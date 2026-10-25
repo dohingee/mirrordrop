@@ -1,0 +1,103 @@
+# Builds, signs (app + broadcast extension) and uploads to TestFlight. Run it manually from the Actions tab.
+# Setup (Apple Developer account, App Store Connect API key, GitHub secrets): docs/SETUP.md.
+# The repo is public: everything account-specific comes from Actions secrets, never from files.
+name: iOS TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "macOS runner (pick macos-15 when macos-26 jobs keep getting cancelled while queued)"
+        type: choice
+        options: [macos-26, macos-15]
+        default: macos-26
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    runs-on: ${{ inputs.runner || 'macos-26' }}
+    timeout-minutes: 45
+    steps:
+      - name: Check secrets
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          KEY: ${{ secrets.ASC_KEY_P8 }}
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          missing=0
+          for name in KEY_ID:ASC_KEY_ID ISSUER:ASC_ISSUER_ID KEY:ASC_KEY_P8 TEAM:APPLE_TEAM_ID; do
+            var="${name%%:*}"
+            if [ -z "${!var}" ]; then echo "::error::GitHub secret ${name#*:} is not set (docs/SETUP.md)"; missing=1; fi
+          done
+          exit $missing
+
+      - uses: actions/checkout@v7
+
+      # App Store uploads need the iOS 26 SDK or newer. Picks the newest installed Xcode 26+.
+      - name: Select Xcode
+        run: |
+          xcode=$(ls -d /Applications/Xcode_2[6-9]*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)
+          if [ -n "$xcode" ]; then sudo xcode-select -s "$xcode"; fi
+          xcodebuild -version | tee -a "$GITHUB_STEP_SUMMARY"
+          xcodebuild -version | head -1 | grep -qE 'Xcode (2[6-9]|[3-9][0-9])' || { echo "::error::Xcode 26 or newer is required"; exit 1; }
+
+      - name: Generate the Xcode project
+        working-directory: ios
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Archive and upload
+        working-directory: ios
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          KEY: ${{ secrets.ASC_KEY_P8 }}
+          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          set -o pipefail
+          key="$RUNNER_TEMP/AuthKey_$KEY_ID.p8"
+          printf '%s\n' "$KEY" > "$key"
+          auth=(-allowProvisioningUpdates -authenticationKeyPath "$key" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER")
+          xcodebuild archive \
+            -project MirrorDrop.xcodeproj -scheme MirrorDrop -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath build/MirrorDrop.xcarchive \
+            -skipPackagePluginValidation -skipMacroValidation \
+            "${auth[@]}" DEVELOPMENT_TEAM="$TEAM" CURRENT_PROJECT_VERSION="$BUILD_NUMBER" 2>&1 | tee ../xcodebuild-output.txt | grep -E "error:|\*\* " || true
+          grep -q '\*\* ARCHIVE SUCCEEDED \*\*' ../xcodebuild-output.txt
+          app=build/MirrorDrop.xcarchive/Products/Applications/MirrorDrop.app
+          for plist in "$app/Info.plist" "$app/PlugIns/MirrorDropBroadcast.appex/Info.plist"; do
+            if [ ! -f "$plist" ]; then echo "::error::missing $plist (extension not embedded?)"; exit 1; fi
+            built=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$plist")
+            if [ "$built" != "$BUILD_NUMBER" ]; then echo "::error::$plist has build number $built, expected $BUILD_NUMBER"; exit 1; fi
+          done
+          cat > build/ExportOptions.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>$TEAM</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>manageAppVersionAndBuildNumber</key><false/>
+          </dict></plist>
+          PLIST
+          xcodebuild -exportArchive -archivePath build/MirrorDrop.xcarchive -exportPath build/export \
+            -exportOptionsPlist build/ExportOptions.plist "${auth[@]}" 2>&1 | tee -a ../xcodebuild-output.txt | grep -E "error:|Upload|\*\* " || true
+          grep -q '\*\* EXPORT SUCCEEDED \*\*' ../xcodebuild-output.txt
+          rm -f "$key"
+          echo "Uploaded build $BUILD_NUMBER to App Store Connect. It appears in TestFlight after processing (5-30 min)." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Report build errors
+        if: failure() && hashFiles('xcodebuild-output.txt') != ''
+        run: |
+          { grep -E "error:|failed|No profiles|No Accounts|not have permission|App Group" xcodebuild-output.txt || tail -n 30 xcodebuild-output.txt; } \
+            | tail -n 30 | cut -c1-400 | sed -E 's/%/%25/g' | while IFS= read -r line; do echo "::error title=xcodebuild::${line}"; done

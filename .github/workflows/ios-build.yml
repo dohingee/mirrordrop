@@ -1,0 +1,74 @@
+# Builds the app + broadcast extension for the simulator and runs the unit tests. No signing, no secrets.
+# The repo is public, so macOS minutes are free; it still runs only when ios/ changes to keep feedback fast.
+name: iOS build
+
+on:
+  push:
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-build.yml"
+  pull_request:
+    paths:
+      - "ios/**"
+      - ".github/workflows/ios-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Xcode version
+        run: xcodebuild -version | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Generate the Xcode project
+        working-directory: ios
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - uses: actions/cache@v5
+        with:
+          path: ios/build/spm
+          key: spm-${{ hashFiles('ios/project.yml') }}
+
+      - name: Build and test (simulator)
+        working-directory: ios
+        run: |
+          set -o pipefail
+          udid=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          print(next(d["udid"] for rt in sorted(devices, reverse=True) if ".iOS-" in rt
+                     for d in devices[rt] if d["name"].startswith("iPhone")))')
+          xcodebuild test \
+            -project MirrorDrop.xcodeproj -scheme MirrorDrop \
+            -destination "id=$udid" \
+            -clonedSourcePackagesDirPath build/spm \
+            -derivedDataPath build/dd \
+            -skipPackagePluginValidation -skipMacroValidation \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | tee ../xcodebuild-output.txt | grep -E "error:|warning: .*(MirrorDrop|Shared)/|Test Suite|Executed|\*\* " || true
+          grep -q '\*\* TEST SUCCEEDED \*\*' ../xcodebuild-output.txt
+
+      - name: Report build errors
+        if: failure() && hashFiles('xcodebuild-output.txt') != ''
+        run: |
+          { grep -E "error:|failed|XCTAssert" xcodebuild-output.txt || tail -n 30 xcodebuild-output.txt; } \
+            | tail -n 30 | cut -c1-400 | sed -E 's/%/%25/g' | while IFS= read -r line; do echo "::error title=xcodebuild::${line}"; done
+
+      - name: Upload build log
+        if: always() && hashFiles('xcodebuild-output.txt') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcodebuild-output
+          path: xcodebuild-output.txt
+          retention-days: 7

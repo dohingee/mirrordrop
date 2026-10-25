@@ -1,0 +1,125 @@
+# Xcode project definition. The .xcodeproj is generated (never committed):
+#   brew install xcodegen && cd ios && xcodegen generate
+# CI does the same (.github/workflows/ios-build.yml). Plan: docs/PLAN.md.
+name: MirrorDrop
+options:
+  bundleIdPrefix: com.mirrordrop
+  developmentLanguage: ko
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    MARKETING_VERSION: "0.1.0"
+    # The TestFlight workflow overrides this with the GitHub run number (app and extension must match).
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+packages:
+  # Google's official SPM package (binary xcframework from dl.google.com). See docs/PLAN.md "Cast SDK".
+  GoogleCast:
+    url: https://github.com/googlecast/google-cast-ios-sdk
+    exactVersion: 4.8.6
+targets:
+  MirrorDrop:
+    type: application
+    platform: iOS
+    sources:
+      - path: MirrorDrop
+        excludes:
+          - Info.plist
+          - MirrorDrop.entitlements
+      - path: Shared
+    info:
+      path: MirrorDrop/Info.plist
+      properties:
+        CFBundleDisplayName: MirrorDrop
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: ko
+        LSRequiresIPhoneOS: true
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        # Google Cast discovery (iOS 14+ local network privacy).
+        NSLocalNetworkUsageDescription: 같은 Wi-Fi에 있는 TV(Google Cast 기기)를 찾고, iPhone 화면을 그 TV로 보내기 위해 로컬 네트워크를 사용합니다.
+        NSBonjourServices:
+          - _googlecast._tcp
+          - _CC1AD845._googlecast._tcp
+        # The Cast SDK links CoreBluetooth; App Store upload checks require a purpose string.
+        NSBluetoothAlwaysUsageDescription: 근처의 TV(Google Cast 기기)를 찾는 데 블루투스를 쓸 수 있습니다.
+        # Lets the diagnostics screen fetch the extension's own http://<LAN IP> server.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    entitlements:
+      path: MirrorDrop/MirrorDrop.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.mirrordrop.app]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mirrordrop.app
+        PRODUCT_NAME: MirrorDrop
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+    dependencies:
+      - package: GoogleCast
+        product: GoogleCastDynamic
+      - target: MirrorDropBroadcast
+  MirrorDropBroadcast:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: MirrorDropBroadcast
+        excludes:
+          - Info.plist
+          - MirrorDropBroadcast.entitlements
+      - path: Shared
+    info:
+      path: MirrorDropBroadcast/Info.plist
+      properties:
+        CFBundleDisplayName: MirrorDrop
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: ko
+        NSLocalNetworkUsageDescription: 같은 Wi-Fi에 있는 TV가 iPhone 화면 영상을 가져갈 수 있도록 로컬 네트워크를 사용합니다.
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.broadcast-services-upload
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).SampleHandler
+          RPBroadcastProcessMode: RPBroadcastProcessModeSampleBuffer
+    entitlements:
+      path: MirrorDropBroadcast/MirrorDropBroadcast.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.mirrordrop.app]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mirrordrop.app.broadcast
+        PRODUCT_NAME: MirrorDropBroadcast
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+  MirrorDropTests:
+    # Logic tests: compiles Shared/ directly, no host app, so the Cast SDK is not involved.
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: MirrorDropTests
+      - path: Shared
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.mirrordrop.app.tests
+schemes:
+  MirrorDrop:
+    build:
+      targets:
+        MirrorDrop: all
+        MirrorDropBroadcast: all
+        MirrorDropTests: [test]
+    test:
+      config: Debug
+      targets: [MirrorDropTests]
+    archive:
+      config: Release
