@@ -10,7 +10,7 @@
 |---|---|---|
 | 0. 준비 | 저장소, Apple 번들 ID·App Group, App Store Connect 앱, GitHub 비밀값 (`docs/SETUP.md`) | TestFlight에 첫 빌드가 올라감 |
 | **1. PoC (지금)** | 시험 화면: Cast 연결, 테스트 A(인터넷 샘플 영상), 테스트 B(내 화면 → TV), 진단 화면 | `docs/POC_TEST.md`의 핵심 항목(A, B, 메모리)이 통과하거나, 막히는 이유가 분명해짐 |
-| 2. MVP | 쓰기 쉬운 한 화면 UI, 연결 끊김·Wi-Fi 변경 처리, 화질/지연 설정, 소리 정리, 필요하면 커스텀 수신기 | 처음 쓰는 사람이 설명 없이 TV에 화면을 띄움 |
+| 2. MVP | iOS 27+ ScreenCaptureKit 캡처 경로 추가(17~26은 ReplayKit 유지), 쓰기 쉬운 한 화면 UI, 연결 끊김·Wi-Fi 변경 처리, 화질/지연 설정, 소리 정리, 필요하면 커스텀 수신기 | 처음 쓰는 사람이 설명 없이 TV에 화면을 띄움 |
 | 3. 광고 + 정책 | AdMob(UMP 동의 포함), 개인정보처리방침, App Privacy 답안, 심사 메모 | 광고 켠 빌드가 정책 점검 통과 |
 | 4. 안정화 + 출시 | 여러 TV·스틱 기종 시험, 오래 켜 두기(발열·메모리), 스토어 자료, 심사 제출 | App Store 출시 |
 
@@ -29,10 +29,10 @@
 ### 2. 화면 캡처: ReplayKit 방송 확장 (Broadcast Upload Extension)
 - 다른 앱(사진, Safari 등) 화면까지 잡으려면 iOS 17~26에서는 이 방법뿐이다.
 - 확장은 **메모리 약 50MB**를 넘으면 iOS가 강제로 끈다. 그래서 확장에는 Cast SDK를 넣지 않고, 버퍼 수에 상한을 둔다. 진단 화면에 현재·최고 메모리를 보여 준다.
-- **새로 알게 된 점 (결정 필요)**: Apple 문서에 따르면 iOS 27부터 `RPBroadcastSampleHandler`가 "곧 지원 중단(deprecated)"으로 표시되고, iOS용 **ScreenCaptureKit**이 생겼다. 앱 본체가 `SCContentSharingPicker`로 전체 화면을 잡고, 백그라운드 모드 `screen-capture`로 계속 돌 수 있다고 한다. 확장이 필요 없으니 50MB 제한과 앱↔확장 통신이 사라질 수 있다.
+- **새로 알게 된 점**: Apple 문서에 따르면 iOS 27부터 `RPBroadcastSampleHandler`가 "곧 지원 중단(deprecated)"으로 표시되고, iOS용 **ScreenCaptureKit**이 생겼다. 앱 본체가 `SCContentSharingPicker`로 전체 화면을 잡고, 백그라운드 모드 `screen-capture`로 계속 돌 수 있다고 한다. 확장이 필요 없으니 50MB 제한과 앱↔확장 통신이 사라질 수 있다.
   - PoC는 ReplayKit로 만든다. iOS 27에서도 아직 동작하고, iOS 17~26 기기도 지원하기 때문이다.
   - 인코딩·HLS·서버 코드(`FrameScaler`, `HLSSegmenter`, `StreamStore`, `HTTPServer`)는 ReplayKit에 묶이지 않게 만들어서, 2단계에서 ScreenCaptureKit 경로를 추가할 때 그대로 쓸 수 있다.
-  - 2단계 시작 전에 정할 것: iOS 27 이상만 지원할지(ScreenCaptureKit만), 둘 다 지원할지. → **사용자 결정 필요**
+  - **결정 (2026-10-25): 둘 다 지원한다.** iOS 17~26은 ReplayKit 방송 확장, iOS 27 이상은 ScreenCaptureKit. 무료·광고 앱이라 지원 기기 수가 중요하고, ReplayKit은 deprecated일 뿐 아직 동작하기 때문이다. ScreenCaptureKit 경로는 2단계에서 추가하고, iOS 17~26 기기가 충분히 줄면 ReplayKit 경로를 걷어낸다.
 
 ### 3. 수신기: 먼저 Google의 기본 미디어 수신기(Default Media Receiver, `CC1AD845`)
 - Cast 개발자 콘솔 등록(유료 5달러)이나 수신기 웹페이지 호스팅이 필요 없다.
