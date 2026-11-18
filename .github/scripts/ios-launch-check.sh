@@ -47,6 +47,17 @@ else
     summary "Bundle: extension embedded, CFBundleVersion $v_app in both"
   fi
 fi
+# iPhone only (UIDeviceFamily = [1]). A universal build passes every simulator check but App Store
+# Connect rejects it at upload (iPad multitasking needs all four orientations; the app is
+# portrait-only): iOS TestFlight run #3. Checked here so the archive never starts.
+family=$(/usr/libexec/PlistBuddy -c 'Print :UIDeviceFamily' "$app/Info.plist" 2>/dev/null | tr -d ' \n' || true)
+if [ "$family" != "Array{1}" ]; then
+  echo "::error::the app is not iPhone-only (UIDeviceFamily: ${family:-missing}); set TARGETED_DEVICE_FAMILY \"1\" in each target of ios/project.yml"
+  summary "Bundle: FAILED, not iPhone-only (UIDeviceFamily ${family:-missing})"
+  failed=1
+else
+  summary "Bundle: iPhone-only (UIDeviceFamily [1])"
+fi
 # Both targets need the App Group (the app reads the extension's status through it). Simulator
 # signing may keep entitlements out of the signature, so a missing group only warns; the archive
 # (device signing) is the real proof.
