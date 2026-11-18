@@ -1,0 +1,4 @@
+# This repository is edited on Windows but built on macOS: store every text file with LF endings.
+# (A script written with CRLF fails on the Mac runner: "set: pipefail\r: invalid option name".)
+* text=auto eol=lf
+*.png binary
