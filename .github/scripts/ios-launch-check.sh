@@ -114,7 +114,15 @@ for kind in iphone ipad; do
     summary "Launch check: FAILED at 'create $kind'"; exit 1; }
   step 180 "boot $kind" xcrun simctl boot "$udid"
   step 300 "wait for $kind to finish booting" xcrun simctl bootstatus "$udid" -b
-  step 30 "status bar on $kind" xcrun simctl status_bar "$udid" override --time 9:41 --dataNetwork wifi     --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
+  # Cosmetic (same clock and battery in every screenshot), so a failure only warns. iOS TestFlight
+  # run #2 failed here on the iPad (error text not seen; likely the cellular options on a Wi-Fi-only
+  # iPad), so those go to the iPhone only.
+  bar=(--time 9:41 --dataNetwork wifi --wifiMode active --wifiBars 3 --batteryState charged --batteryLevel 100)
+  [ "$kind" = iphone ] && bar+=(--cellularMode active --cellularBars 4)
+  echo "[$(date +%H:%M:%S)] status bar on $kind"
+  limit 30 xcrun simctl status_bar "$udid" override "${bar[@]}" \
+    || { echo "::warning::status bar override failed on $kind (screenshots keep the real clock)"
+         summary "Status bar: override failed on $kind (screenshots keep the real clock)"; }
   step 180 "install on $kind" xcrun simctl install "$udid" "$app"
   # First launch is slow (fresh install); 25 s also covers a crash shortly after start.
   check "$udid" "$kind" main 25 "${ko[@]}"
