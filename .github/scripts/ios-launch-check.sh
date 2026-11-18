@@ -85,8 +85,8 @@ ko=(-AppleLanguages "(ko)" -AppleLocale ko_KR)
 # minutes and names its step. (Run #2 booted both simulators at once and hung silently for 21 min
 # until the job was cancelled; one at a time is what works for Bottlepost.) macOS has no `timeout`:
 # perl's alarm survives exec, so SIGALRM ends the command (exit 142).
-# The limits for one device add up to about 13 min worst case; the workflow step allows 35 min
-# (Release build + both devices + one hang), so these fire first and name the step.
+# Worst case with one boot retry: about 16 min for that device plus about 10 for the other and the
+# Release build; the workflow step allows 35 min, so these limits fire first and name the step.
 limit() {  # seconds command...  (exit code of the command, 142 on timeout)
   local secs=$1; shift
   perl -e 'alarm shift; exec @ARGV or die "exec: $!"' "$secs" "$@"
@@ -118,13 +118,28 @@ check() {  # udid kind name wait [app arguments...]
 }
 
 touch "$out/.started"
+retried=0
 for kind in iphone ipad; do
   devtype=$([ "$kind" = iphone ] && echo "$iphone" || echo "$ipad")
   echo "[$(date +%H:%M:%S)] create $kind ($devtype)"
   udid=$(limit 60 xcrun simctl create "launch-$kind" "$devtype" "$runtime") || {
     summary "Launch check: FAILED at 'create $kind'"; exit 1; }
+  # Booting on the Intel runner sometimes stalls (iOS TestFlight run #4: the iPhone was not up after
+  # 300 s; iOS build run #2 hung 21 min). Once per run, a stalled device is deleted and a fresh one
+  # is booted with `bootstatus -b` (boots it and waits, no device-state error); a second stall fails.
   step 180 "boot $kind" xcrun simctl boot "$udid"
-  step 300 "wait for $kind to finish booting" xcrun simctl bootstatus "$udid" -b
+  echo "[$(date +%H:%M:%S)] wait for $kind to finish booting"
+  if ! limit 300 xcrun simctl bootstatus "$udid" -b; then
+    [ "$retried" = 0 ] || { summary "Launch check: FAILED at 'wait for $kind to finish booting' (no retry left)"; exit 1; }
+    retried=1
+    echo "::warning::$kind did not finish booting in 300 s; trying once more on a fresh simulator"
+    limit 60 xcrun simctl shutdown "$udid" || true
+    limit 60 xcrun simctl delete "$udid" || true
+    udid=$(limit 60 xcrun simctl create "launch-$kind-2" "$devtype" "$runtime") || {
+      summary "Launch check: FAILED at 'create $kind (retry)'"; exit 1; }
+    step 300 "boot $kind on a fresh simulator (retry)" xcrun simctl bootstatus "$udid" -b
+    summary "Boot: $kind needed a fresh simulator"
+  fi
   # Cosmetic (same clock and battery in every screenshot), so a failure only warns. iOS TestFlight
   # run #2 failed here on the iPad (error text not seen; likely the cellular options on a Wi-Fi-only
   # iPad), so those go to the iPhone only.
