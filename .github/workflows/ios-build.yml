@@ -62,6 +62,7 @@ jobs:
       - name: Launch on iPhone and iPad simulators (Xcode ${{ steps.setup.outputs.xcode }})
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         working-directory: ios
+        timeout-minutes: 35
         run: bash ../.github/scripts/ios-launch-check.sh
 
       # Fork pull requests get a read-only token; this repository is private, so there are none.

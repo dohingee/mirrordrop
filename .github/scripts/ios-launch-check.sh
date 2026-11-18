@@ -68,23 +68,36 @@ def pick(prefix):
 print(rt["identifier"], pick("iPhone"), pick("iPad Air"))')"
 echo "runtime $runtime"
 
-# Boot both simulators at once (each boot takes a minute or more on the Intel runner).
-# udid_iphone / udid_ipad: plain variables, macOS /bin/bash 3.2 has no associative arrays.
-for kind in iphone ipad; do
-  devtype=$([ "$kind" = iphone ] && echo "$iphone" || echo "$ipad")
-  printf -v "udid_$kind" '%s' "$(xcrun simctl create "launch-$kind" "$devtype" "$runtime")"
-  var="udid_$kind"; xcrun simctl boot "${!var}"
-done
 ko=(-AppleLanguages "(ko)" -AppleLocale ko_KR)
 
+# Every simulator command runs under a time limit and is logged with the time, so a hang fails in
+# minutes and names its step. (Run #2 booted both simulators at once and hung silently for 21 min
+# until the job was cancelled; one at a time is what works for Bottlepost.) macOS has no `timeout`:
+# perl's alarm survives exec, so SIGALRM ends the command (exit 142).
+# The limits for one device add up to about 13 min worst case; the workflow step allows 35 min
+# (Release build + both devices + one hang), so these fire first and name the step.
+limit() {  # seconds command...  (exit code of the command, 142 on timeout)
+  local secs=$1; shift
+  perl -e 'alarm shift; exec @ARGV or die "exec: $!"' "$secs" "$@"
+}
+step() {  # seconds description command...  (fails the check on error or timeout)
+  local secs=$1 what=$2; shift 2
+  echo "[$(date +%H:%M:%S)] $what"
+  if ! limit "$secs" "$@"; then
+    echo "::error::launch check: '$what' failed or took longer than $secs s"
+    summary "Launch check: FAILED at '$what'"
+    exit 1
+  fi
+}
+
 # Launches (replacing any running copy), waits, fails the check if the app died, screenshots.
-check() {  # kind name wait [app arguments...]
-  local kind=$1 name=$2 wait=$3; shift 3
-  local var="udid_$kind" pid
-  local udid=${!var}
-  pid=$(xcrun simctl launch --terminate-running-process "$udid" "$bundle" "$@" | awk '{print $NF}') || true
+check() {  # udid kind name wait [app arguments...]
+  local udid=$1 kind=$2 name=$3 wait=$4; shift 4
+  local pid
+  echo "[$(date +%H:%M:%S)] launch $name on $kind"
+  pid=$(limit 60 xcrun simctl launch --terminate-running-process "$udid" "$bundle" "$@" | awk '{print $NF}') || true
   sleep "$wait"
-  xcrun simctl io "$udid" screenshot --type=png "$out/$kind-$name.png" >/dev/null 2>&1 || true
+  limit 30 xcrun simctl io "$udid" screenshot --type=png "$out/$kind-$name.png" >/dev/null 2>&1 || true
   if [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1; then
     echo "ok: $name running on the $kind simulator after $wait s (pid $pid)"
   else
@@ -95,18 +108,21 @@ check() {  # kind name wait [app arguments...]
 
 touch "$out/.started"
 for kind in iphone ipad; do
-  var="udid_$kind"; udid=${!var}
-  xcrun simctl bootstatus "$udid" -b >/dev/null
-  xcrun simctl status_bar "$udid" override --time 9:41 --dataNetwork wifi --wifiMode active --wifiBars 3 \
-    --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
-  xcrun simctl install "$udid" "$app"
+  devtype=$([ "$kind" = iphone ] && echo "$iphone" || echo "$ipad")
+  echo "[$(date +%H:%M:%S)] create $kind ($devtype)"
+  udid=$(limit 60 xcrun simctl create "launch-$kind" "$devtype" "$runtime") || {
+    summary "Launch check: FAILED at 'create $kind'"; exit 1; }
+  step 180 "boot $kind" xcrun simctl boot "$udid"
+  step 300 "wait for $kind to finish booting" xcrun simctl bootstatus "$udid" -b
+  step 30 "status bar on $kind" xcrun simctl status_bar "$udid" override --time 9:41 --dataNetwork wifi     --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 --batteryState charged --batteryLevel 100
+  step 180 "install on $kind" xcrun simctl install "$udid" "$app"
   # First launch is slow (fresh install); 25 s also covers a crash shortly after start.
-  check "$kind" main 25 "${ko[@]}"
+  check "$udid" "$kind" main 25 "${ko[@]}"
   if [ "$kind" = iphone ]; then
-    check iphone diagnostics 6 "${ko[@]}" -MDScreen diagnostics
-    check iphone clock 6 "${ko[@]}" -MDScreen clock
+    check "$udid" iphone diagnostics 6 "${ko[@]}" -MDScreen diagnostics
+    check "$udid" iphone clock 6 "${ko[@]}" -MDScreen clock
   fi
-  xcrun simctl shutdown "$udid" || true
+  limit 60 xcrun simctl shutdown "$udid" || true
 done
 
 crashes=$(find ~/Library/Logs/DiagnosticReports -name 'MirrorDrop*' -newer "$out/.started" 2>/dev/null || true)

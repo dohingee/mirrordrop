@@ -86,6 +86,7 @@ jobs:
       - name: Launch check (iPhone and iPad simulators)
         if: steps.earlier.outputs.run_url == ''
         working-directory: ios
+        timeout-minutes: 35
         run: bash ../.github/scripts/ios-launch-check.sh
 
       # Screenshots of what is about to ship (or why it stopped), readable from the PC. Skipped
