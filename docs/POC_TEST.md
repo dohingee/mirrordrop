@@ -1,5 +1,7 @@
 # PoC 기기 시험 체크리스트
 
+> 설치 전에 Claude가 PC에서 공통 스킬 `ios-pc-test`(시뮬레이터 화면 캡처·단위 테스트)로 먼저 확인합니다. 이 목록은 iPhone·TV에서만 볼 수 있는 것입니다.
+
 준비물: TestFlight로 설치한 MirrorDrop, Google Cast 기기(TV·스틱), 같은 Wi-Fi, 다른 휴대폰(사진 찍기용, 지연 측정).
 
 적는 법

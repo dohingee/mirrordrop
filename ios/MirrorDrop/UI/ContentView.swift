@@ -7,9 +7,10 @@ struct ContentView: View {
     @State private var includeAudio = AppGroup.defaults?.bool(forKey: AppGroup.includeAudioKey) ?? false
     @State private var sampleURL = SampleStream.fmp4.url
     @State private var sentURL: URL?
+    @State private var path = LaunchScreen.fromArguments.map { [$0] } ?? []
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 connectSection
                 testASection
@@ -21,6 +22,12 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("MirrorDrop 테스트")
+            .navigationDestination(for: LaunchScreen.self) { screen in
+                switch screen {
+                case .diagnostics: DiagnosticsView()
+                case .clock: ClockView()
+                }
+            }
         }
         .onChange(of: monitor.readyURL) { _, url in sendMirrorIfNeeded(url) }
         .onChange(of: cast.isConnected) { _, _ in sendMirrorIfNeeded(monitor.readyURL) }
@@ -107,6 +114,18 @@ struct ContentView: View {
         if cast.load(url: url, title: "내 iPhone 화면", live: true, format: .fmp4) {
             sentURL = url
         }
+    }
+}
+
+/// Screen to open at launch, for CI screenshots only (.github/scripts/ios-launch-check.sh):
+/// `-MDScreen diagnostics|clock` (any other value, e.g. `main`, keeps the main screen). Launch
+/// arguments land in UserDefaults' volatile argument domain, so a normal launch has no value here
+/// and the path starts empty.
+enum LaunchScreen: String, Hashable {
+    case diagnostics, clock
+
+    static var fromArguments: LaunchScreen? {
+        UserDefaults.standard.string(forKey: "MDScreen").flatMap(LaunchScreen.init(rawValue:))
     }
 }
 

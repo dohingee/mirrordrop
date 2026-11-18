@@ -1,0 +1,84 @@
+# Shared start of every macOS job (ios-build, ios-testflight): picks Xcode, installs a pinned
+# XcodeGen, generates ios/MirrorDrop.xcodeproj and restores the Swift packages (the Google Cast
+# SDK). Run it after actions/checkout. Afterwards every xcodebuild call passes
+#   -clonedSourcePackagesDirPath "$SPM_PACKAGES_DIR" -disablePackageRepositoryCache
+# so all builds in a job share the cached package checkouts (sources and binaries only: build
+# output, the DerivedData, is never cached, so a Release archive is always compiled from scratch).
+name: iOS setup
+description: Select Xcode, install XcodeGen, generate the project, restore Swift packages
+
+inputs:
+  # Same release Bottlepost pins (checked 2026-11-13). To update: take the version and the sha256
+  # "digest" of xcodegen.zip from https://github.com/yonaskolb/XcodeGen/releases.
+  xcodegen-version:
+    description: XcodeGen release
+    default: "2.46.0"
+  xcodegen-sha256:
+    description: sha256 of that release's xcodegen.zip
+    default: "4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806"
+
+outputs:
+  xcode:
+    description: 'Selected Xcode, e.g. "26.5-17F42" (version and build)'
+    value: ${{ steps.xcode.outputs.xcode }}
+
+runs:
+  using: composite
+  steps:
+    # Newest stable Xcode 26 on the image (no beta or release candidate: App Store Connect refuses
+    # those builds). App Store uploads need the iOS 26 SDK or newer.
+    - name: Select Xcode (iOS 26 SDK or newer)
+      id: xcode
+      shell: bash
+      run: |
+        xcode=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | grep -viE 'beta|release_candidate|_rc' | sort -V | tail -1)
+        if [ -n "$xcode" ]; then sudo xcode-select -s "$xcode"; fi
+        sdk=$(xcrun --sdk iphoneos --show-sdk-version)
+        { xcodebuild -version; echo "iOS SDK $sdk"; } | tee -a "$GITHUB_STEP_SUMMARY"
+        printf '26.0\n%s\n' "$sdk" | sort -V -C || { echo "::error::Xcode with the iOS 26 SDK or newer is required (found iOS SDK $sdk)"; exit 1; }
+        echo "xcode=$(xcodebuild -version | awk 'NR==1 {v=$2} /Build version/ {b=$3} END {print v"-"b}')" >> "$GITHUB_OUTPUT"
+
+    - name: Cache XcodeGen
+      id: xcodegen-cache
+      uses: actions/cache@v6
+      with:
+        path: ~/.xcodegen/${{ inputs.xcodegen-version }}
+        key: xcodegen-${{ runner.os }}-${{ inputs.xcodegen-version }}-${{ inputs.xcodegen-sha256 }}
+
+    # Release zip instead of `brew install xcodegen` (which first updates Homebrew: 1-2 minutes).
+    - name: Download XcodeGen
+      if: steps.xcodegen-cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        VERSION: ${{ inputs.xcodegen-version }}
+        SHA256: ${{ inputs.xcodegen-sha256 }}
+      run: |
+        set -euo pipefail
+        zip="$RUNNER_TEMP/xcodegen.zip"
+        curl -fsSL --retry 3 -o "$zip" "https://github.com/yonaskolb/XcodeGen/releases/download/$VERSION/xcodegen.zip"
+        echo "$SHA256  $zip" | shasum -a 256 -c -
+        mkdir -p ~/.xcodegen/"$VERSION"
+        unzip -q "$zip" -d ~/.xcodegen/"$VERSION"
+
+    - name: Generate the Xcode project
+      shell: bash
+      env:
+        VERSION: ${{ inputs.xcodegen-version }}
+      run: |
+        set -euo pipefail
+        bin=$(find ~/.xcodegen/"$VERSION" -type f -name xcodegen -path '*/bin/*' | head -1)
+        [ -n "$bin" ] || { echo "::error::xcodegen not found in the $VERSION release zip"; exit 1; }
+        echo "$(dirname "$bin")" >> "$GITHUB_PATH"
+        "$bin" --version
+        cd ios && "$bin" generate
+        echo "SPM_PACKAGES_DIR=$GITHUB_WORKSPACE/ios/build/spm" >> "$GITHUB_ENV"
+
+    # Package versions are pinned in ios/project.yml (exactVersion). Same OS and Xcode only:
+    # another Xcode may resolve packages differently.
+    - name: Cache Swift packages
+      uses: actions/cache@v6
+      with:
+        path: ios/build/spm
+        key: spm-${{ runner.os }}-xcode-${{ steps.xcode.outputs.xcode }}-${{ hashFiles('ios/project.yml') }}
+        restore-keys: |
+          spm-${{ runner.os }}-xcode-${{ steps.xcode.outputs.xcode }}-

@@ -5,13 +5,14 @@ iPhone 화면을 같은 Wi-Fi에 있는 TV(Google Cast 지원 기기)로 보내�
 
 - 사진·영상 감상이 목적입니다. 1~3초 정도 늦게 나와도 괜찮은 용도입니다.
 - 화면 영상은 집 안 Wi-Fi 밖으로 나가지 않습니다. iPhone이 직접 TV에 건네줍니다.
-- Mac 없이 GitHub Actions에서 빌드하고, TestFlight로 iPhone에 설치합니다.
+- Mac 없이 GitHub Actions(비공개 저장소)에서 빌드하고, TestFlight로 iPhone에 설치합니다.
 
 ## 문서
 | 문서 | 내용 |
 |---|---|
-| [docs/SETUP.md](docs/SETUP.md) | 처음 한 번 할 일 (Apple·GitHub 설정, TestFlight 설치) |
+| [docs/SETUP.md](docs/SETUP.md) | 처음 한 번 할 일 (Apple·GitHub 설정, 빌드 비용, TestFlight 설치), 업데이트 순서 |
 | [docs/POC_TEST.md](docs/POC_TEST.md) | iPhone과 TV로 하는 시험 체크리스트 |
+| [docs/SPEC.md](docs/SPEC.md) | 무엇을 누구를 위해 만드는지, App Store 심사 위험 점검 |
 | [docs/PLAN.md](docs/PLAN.md) | 전체 계획(0~4단계)과 지금까지 정한 것 |
 | [CLAUDE.md](CLAUDE.md) | 코드 구조와 꼭 지킬 규칙 (개발용) |
 

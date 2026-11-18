@@ -1,15 +1,33 @@
-# Builds the app + broadcast extension for the simulator and runs the unit tests. No signing, no secrets.
-# The repo is public, so macOS minutes are free; it still runs only when ios/ changes to keep feedback fast.
+# Checks an iOS change without uploading it: unit tests, then the launch check, on one macOS runner
+# (one queue wait, one package restore). Cost: about 12-18 macOS minutes per run, which count 10x
+# against the private repository's Actions quota (shared by three apps). So a branch push never
+# starts it: start it on purpose when a commit needs checking or screenshots, from the PC by pushing
+# a tag ios-check-<anything> on that commit (no gh CLI needed), or Actions > iOS build > Run
+# workflow. Same-repository pull requests that touch the app run it too. iOS TestFlight (tag
+# testflight-*) runs the same scripts itself unless this already passed.
+#  1. Unit tests: Debug build of the MirrorDropTests scheme for the simulator, unsigned, no secrets
+#     (.github/scripts/ios-unit-tests.sh).
+#  2. Launch check: Release app for the simulator with its entitlements (ad-hoc signed), extension
+#     embedded and build numbers equal, started on iPhone and iPad simulators, with screenshots of
+#     each screen (.github/scripts/ios-launch-check.sh). Runs even when a unit test failed, so one
+#     run reports both; a run with a failed test is not "success", so TestFlight never reuses it.
+#  3. The results (screenshots, summary, crash reports) are pushed to the ci-results branch, so they
+#     can be read from the PC with git alone (.github/scripts/publish-ci-results.sh).
+# iOS TestFlight reuses a passed tag or manual run of the same app content and Xcode instead of repeating
+# 1 and 2 (.github/scripts/find-launch-check.py matches the launch step's name below: keep in sync).
 name: iOS build
 
 on:
+  # Tags only, never branches (see above).
   push:
-    paths:
-      - "ios/**"
-      - ".github/workflows/ios-build.yml"
+    tags: ["ios-check-*"]
+  # Keep these paths in sync with APP_PATHS in find-launch-check.py.
   pull_request:
     paths:
       - "ios/**"
+      - ".github/actions/ios-setup/**"
+      - ".github/scripts/ios-unit-tests.sh"
+      - ".github/scripts/ios-launch-check.sh"
       - ".github/workflows/ios-build.yml"
   workflow_dispatch:
 
@@ -22,53 +40,45 @@ concurrency:
 
 jobs:
   build:
-    runs-on: macos-26
-    timeout-minutes: 30
+    # macos-26-intel: same Xcode 26 as macos-26 (arm64), whose queue kept failing ("not acquired by Runner") in 2026-11.
+    runs-on: macos-26-intel
+    timeout-minutes: 45
+    # Only to push the results to the ci-results branch (publish-ci-results.sh touches no other branch).
+    permissions:
+      contents: write
+    env:
+      RESULTS_DIR: ${{ github.workspace }}/ios/build/ci-results
     steps:
       - uses: actions/checkout@v7
 
-      - name: Xcode version
-        run: xcodebuild -version | tee -a "$GITHUB_STEP_SUMMARY"
-
-      - name: Generate the Xcode project
-        working-directory: ios
-        run: |
-          brew install xcodegen
-          xcodegen generate
-
-      - uses: actions/cache@v5
-        with:
-          path: ios/build/spm
-          key: spm-${{ hashFiles('ios/project.yml') }}
+      - name: Xcode, XcodeGen and Swift packages
+        id: setup
+        uses: ./.github/actions/ios-setup
 
       - name: Build and test (simulator)
         working-directory: ios
-        run: |
-          set -o pipefail
-          udid=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
-          devices = json.load(sys.stdin)["devices"]
-          print(next(d["udid"] for rt in sorted(devices, reverse=True) if ".iOS-" in rt
-                     for d in devices[rt] if d["name"].startswith("iPhone")))')
-          xcodebuild test \
-            -project MirrorDrop.xcodeproj -scheme MirrorDrop \
-            -destination "id=$udid" \
-            -clonedSourcePackagesDirPath build/spm \
-            -derivedDataPath build/dd \
-            -skipPackagePluginValidation -skipMacroValidation \
-            CODE_SIGNING_ALLOWED=NO 2>&1 | tee ../xcodebuild-output.txt | grep -E "error:|warning: .*(MirrorDrop|Shared)/|Test Suite|Executed|\*\* " || true
-          grep -q '\*\* TEST SUCCEEDED \*\*' ../xcodebuild-output.txt
+        run: bash ../.github/scripts/ios-unit-tests.sh
 
+      - name: Launch on iPhone and iPad simulators (Xcode ${{ steps.setup.outputs.xcode }})
+        if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
+        working-directory: ios
+        run: bash ../.github/scripts/ios-launch-check.sh
+
+      # Fork pull requests get a read-only token; this repository is private, so there are none.
+      - name: Publish results to the ci-results branch
+        if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash .github/scripts/publish-ci-results.sh launch-check "$RESULTS_DIR"
+
+      # Unit test log and launch-check build log (the launch check's own failures are annotations already).
       - name: Report build errors
-        if: failure() && hashFiles('xcodebuild-output.txt') != ''
+        if: failure()
         run: |
-          { grep -E "error:|failed|XCTAssert" xcodebuild-output.txt || tail -n 30 xcodebuild-output.txt; } \
-            | tail -n 30 | cut -c1-400 | sed -E 's/%/%25/g' | while IFS= read -r line; do echo "::error title=xcodebuild::${line}"; done
-
-      - name: Upload build log
-        if: always() && hashFiles('xcodebuild-output.txt') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: xcodebuild-output
-          path: xcodebuild-output.txt
-          retention-days: 7
+          for f in xcodebuild-output.txt ios/build/launch-build.txt; do
+            [ -f "$f" ] || continue
+            grep -E "error:|failed|XCTAssert" "$f" | tail -n 20 | cut -c1-400 | sed -E 's/%/%25/g' \
+              | while IFS= read -r line; do echo "::error title=$(basename "$f")::${line}"; done
+          done

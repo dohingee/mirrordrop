@@ -1,6 +1,6 @@
 # Xcode project definition. The .xcodeproj is generated (never committed):
 #   brew install xcodegen && cd ios && xcodegen generate
-# CI does the same (.github/workflows/ios-build.yml). Plan: docs/PLAN.md.
+# CI does the same with a pinned XcodeGen (.github/actions/ios-setup). Plan: docs/PLAN.md.
 name: MirrorDrop
 options:
   bundleIdPrefix: com.mirrordrop
@@ -123,3 +123,13 @@ schemes:
       targets: [MirrorDropTests]
     archive:
       config: Release
+  # Unit tests only (CI: .github/scripts/ios-unit-tests.sh). The tests compile Shared/ and need no
+  # host app, so this skips the Debug build of the app and extension and saves Mac minutes; the
+  # launch check builds the Release app anyway.
+  MirrorDropTests:
+    build:
+      targets:
+        MirrorDropTests: [test]
+    test:
+      config: Debug
+      targets: [MirrorDropTests]

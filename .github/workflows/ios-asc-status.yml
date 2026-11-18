@@ -1,0 +1,46 @@
+# Reads the TestFlight state of the app from App Store Connect (newest builds: processing, beta
+# review, expiry; App Store versions) with GET requests only, and pushes it to the ci-results branch
+# (asc-status/) so it can be read from the PC with git. Never changes anything in App Store Connect.
+# Start it from the PC by pushing a tag asc-status-<anything>, or from the Actions tab.
+# Cost: under a minute on Ubuntu, no macOS minutes.
+name: iOS App Store Connect status
+
+on:
+  push:
+    tags: ["asc-status-*"]
+  workflow_dispatch:
+
+permissions:
+  # write: only to publish the result to the ci-results branch (publish-ci-results.sh).
+  contents: write
+
+concurrency:
+  group: ios-asc-status
+  cancel-in-progress: false
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/scripts
+
+      - name: Read App Store Connect
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          KEY: ${{ secrets.ASC_KEY_P8 }}
+          BUNDLE_ID: com.mirrordrop.app
+          OUT: ${{ runner.temp }}/asc-status
+        run: python3 -u .github/scripts/asc-status.py
+
+      # Also after a failed read, so the error is readable from the PC.
+      - name: Publish to the ci-results branch
+        if: ${{ !cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash .github/scripts/publish-ci-results.sh asc-status "$RUNNER_TEMP/asc-status"

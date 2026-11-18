@@ -1,19 +1,39 @@
-# Builds, signs (app + broadcast extension) and uploads to TestFlight. Run it manually from the Actions tab.
-# Setup (Apple Developer account, App Store Connect API key, GitHub secrets): docs/SETUP.md.
-# The repo is public: everything account-specific comes from Actions secrets, never from files.
+# Tests, checks, signs and uploads the iOS app (app + broadcast extension) to TestFlight in one job
+# on one macOS runner (one queue wait, one package restore). Start it from the PC by pushing a tag
+# testflight-<anything> on the commit to ship, or from the Actions tab. Setup (Apple Developer,
+# App Store Connect API key, GitHub secrets): docs/SETUP.md.
+# Cost (macOS minutes, counted 10x against the private repository's quota): about 8-12 when a
+# passed "iOS build" run is reused, about 18-25 otherwise.
+#  1. Unit tests and 2. launch check (same scripts as ios-build.yml), unless a passed "iOS build"
+#     run already did both for this commit (or an ancestor with no app change since) under the same
+#     Xcode: .github/scripts/find-launch-check.py. Never uploads without both. A test failure stops
+#     the job before the launch check and the archive.
+#  3. Archive (Release, device) and upload. Build number = this workflow's run number, written to
+#     the app and the extension (CURRENT_PROJECT_VERSION) and checked in both.
+# The builds differ in configuration or platform, so none can reuse another's compiled output; what
+# they share is the runner, the selected Xcode, the generated project and the Swift packages.
 name: iOS TestFlight
 
 on:
+  push:
+    tags: ["testflight-*"]
   workflow_dispatch:
     inputs:
       runner:
-        description: "macOS runner (pick macos-15 when macos-26 jobs keep getting cancelled while queued)"
+        description: "macOS runner (intel is the default: the arm64 queue kept failing in 2026-11; if one waits too long, try the other)"
         type: choice
-        options: [macos-26, macos-15]
-        default: macos-26
+        options: [macos-26-intel, macos-26]
+        default: macos-26-intel
+      force_launch_check:
+        description: "Run the unit tests and the launch check even if iOS build already passed them for this commit"
+        type: boolean
+        default: false
 
 permissions:
-  contents: read
+  # write: only to publish launch-check results to the ci-results branch (publish-ci-results.sh).
+  contents: write
+  # Reads earlier "iOS build" runs (.github/scripts/find-launch-check.py).
+  actions: read
 
 concurrency:
   group: ios-testflight
@@ -21,38 +41,62 @@ concurrency:
 
 jobs:
   upload:
-    runs-on: ${{ inputs.runner || 'macos-26' }}
-    timeout-minutes: 45
+    runs-on: ${{ inputs.runner || 'macos-26-intel' }}
+    timeout-minutes: 60
+    env:
+      RESULTS_DIR: ${{ github.workspace }}/ios/build/ci-results
     steps:
+      # First step: a missing secret fails in seconds instead of after the build.
       - name: Check secrets
         env:
           KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ISSUER: ${{ secrets.ASC_ISSUER_ID }}
           KEY: ${{ secrets.ASC_KEY_P8 }}
-          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          TEAM: ${{ vars.APPLE_TEAM_ID }}
         run: |
           missing=0
           for name in KEY_ID:ASC_KEY_ID ISSUER:ASC_ISSUER_ID KEY:ASC_KEY_P8 TEAM:APPLE_TEAM_ID; do
             var="${name%%:*}"
-            if [ -z "${!var}" ]; then echo "::error::GitHub secret ${name#*:} is not set (docs/SETUP.md)"; missing=1; fi
+            if [ -z "${!var}" ]; then echo "::error::GitHub secret or variable ${name#*:} is not set (docs/SETUP.md 5)"; missing=1; fi
           done
           exit $missing
 
       - uses: actions/checkout@v7
 
-      # App Store uploads need the iOS 26 SDK or newer. Picks the newest installed Xcode 26+.
-      - name: Select Xcode
-        run: |
-          xcode=$(ls -d /Applications/Xcode_2[6-9]*.app 2>/dev/null | grep -v -i beta | sort -V | tail -1)
-          if [ -n "$xcode" ]; then sudo xcode-select -s "$xcode"; fi
-          xcodebuild -version | tee -a "$GITHUB_STEP_SUMMARY"
-          xcodebuild -version | head -1 | grep -qE 'Xcode (2[6-9]|[3-9][0-9])' || { echo "::error::Xcode 26 or newer is required"; exit 1; }
+      - name: Xcode, XcodeGen and Swift packages
+        id: setup
+        uses: ./.github/actions/ios-setup
 
-      - name: Generate the Xcode project
+      # Never upload a build that fails its tests or does not start. A passed "iOS build" run of the
+      # same app content and Xcode counts; without one, or if the lookup fails, both run here.
+      - name: Find a passed iOS build (tests + launch check) of this commit
+        id: earlier
+        if: ${{ !inputs.force_launch_check }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          XCODE: ${{ steps.setup.outputs.xcode }}
+        run: python3 .github/scripts/find-launch-check.py
+
+      - name: Unit tests (simulator)
+        id: tests
+        if: steps.earlier.outputs.run_url == ''
         working-directory: ios
-        run: |
-          brew install xcodegen
-          xcodegen generate
+        run: bash ../.github/scripts/ios-unit-tests.sh
+
+      - name: Launch check (iPhone and iPad simulators)
+        if: steps.earlier.outputs.run_url == ''
+        working-directory: ios
+        run: bash ../.github/scripts/ios-launch-check.sh
+
+      # Screenshots of what is about to ship (or why it stopped), readable from the PC. Skipped
+      # when an earlier "iOS build" run was reused: that run already published them.
+      - name: Publish results to the ci-results branch
+        if: ${{ !cancelled() && steps.tests.outcome != 'skipped' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash .github/scripts/publish-ci-results.sh launch-check "$RESULTS_DIR"
 
       - name: Archive and upload
         working-directory: ios
@@ -60,16 +104,21 @@ jobs:
           KEY_ID: ${{ secrets.ASC_KEY_ID }}
           ISSUER: ${{ secrets.ASC_ISSUER_ID }}
           KEY: ${{ secrets.ASC_KEY_P8 }}
-          TEAM: ${{ secrets.APPLE_TEAM_ID }}
+          TEAM: ${{ vars.APPLE_TEAM_ID }}
           BUILD_NUMBER: ${{ github.run_number }}
         run: |
           set -o pipefail
           key="$RUNNER_TEMP/AuthKey_$KEY_ID.p8"
           printf '%s\n' "$KEY" > "$key"
+          # Each run would otherwise leave one more development certificate behind (account limit).
+          KEY_PATH="$key" python3 -u ../.github/scripts/asc-clean-dev-certs.py < /dev/null || echo "::warning::could not revoke old development certificates (docs/SETUP.md)"
+          # Automatic signing registers both bundle IDs (com.mirrordrop.app and .broadcast) with the
+          # App Group and makes their profiles on the first run.
           auth=(-allowProvisioningUpdates -authenticationKeyPath "$key" -authenticationKeyID "$KEY_ID" -authenticationKeyIssuerID "$ISSUER")
           xcodebuild archive \
             -project MirrorDrop.xcodeproj -scheme MirrorDrop -configuration Release \
             -destination 'generic/platform=iOS' -archivePath build/MirrorDrop.xcarchive \
+            -clonedSourcePackagesDirPath "$SPM_PACKAGES_DIR" -disablePackageRepositoryCache \
             -skipPackagePluginValidation -skipMacroValidation \
             "${auth[@]}" DEVELOPMENT_TEAM="$TEAM" CURRENT_PROJECT_VERSION="$BUILD_NUMBER" 2>&1 | tee ../xcodebuild-output.txt | grep -E "error:|\*\* " || true
           grep -q '\*\* ARCHIVE SUCCEEDED \*\*' ../xcodebuild-output.txt
@@ -97,7 +146,10 @@ jobs:
           echo "Uploaded build $BUILD_NUMBER to App Store Connect. It appears in TestFlight after processing (5-30 min)." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Report build errors
-        if: failure() && hashFiles('xcodebuild-output.txt') != ''
+        if: failure()
         run: |
-          { grep -E "error:|failed|No profiles|No Accounts|not have permission|App Group" xcodebuild-output.txt || tail -n 30 xcodebuild-output.txt; } \
-            | tail -n 30 | cut -c1-400 | sed -E 's/%/%25/g' | while IFS= read -r line; do echo "::error title=xcodebuild::${line}"; done
+          for f in xcodebuild-output.txt ios/build/launch-build.txt; do
+            [ -f "$f" ] || continue
+            grep -E "error:|failed|XCTAssert|No profiles|No Accounts|not have permission|App Group" "$f" | tail -n 20 | cut -c1-400 | sed -E 's/%/%25/g' \
+              | while IFS= read -r line; do echo "::error title=$(basename "$f")::${line}"; done
+          done
