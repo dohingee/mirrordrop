@@ -166,8 +166,8 @@ for kind in iphone ipad; do
   # First launch is slow (fresh install); 25 s also covers a crash shortly after start.
   check "$udid" "$kind" main 25 "${ko[@]}"
   if [ "$kind" = iphone ]; then
-    check "$udid" iphone diagnostics 6 "${ko[@]}" -MDScreen diagnostics
-    check "$udid" iphone clock 6 "${ko[@]}" -MDScreen clock
+    check "$udid" iphone diagnostics 15 "${ko[@]}" -MDScreen diagnostics
+    check "$udid" iphone clock 15 "${ko[@]}" -MDScreen clock
   fi
   limit 60 xcrun simctl shutdown "$udid" || true
 done
