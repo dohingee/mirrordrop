@@ -1,7 +1,6 @@
 # Checks an iOS change without uploading it: unit tests, then the launch check, on one macOS runner
-# (one queue wait, one package restore). Cost: about 12-18 macOS minutes per run, which count 10x
-# against the private repository's Actions quota (shared by three apps). So a branch push never
-# starts it: start it on purpose when a commit needs checking or screenshots, from the PC by pushing
+# (one queue wait, one package restore). About 25-30 min per run. The repository is public (free
+# Actions minutes), but a branch push still never starts it, to keep runs deliberate: start it on purpose when a commit needs checking or screenshots, from the PC by pushing
 # a tag ios-check-<anything> on that commit (no gh CLI needed), or Actions > iOS build > Run
 # workflow. Same-repository pull requests that touch the app run it too. iOS TestFlight (tag
 # testflight-*) runs the same scripts itself unless this already passed.
@@ -43,6 +42,8 @@ jobs:
     # macos-26-intel: same Xcode 26 as macos-26 (arm64), whose queue kept failing ("not acquired by Runner") in 2026-11.
     runs-on: macos-26-intel
     timeout-minutes: 45
+    # Public repository: pull requests from forks never run here (they are not ours to check).
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     # Only to push the results to the ci-results branch (publish-ci-results.sh touches no other branch).
     permissions:
       contents: write
@@ -65,7 +66,7 @@ jobs:
         timeout-minutes: 35
         run: bash ../.github/scripts/ios-launch-check.sh
 
-      # Fork pull requests get a read-only token; this repository is private, so there are none.
+      # Fork pull requests never get here (job condition); kept as a second guard.
       - name: Publish results to the ci-results branch
         if: ${{ !cancelled() && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
         env:

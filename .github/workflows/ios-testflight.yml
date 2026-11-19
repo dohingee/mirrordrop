@@ -2,8 +2,8 @@
 # on one macOS runner (one queue wait, one package restore). Start it from the PC by pushing a tag
 # testflight-<anything> on the commit to ship, or from the Actions tab. Setup (Apple Developer,
 # App Store Connect API key, GitHub secrets): docs/SETUP.md.
-# Cost (macOS minutes, counted 10x against the private repository's quota): about 8-12 when a
-# passed "iOS build" run is reused, about 18-25 otherwise.
+# Time: about 10-15 min when a passed "iOS build" run is reused, about 25-30 otherwise (free: the
+# repository is public; the team ID is masked in the logs, keys are secrets).
 #  1. Unit tests and 2. launch check (same scripts as ios-build.yml), unless a passed "iOS build"
 #     run already did both for this commit (or an ancestor with no app change since) under the same
 #     Xcode: .github/scripts/find-launch-check.py. Never uploads without both. A test failure stops
@@ -54,6 +54,9 @@ jobs:
           KEY: ${{ secrets.ASC_KEY_P8 }}
           TEAM: ${{ vars.APPLE_TEAM_ID }}
         run: |
+          # Public repository, public logs: the team ID is a variable, not a secret, so mask it here
+          # for every later step of this job (DEVELOPMENT_TEAM, ExportOptions).
+          [ -z "$TEAM" ] || echo "::add-mask::$TEAM"
           missing=0
           for name in KEY_ID:ASC_KEY_ID ISSUER:ASC_ISSUER_ID KEY:ASC_KEY_P8 TEAM:APPLE_TEAM_ID; do
             var="${name%%:*}"

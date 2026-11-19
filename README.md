@@ -5,7 +5,7 @@ iPhone 화면을 같은 Wi-Fi에 있는 TV(Google Cast 지원 기기)로 보내�
 
 - 사진·영상 감상이 목적입니다. 1~3초 정도 늦게 나와도 괜찮은 용도입니다.
 - 화면 영상은 집 안 Wi-Fi 밖으로 나가지 않습니다. iPhone이 직접 TV에 건네줍니다.
-- Mac 없이 GitHub Actions(비공개 저장소)에서 빌드하고, TestFlight로 iPhone에 설치합니다.
+- Mac 없이 GitHub Actions(공개 저장소)에서 빌드하고, TestFlight로 iPhone에 설치합니다.
 
 ## 문서
 | 문서 | 내용 |

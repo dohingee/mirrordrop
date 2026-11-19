@@ -16,13 +16,13 @@
 - 새로 만드는 것(앱 ID, 앱, API 키, 테스터 초대)은 이 설정을 해 달라는 요청 안에서 Claude가 바로 합니다. 요청에 없던 것이면 그 자리에서 한 번 묻습니다.
 
 > 💰 **비용 안내 (Mac 시간)**
-> - 저장소가 **비공개**라서 macOS 빌드 1분은 GitHub 무료 한도에서 10분으로 계산됩니다.
-> - 무료 한도로 쓸 수 있는 macOS 시간은 한 달 약 200분이고, 이 계정의 앱 3개가 함께 씁니다.
-> - 그래서 Mac은 **일부러 시작할 때만** 돕니다. 코드를 올리기(push)만 해서는 아무것도 돌지 않습니다.
+> - 저장소가 **공개**라서 macOS 빌드는 무료이고 한도도 없습니다(2026-11-19 공개로 바꿈. 비공개였을 때 무료 한도를 다 써서 빌드가 막혔기 때문).
+>   - 공개라서 코드·빌드 기록을 누구나 볼 수 있습니다. 키는 GitHub 비밀값이라 가려지고, 팀 ID는 빌드 기록에서 가리도록 해 두었습니다. 다른 사람이 보낸 변경 요청(포크 PR)으로는 Mac 빌드가 돌지 않습니다.
+> - 그래도 Mac은 **일부러 시작할 때만** 돕니다(기다리는 시간 절약, 결과 확인을 분명히 하려고). 코드를 올리기(push)만 해서는 아무것도 돌지 않습니다.
 >   - `iOS build`(`ios-build.yml`): Claude가 `ios-check-<날짜>` 태그를 올리면 시작(손 실행도 가능). 단위 테스트 + iPhone·iPad 시뮬레이터 실행 확인과 화면 캡처.
 >   - `iOS TestFlight`(`ios-testflight.yml`): `testflight-<번호>` 태그로 시작(손 실행도 가능). 같은 앱 내용으로 이미 통과한 검사가 있으면 검사를 건너뛰고 업로드만 합니다.
 >   - 실제 걸린 시간(2026-11-19, `macos-26-intel`): `iOS build` 한 번 약 25~30분, `iOS TestFlight` 한 번 약 25~30분(검사 포함). 즉 한 번에 무료 한도의 약 15%가 듭니다.
-> - 무료 한도를 다 쓰면 Mac 작업이 **시작조차 안 되고 몇 초 만에 실패**합니다(메시지: "recent account payments have failed or your spending limit needs to be increased"). 2026-11-19에 처음 겪었고, 매달 1일에 한도가 다시 채워집니다.
+> - 비공개로 되돌리면 Mac 1분이 무료 한도에서 10분으로 계산되고(한 달 약 200분, 앱 3개가 나눔), 한도를 다 쓰면 Mac 작업이 **몇 초 만에 실패**합니다(메시지: "recent account payments have failed or your spending limit needs to be increased").
 > - 사용량: GitHub → **Settings** → **Billing**.
 
 ---
@@ -71,7 +71,7 @@
 ✋ https://github.com 에 **`dohingee`** 로 로그인합니다.
 
 🤖 Claude가 `dohingee/mirrordrop`에서 확인합니다.
-- 저장소가 **비공개(Private)** 인지, **Actions**가 켜져 있는지.
+- 저장소가 **공개(Public)** 인지(이유는 위 비용 안내), **Actions**가 켜져 있는지.
 
 GitHub 비밀값은 **저장소마다 따로**입니다. Bottlepost에 넣은 값이 있어도 이 저장소에 다시 넣어야 합니다.
 **Settings** → **Secrets and variables** → **Actions**

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pushes CI results to the ci-results branch so they can be read from the Windows PC with plain git
-# (no gh CLI, private repository):
+# (no gh CLI needed):
 #   git fetch origin ci-results && git archive origin/ci-results | tar -x -C <folder>
 # The branch is always one orphan commit, force-pushed (no history piles up in the repository).
 #   publish-ci-results.sh launch-check <dir> : <dir> becomes <short sha>/, replacing the previous

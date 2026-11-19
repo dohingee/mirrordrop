@@ -3,13 +3,13 @@
 ## 목표
 - iPhone 화면을 같은 Wi-Fi의 Google Cast 기기(TV, 스틱)로 보여 주는 **무료 앱**. 나중에 광고(AdMob)를 붙인다.
 - 주 용도: 사진·영상 보기. **1~3초 지연은 괜찮다**(게임·발표용 아님).
-- 운영 환경: Mac 없음(Windows PC). 코드는 이 PC의 git + 비공개 GitHub 저장소, 빌드는 GitHub Actions(macOS)를 일부러 시작할 때만 돌린다(`CLAUDE.md` "빌드"). Claude가 PC에서 시뮬레이터 캡처로 먼저 확인한 뒤, TestFlight + 실제 iPhone(iOS 27) + 실제 Cast 기기로 시험한다.
+- 운영 환경: Mac 없음(Windows PC). 코드는 이 PC의 git + 공개 GitHub 저장소, 빌드는 GitHub Actions(macOS)를 일부러 시작할 때만 돌린다(`CLAUDE.md` "빌드"). Claude가 PC에서 시뮬레이터 캡처로 먼저 확인한 뒤, TestFlight + 실제 iPhone(iOS 27) + 실제 Cast 기기로 시험한다.
 - 앱이 무엇이고 누구를 위한 것인지, App Store 심사 위험 점검: `docs/SPEC.md`.
 
 ## 단계
 | 단계 | 할 일 | 끝났다고 보는 기준 |
 |---|---|---|
-| 0. 준비 | 심사 위험 점검(`docs/SPEC.md`), 비공개 저장소, Apple 번들 ID·App Group, App Store Connect 앱, GitHub 비밀값, 손 실행·태그 실행 빌드 (`docs/SETUP.md`) | 심사 위험 점검 결론이 "진행"이고, `testflight-` 태그로 TestFlight에 첫 빌드가 올라감 |
+| 0. 준비 | 심사 위험 점검(`docs/SPEC.md`), GitHub 저장소, Apple 번들 ID·App Group, App Store Connect 앱, GitHub 비밀값, 손 실행·태그 실행 빌드 (`docs/SETUP.md`) | 심사 위험 점검 결론이 "진행"이고, `testflight-` 태그로 TestFlight에 첫 빌드가 올라감 |
 | **1. PoC (지금)** | 시험 화면: Cast 연결, 테스트 A(인터넷 샘플 영상), 테스트 B(내 화면 → TV), 진단 화면 | `docs/POC_TEST.md`의 핵심 항목(A, B, 메모리)이 통과하거나, 막히는 이유가 분명해짐 |
 | 2. MVP | iOS 27+ ScreenCaptureKit 캡처 경로 추가(17~26은 ReplayKit 유지), 쓰기 쉬운 한 화면 UI, 연결 끊김·Wi-Fi 변경 처리, 화질/지연 설정, 소리 정리, 필요하면 커스텀 수신기 | 처음 쓰는 사람이 설명 없이 TV에 화면을 띄움 |
 | 3. 광고 + 정책 | AdMob(UMP 동의 포함), 개인정보처리방침, App Privacy 답안, 심사 메모 | 광고 켠 빌드가 정책 점검 통과 |
