@@ -85,8 +85,10 @@ ko=(-AppleLanguages "(ko)" -AppleLocale ko_KR)
 # minutes and names its step. (Run #2 booted both simulators at once and hung silently for 21 min
 # until the job was cancelled; one at a time is what works for Bottlepost.) macOS has no `timeout`:
 # perl's alarm survives exec, so SIGALRM ends the command (exit 142).
-# Worst case with one boot retry: about 16 min for that device plus about 10 for the other and the
-# Release build; the workflow step allows 35 min, so these limits fire first and name the step.
+# Worst case (one boot retry, one launch retry, every launch at its 180 s limit): boots and installs
+# about 20 min, four launches with screenshots about 15 min, so a hang can still reach the workflow
+# step's 35 min limit; a typical run is about 15 min. Whatever fires, summary.txt names the last step
+# reached (the timestamps in the log show where the time went).
 limit() {  # seconds command...  (exit code of the command, 142 on timeout)
   local secs=$1; shift
   perl -e 'alarm shift; exec @ARGV or die "exec: $!"' "$secs" "$@"
@@ -108,10 +110,13 @@ check() {  # udid kind name wait [app arguments...]
   echo "[$(date +%H:%M:%S)] launch $name on $kind"
   # `simctl launch` itself can take over a minute on the Intel runner right after a boot (iOS
   # TestFlight run #6: the first iPhone launch hit a 60 s limit, no pid, no crash, home screen in the
-  # screenshot; the next launches took about 60 s too). So 180 s, and one more try without a pid.
+  # screenshot; the next launches took about 60 s too). So 180 s, and once per run (like the boot
+  # retry) one more try without a pid, noted in the summary so a first-launch hang is not hidden.
   pid=$(limit 180 xcrun simctl launch --terminate-running-process "$udid" "$bundle" "$@" | awk '{print $NF}') || true
-  if [ -z "$pid" ]; then
-    echo "::warning::launch $name on $kind returned no pid; trying once more"
+  if [ -z "$pid" ] && [ "$launch_retried" = 0 ]; then
+    launch_retried=1
+    echo "::warning::launch $name on $kind returned no pid within 180 s; trying once more"
+    summary "Launch: $name on $kind gave no pid in 180 s, launched a second time"
     pid=$(limit 180 xcrun simctl launch --terminate-running-process "$udid" "$bundle" "$@" | awk '{print $NF}') || true
   fi
   sleep "$wait"
@@ -126,6 +131,7 @@ check() {  # udid kind name wait [app arguments...]
 
 touch "$out/.started"
 retried=0
+launch_retried=0
 for kind in iphone ipad; do
   devtype=$([ "$kind" = iphone ] && echo "$iphone" || echo "$ipad")
   echo "[$(date +%H:%M:%S)] create $kind ($devtype)"
