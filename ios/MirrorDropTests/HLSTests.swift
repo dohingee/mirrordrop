@@ -31,7 +31,7 @@ final class PlaylistTests: XCTestCase {
         #EXTM3U
         #EXT-X-VERSION:7
         #EXT-X-INDEPENDENT-SEGMENTS
-        #EXT-X-TARGETDURATION:2
+        #EXT-X-TARGETDURATION:1
         #EXT-X-MEDIA-SEQUENCE:7
         #EXT-X-MAP:URI="init.mp4"
         #EXTINF:1.000,
@@ -51,7 +51,17 @@ final class PlaylistTests: XCTestCase {
 
     func testTargetDurationCoversEverySegment() {
         XCTAssertEqual(HLSPlaylist.targetDuration(segments([(0, 1.0)])), 1)
-        XCTAssertEqual(HLSPlaylist.targetDuration(segments([(0, 1.0), (1, 2.4)])), 3)
+        // Rounded to the nearest second, as RFC 8216 allows.
+        XCTAssertEqual(HLSPlaylist.targetDuration(segments([(0, 1.0), (1, 2.4)])), 2)
+        XCTAssertEqual(HLSPlaylist.targetDuration(segments([(0, 1.0), (1, 2.6)])), 3)
+    }
+
+    /// Keyframe-aligned 1 s segments are slightly longer than 1 s; the target must stay 1,
+    /// because players hold back about three target durations from the live edge.
+    func testSlightlyLongSegmentsKeepTargetOne() {
+        XCTAssertEqual(HLSPlaylist.targetDuration(segments([(0, 1.033), (1, 1.067), (2, 1.499)])), 1)
+        XCTAssertEqual(HLSPlaylist.targetDuration(segments([(0, 1.5)])), 2)
+        XCTAssertEqual(HLSPlaylist.targetDuration(segments([(0, 0.5)])), 1)
     }
 
     func testMasterPlaylist() {

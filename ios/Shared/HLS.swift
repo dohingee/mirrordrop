@@ -53,10 +53,13 @@ enum HLSPlaylist {
         return Int(digits)
     }
 
-    /// EXT-X-TARGETDURATION must be >= every EXTINF rounded to the nearest integer.
+    /// EXT-X-TARGETDURATION must be >= every EXTINF rounded to the nearest integer (RFC 8216 4.3.3.1).
+    /// Nearest, not up: AVAssetWriter cuts at the first keyframe after the interval, so 1 s segments
+    /// come out a little longer (1.033 s). Rounding up made the target 2, and players start about
+    /// three target durations behind the live edge, so the delay doubled (about 6 s on a real TV).
     static func targetDuration(_ segments: [MediaSegment]) -> Int {
         let longest = segments.map(\.duration).max() ?? 1
-        return max(1, Int(longest.rounded(.up)))
+        return max(1, Int(longest.rounded(.toNearestOrAwayFromZero)))
     }
 
     /// Live (sliding window) media playlist. No EXT-X-ENDLIST.
