@@ -106,7 +106,14 @@ check() {  # udid kind name wait [app arguments...]
   local udid=$1 kind=$2 name=$3 wait=$4; shift 4
   local pid
   echo "[$(date +%H:%M:%S)] launch $name on $kind"
-  pid=$(limit 60 xcrun simctl launch --terminate-running-process "$udid" "$bundle" "$@" | awk '{print $NF}') || true
+  # `simctl launch` itself can take over a minute on the Intel runner right after a boot (iOS
+  # TestFlight run #6: the first iPhone launch hit a 60 s limit, no pid, no crash, home screen in the
+  # screenshot; the next launches took about 60 s too). So 180 s, and one more try without a pid.
+  pid=$(limit 180 xcrun simctl launch --terminate-running-process "$udid" "$bundle" "$@" | awk '{print $NF}') || true
+  if [ -z "$pid" ]; then
+    echo "::warning::launch $name on $kind returned no pid; trying once more"
+    pid=$(limit 180 xcrun simctl launch --terminate-running-process "$udid" "$bundle" "$@" | awk '{print $NF}') || true
+  fi
   sleep "$wait"
   limit 30 xcrun simctl io "$udid" screenshot --type=png "$out/$kind-$name.png" >/dev/null 2>&1 || true
   if [ -n "$pid" ] && ps -p "$pid" >/dev/null 2>&1; then
