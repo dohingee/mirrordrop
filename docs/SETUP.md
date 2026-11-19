@@ -21,7 +21,7 @@
 > - 그래도 Mac은 **일부러 시작할 때만** 돕니다(기다리는 시간 절약, 결과 확인을 분명히 하려고). 코드를 올리기(push)만 해서는 아무것도 돌지 않습니다.
 >   - `iOS build`(`ios-build.yml`): Claude가 `ios-check-<날짜>` 태그를 올리면 시작(손 실행도 가능). 단위 테스트 + iPhone·iPad 시뮬레이터 실행 확인과 화면 캡처.
 >   - `iOS TestFlight`(`ios-testflight.yml`): `testflight-<번호>` 태그로 시작(손 실행도 가능). 같은 앱 내용으로 이미 통과한 검사가 있으면 검사를 건너뛰고 업로드만 합니다.
->   - 실제 걸린 시간(2026-11-19, `macos-26-intel`): `iOS build` 한 번 약 25~30분, `iOS TestFlight` 한 번 약 25~30분(검사 포함). 즉 한 번에 무료 한도의 약 15%가 듭니다.
+>   - 실제 걸린 시간(2026-11-19, `macos-26-intel`. 그 뒤 시뮬레이터 멈춤이 잦아 기본을 `macos-26`(Apple 칩)으로 바꿈): `iOS build` 한 번 약 25~30분, `iOS TestFlight` 한 번 약 25~30분(검사 포함). 즉 한 번에 무료 한도의 약 15%가 듭니다.
 > - 비공개로 되돌리면 Mac 1분이 무료 한도에서 10분으로 계산되고(한 달 약 200분, 앱 3개가 나눔), 한도를 다 쓰면 Mac 작업이 **몇 초 만에 실패**합니다(메시지: "recent account payments have failed or your spending limit needs to be increased").
 > - 사용량: GitHub → **Settings** → **Billing**.
 

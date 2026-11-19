@@ -39,8 +39,10 @@ concurrency:
 
 jobs:
   build:
-    # macos-26-intel: same Xcode 26 as macos-26 (arm64), whose queue kept failing ("not acquired by Runner") in 2026-11.
-    runs-on: macos-26-intel
+    # macos-26 (arm64, Apple silicon). The Intel runner stalled booting simulators again and again
+    # (iOS TestFlight #8 and #9, 2026-11-19); the arm64 queue failures ("not acquired by Runner",
+    # 2026-11-18) were while the repository was private. Back to macos-26-intel if that queue fails.
+    runs-on: macos-26
     timeout-minutes: 45
     # Public repository: pull requests from forks never run here (they are not ours to check).
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository

@@ -20,10 +20,10 @@ on:
   workflow_dispatch:
     inputs:
       runner:
-        description: "macOS runner (intel is the default: the arm64 queue kept failing in 2026-11; if one waits too long, try the other)"
+        description: "macOS runner (arm64 is the default: the Intel runner kept stalling on simulator boots, TestFlight #8/#9; if one waits too long or stalls, try the other)"
         type: choice
-        options: [macos-26-intel, macos-26]
-        default: macos-26-intel
+        options: [macos-26, macos-26-intel]
+        default: macos-26
       force_launch_check:
         description: "Run the unit tests and the launch check even if iOS build already passed them for this commit"
         type: boolean
@@ -41,7 +41,7 @@ concurrency:
 
 jobs:
   upload:
-    runs-on: ${{ inputs.runner || 'macos-26-intel' }}
+    runs-on: ${{ inputs.runner || 'macos-26' }}
     timeout-minutes: 60
     env:
       RESULTS_DIR: ${{ github.workspace }}/ios/build/ci-results
