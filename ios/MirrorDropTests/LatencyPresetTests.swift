@@ -31,14 +31,14 @@ final class LatencyPresetTests: XCTestCase {
         }
     }
 
-    func testDefaultIsL1() {
+    func testDefaultIsL3() {
         let preset = LatencyPreset.default
-        XCTAssertEqual(preset, .l1)
-        XCTAssertEqual(preset.segmentSeconds, 1.0)
-        XCTAssertEqual(preset.playlistWindow, 3)
-        XCTAssertEqual(preset.storedSegments, 6)
+        XCTAssertEqual(preset, .l3)
+        XCTAssertEqual(preset.segmentSeconds, 0.5)
+        XCTAssertEqual(preset.playlistWindow, 6)
+        XCTAssertEqual(preset.storedSegments, 10)
         XCTAssertNil(preset.startOffset)
-        XCTAssertEqual(preset.segmentsBeforeReady, 3)
+        XCTAssertEqual(preset.segmentsBeforeReady, 6)
     }
 
     func testStoredValueRoundTrip() {
@@ -50,21 +50,21 @@ final class LatencyPresetTests: XCTestCase {
     }
 
     func testUnknownStoredValueFallsBackToDefault() {
-        XCTAssertEqual(LatencyPreset(storedValue: nil), .l1)
-        XCTAssertEqual(LatencyPreset(storedValue: "L9"), .l1)
-        XCTAssertEqual(LatencyPreset(storedValue: ""), .l1)
-        XCTAssertEqual(LatencyPreset(storedValue: "l3"), .l1)
+        XCTAssertEqual(LatencyPreset(storedValue: nil), .l3)
+        XCTAssertEqual(LatencyPreset(storedValue: "L9"), .l3)
+        XCTAssertEqual(LatencyPreset(storedValue: ""), .l3)
+        XCTAssertEqual(LatencyPreset(storedValue: "l1"), .l3)
     }
 
     func testSaveAndLoadThroughUserDefaults() throws {
         let suite = "LatencyPresetTests"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        XCTAssertEqual(LatencyPreset.load(from: defaults), .l1)
-        LatencyPreset.l3.save(to: defaults)
         XCTAssertEqual(LatencyPreset.load(from: defaults), .l3)
-        defaults.set("bogus", forKey: AppGroup.latencyPresetKey)
+        LatencyPreset.l1.save(to: defaults)
         XCTAssertEqual(LatencyPreset.load(from: defaults), .l1)
+        defaults.set("bogus", forKey: AppGroup.latencyPresetKey)
+        XCTAssertEqual(LatencyPreset.load(from: defaults), .l3)
     }
 }
 

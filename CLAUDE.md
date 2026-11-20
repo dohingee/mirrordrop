@@ -10,7 +10,7 @@ iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 
   - `App/BroadcastMonitor.swift`: App Group에서 확장 상태를 읽음(Darwin 알림 + 1초 폴링).
   - `UI/`: 테스트 화면(`ContentView`), 진단(`DiagnosticsView`), 지연 측정 시계, Cast 버튼·방송 선택기 래퍼.
 - `MirrorDropBroadcast/` Broadcast Upload Extension (`RPBroadcastSampleHandler`)
-  - `MirrorPipeline`: ReplayKit 프레임 → `FrameScaler`(VideoToolbox, 1280x720 레터박스, 가로 화면 회전) → `HLSSegmenter`(AVAssetWriter `.mpeg4AppleHLS`, 1초 fMP4 조각, 메모리에서만) → `StreamStore` → `HTTPServer`(Network.framework `NWListener`).
+  - `MirrorPipeline`: ReplayKit 프레임 → `FrameScaler`(VideoToolbox, 1280x720 레터박스, 가로 화면 회전) → `HLSSegmenter`(AVAssetWriter `.mpeg4AppleHLS`, fMP4 조각, 길이는 `LatencyPreset`에 따름(기본 L3, 0.5초), 메모리에서만) → `StreamStore` → `HTTPServer`(Network.framework `NWListener`).
   - 정지 화면에서는 ReplayKit이 프레임을 안 주므로 마지막 프레임을 반복해 조각이 계속 나오게 한다.
   - `StatusPublisher`: 상태·메모리·요청 기록을 App Group UserDefaults에 쓰고 Darwin 알림을 보낸다.
 - `Shared/` 앱·확장·테스트가 함께 컴파일: App Group 상수와 상태 모델, HLS 재생목록, HTTP 파서·라우터, 조각 링버퍼, IP·메모리 측정.
