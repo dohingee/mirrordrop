@@ -46,9 +46,10 @@ final class FrameScaler {
     func scale(_ source: CVPixelBuffer, orientation: CGImagePropertyOrientation) -> CVPixelBuffer? {
         let turn: CFString?
         switch orientation {
-        // EXIF semantics: .right means the picture must be turned 90° clockwise to look upright.
-        case .right, .rightMirrored: turn = kVTRotation_CW90
-        case .left, .leftMirrored: turn = kVTRotation_CCW90
+        // Observed on a real iPhone (2026-11-20, build 10): the EXIF-style turn (.right clockwise)
+        // put landscape content upside down on the TV, so both landscape values turn the other way.
+        case .right, .rightMirrored: turn = kVTRotation_CCW90
+        case .left, .leftMirrored: turn = kVTRotation_CW90
         default: turn = nil
         }
 
