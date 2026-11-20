@@ -168,7 +168,10 @@ struct ContentView: View {
                 CastButtonView().frame(width: 44, height: 44)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(cast.isConnected ? (cast.deviceName ?? "TV") : tvStateText).font(.body.weight(.semibold))
-                    Text(cast.isConnected ? "연결됨" : "왼쪽 버튼을 눌러 TV를 고르세요")
+                    // The Cast button hides itself while no TV is found, so do not point at it then.
+                    Text(cast.isConnected ? "연결됨"
+                         : cast.connection == .noDevices ? "TV를 찾으면 여기에 버튼이 나타나요"
+                         : "왼쪽 버튼을 눌러 TV를 고르세요")
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
