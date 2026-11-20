@@ -11,7 +11,7 @@
 |---|---|---|
 | 0. 준비 | 심사 위험 점검(`docs/SPEC.md`), GitHub 저장소, Apple 번들 ID·App Group, App Store Connect 앱, GitHub 비밀값, 손 실행·태그 실행 빌드 (`docs/SETUP.md`) | 심사 위험 점검 결론이 "진행"이고, `testflight-` 태그로 TestFlight에 첫 빌드가 올라감 |
 | **1. PoC (지금)** | 시험 화면: Cast 연결, 테스트 A(인터넷 샘플 영상), 테스트 B(내 화면 → TV), 진단 화면 | `docs/POC_TEST.md`의 핵심 항목(A, B, 메모리)이 통과하거나, 막히는 이유가 분명해짐 |
-| 2. MVP | iOS 27+ ScreenCaptureKit 캡처 경로 추가(17~26은 ReplayKit 유지), 쓰기 쉬운 한 화면 UI, 연결 끊김·Wi-Fi 변경 처리, 화질/지연 설정(PoC 실측 약 6~6.5초. TARGETDURATION 반올림 수정은 효과 없었고, 재생기가 재생목록 맨 앞부터 재생하는 것으로 보여 빌드 12의 "지연 실험" L0~L3로 잼(`docs/POC_TEST.md`). 더 줄이려면 0.5초 조각 + 재생목록 창·저장 조각 수·TARGETDURATION을 함께 맞춘 실험 스위치로 기본 수신기에서 줄어드는지 먼저 잰다), 소리 정리, 필요하면 커스텀 수신기 | 처음 쓰는 사람이 설명 없이 TV에 화면을 띄움 |
+| 2. MVP | iOS 27+ ScreenCaptureKit 캡처 경로 추가(17~26은 ReplayKit 유지), 쓰기 쉬운 한 화면 UI, 연결 끊김·Wi-Fi 변경 처리, 화질/지연 설정(PoC 실측 약 6~6.5초. TARGETDURATION 반올림 수정은 효과 없었고, 재생기가 재생목록 맨 앞부터 재생하는 것으로 보여 빌드 13의 "지연 실험" L0~L3로 잼(`docs/POC_TEST.md`). 더 줄이려면 0.5초 조각 + 재생목록 창·저장 조각 수·TARGETDURATION을 함께 맞춘 실험 스위치로 기본 수신기에서 줄어드는지 먼저 잰다), 소리 정리, 필요하면 커스텀 수신기 | 처음 쓰는 사람이 설명 없이 TV에 화면을 띄움 |
 | 3. 광고 + 정책 | AdMob(UMP 동의 포함), 개인정보처리방침, App Privacy 답안, 심사 메모 | 광고 켠 빌드가 정책 점검 통과 |
 | 4. 안정화 + 출시 | 여러 TV·스틱 기종 시험, 오래 켜 두기(발열·메모리), 스토어 자료, 심사 제출 | App Store 출시 |
 
