@@ -5,6 +5,7 @@ struct ContentView: View {
     @EnvironmentObject private var monitor: BroadcastMonitor
     @AppStorage("autoCast") private var autoCast = true
     @State private var includeAudio = AppGroup.defaults?.bool(forKey: AppGroup.includeAudioKey) ?? false
+    @State private var latencyPreset = LatencyPreset.load()
     @State private var sampleURL = SampleStream.fmp4.url
     @State private var sentURL: URL?
     @State private var path = LaunchScreen.fromArguments.map { [$0] } ?? []
@@ -72,6 +73,13 @@ struct ContentView: View {
                 .onChange(of: includeAudio) { _, value in
                     AppGroup.defaults?.set(value, forKey: AppGroup.includeAudioKey)
                 }
+            Picker("지연 실험", selection: $latencyPreset) {
+                ForEach(LatencyPreset.allCases) { Text($0.label).tag($0) }
+            }
+            .disabled(monitor.isLive)
+            .onChange(of: latencyPreset) { _, value in value.save() }
+            Text("소리·지연 실험 설정은 다음 방송 시작부터 적용됩니다.")
+                .font(.caption).foregroundStyle(.secondary)
             Toggle("준비되면 자동으로 TV에 띄우기", isOn: $autoCast)
             HStack(spacing: 16) {
                 BroadcastPickerView().frame(width: 60, height: 60)

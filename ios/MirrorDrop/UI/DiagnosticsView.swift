@@ -29,6 +29,7 @@ struct DiagnosticsView: View {
                 LabeledContent("코덱", value: s.codecs ?? "-")
                 LabeledContent("화면 방향 값", value: "\(s.orientation)")
                 LabeledContent("앱 소리", value: s.audioEnabled ? "켜짐 (샘플 \(s.audioSamplesIn))" : "꺼짐")
+                LabeledContent("지연 실험 (확장이 쓴 값)", value: Self.presetText(s.latencyPreset))
             }
             Section("서버 요청 (TV가 iPhone에서 가져갔는지)") {
                 LabeledContent("총 요청 수", value: "\(s.requestCount)")
@@ -49,6 +50,13 @@ struct DiagnosticsView: View {
                 ForEach(Array(s.errors.reversed().enumerated()), id: \.offset) { _, line in
                     Text(line).font(.caption2.monospaced()).foregroundStyle(.red)
                 }
+            }
+            Section {
+                LabeledContent("지금", value: cast.liveLagText)
+            } header: {
+                Text("TV 재생 위치")
+            } footer: {
+                Text("TV가 아는 가장 새 조각의 끝에서 얼마나 뒤를 재생하는지입니다. 인코딩 시간은 들어 있지 않습니다.")
             }
             Section("Cast 기록") {
                 ForEach(Array(cast.events.reversed().enumerated()), id: \.offset) { _, line in
@@ -91,8 +99,9 @@ struct DiagnosticsView: View {
         let info = Bundle.main.infoDictionary
         lines.append("앱 \(info?["CFBundleShortVersionString"] ?? "?") (\(info?["CFBundleVersion"] ?? "?")), iOS \(UIDevice.current.systemVersion)")
         lines.append("Cast: \(cast.stateText), 기기: \(cast.deviceName ?? "-"), TV 상태: \(cast.mediaText)")
+        lines.append("TV 재생 위치: \(cast.liveLagText)")
         lines.append("Cast 오류: \(cast.lastError ?? "-")")
-        lines.append("확장 상태: \(monitor.stateText), 오디오: \(s.audioEnabled)")
+        lines.append("확장 상태: \(monitor.stateText), 오디오: \(s.audioEnabled), 지연 실험: \(s.latencyPreset ?? "-")")
         lines.append(String(format: "메모리: 지금 %.1fMB, 최고 %.1fMB", s.memoryMB, s.peakMemoryMB))
         lines.append("프레임: 입력 \(s.framesIn), 인코딩 \(s.framesEncoded), 반복 \(s.framesRepeated), 건너뜀 \(s.framesSkipped), 버림 \(s.framesDropped)")
         lines.append("조각: \(s.segmentsProduced), 보관 \(s.segmentsInWindow), 마지막 \(s.lastSegmentDuration)s/\(s.lastSegmentBytes)B, 코덱 \(s.codecs ?? "-"), 방향 \(s.orientation)")
@@ -118,4 +127,9 @@ struct DiagnosticsView: View {
     }()
 
     private static func time(_ date: Date) -> String { formatter.string(from: date) }
+
+    private static func presetText(_ code: String?) -> String {
+        guard let code else { return "-" }
+        return LatencyPreset(rawValue: code)?.label ?? code
+    }
 }

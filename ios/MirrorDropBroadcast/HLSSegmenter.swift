@@ -77,7 +77,8 @@ final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
         let compression: [String: Any] = [
             AVVideoAverageBitRateKey: config.bitRate,
             AVVideoExpectedSourceFrameRateKey: config.frameRate,
-            AVVideoMaxKeyFrameIntervalKey: config.frameRate,
+            // One keyframe per segment: frames per segment (30 at 1 s, 15 at 0.5 s).
+            AVVideoMaxKeyFrameIntervalKey: max(1, Int((Double(config.frameRate) * config.segmentSeconds).rounded())),
             AVVideoMaxKeyFrameIntervalDurationKey: config.segmentSeconds,
             AVVideoAllowFrameReorderingKey: false,
             AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,

@@ -11,16 +11,18 @@ final class StreamStore {
     }
 
     let playlistWindow: Int
+    let startOffset: Double?
     let format: Format
     private let lock = NSLock()
     private var ring: SegmentRing
     private var initSegment: Data?
     private var codecs: String?
 
-    init(format: Format, playlistWindow: Int = 4, storedSegments: Int = 7) {
+    init(format: Format, playlistWindow: Int = 4, storedSegments: Int = 7, startOffset: Double? = nil) {
         precondition(storedSegments >= playlistWindow)
         self.format = format
         self.playlistWindow = playlistWindow
+        self.startOffset = startOffset
         ring = SegmentRing(capacity: storedSegments)
     }
 
@@ -61,6 +63,7 @@ final class StreamStore {
             bandwidth: format.bandwidth,
             width: format.width,
             height: format.height,
-            frameRate: format.frameRate)
+            frameRate: format.frameRate,
+            startOffset: startOffset)
     }
 }

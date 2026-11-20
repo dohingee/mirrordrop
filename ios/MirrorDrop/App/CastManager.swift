@@ -15,9 +15,12 @@ final class CastManager: NSObject, ObservableObject {
     @Published private(set) var mediaText = "-"
     @Published private(set) var lastError: String?
     @Published private(set) var events: [String] = []
+    /// Receiver's live seekable range end and playback position (seconds), or nil when unknown.
+    @Published private(set) var liveLag: (end: Double, position: Double)?
     private(set) var sdkLog: [String] = []
     private var isSetUp = false
     private weak var observedClient: GCKRemoteMediaClient?
+    private var lagTimer: Timer?
 
     func setUp() {
         guard !isSetUp else { return }
@@ -32,6 +35,9 @@ final class CastManager: NSObject, ObservableObject {
         NotificationCenter.default.addObserver(self, selector: #selector(castStateDidChange),
                                                name: NSNotification.Name.gckCastStateDidChange, object: context)
         refreshState()
+        lagTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+            self?.refreshLiveLag()
+        }
     }
 
     private var remoteClient: GCKRemoteMediaClient? {
@@ -96,6 +102,38 @@ final class CastManager: NSObject, ObservableObject {
             observedClient?.remove(self)
             client.add(self)
             observedClient = client
+        }
+    }
+
+    /// "라이브 끝에서 X.X초 뒤" for diagnostics, with the raw values it came from.
+    var liveLagText: String {
+        guard let liveLag else { return "알 수 없음" }
+        return String(format: "라이브 끝에서 %.1f초 뒤 (끝 %.1f, 위치 %.1f)",
+                      liveLag.end - liveLag.position, liveLag.end, liveLag.position)
+    }
+
+    /// End of the receiver's live seekable range and its (extrapolated) playback position.
+    /// End minus position is buffering behind the newest segment the receiver knows about;
+    /// encoding and playlist-polling time on top of that are not included. Not clamped at zero,
+    /// so a negative value (receiver's range end held back) stays visible.
+    private func refreshLiveLag() {
+        var sample: (end: Double, position: Double)?
+        if isConnected, let client = remoteClient, client.mediaStatus?.playerState == .playing {
+            // Both return 0 with no media; the range end is invalid (not finite) when the stream is not live.
+            let end = client.approximateLiveSeekableRangeEnd()
+            let position = client.approximateStreamPosition()
+            if end.isFinite, end > 0, position.isFinite, position > 0 {
+                sample = (end, position)
+            }
+        }
+        // Publish only visible changes (one decimal) to avoid needless view updates.
+        switch (sample, liveLag) {
+        case (nil, nil):
+            break
+        case let (new?, old?) where abs(new.end - old.end) < 0.05 && abs(new.position - old.position) < 0.05:
+            break
+        default:
+            liveLag = sample
         }
     }
 

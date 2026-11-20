@@ -111,6 +111,8 @@ struct StreamSnapshot {
     var width: Int
     var height: Int
     var frameRate: Double
+    /// EXT-X-START TIME-OFFSET for the media playlist, if the latency preset asks for one.
+    var startOffset: Double? = nil
 }
 
 /// Maps a request to a response. Paths look like /<token>/live.m3u8.
@@ -143,7 +145,7 @@ struct StreamRouter {
                                           width: snapshot.width, height: snapshot.height, frameRate: snapshot.frameRate)
             return playlist(text)
         case HLSPlaylist.mediaName:
-            return playlist(HLSPlaylist.media(snapshot.playlistSegments))
+            return playlist(HLSPlaylist.media(snapshot.playlistSegments, startOffset: snapshot.startOffset))
         case HLSPlaylist.initName:
             guard let data = snapshot.initSegment else { return plain(404, "not ready") }
             return media(data, cache: "max-age=3600")

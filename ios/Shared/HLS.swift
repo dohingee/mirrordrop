@@ -63,11 +63,18 @@ enum HLSPlaylist {
     }
 
     /// Live (sliding window) media playlist. No EXT-X-ENDLIST.
-    static func media(_ segments: [MediaSegment]) -> String {
+    /// `startOffset` adds EXT-X-START (negative: seconds before the playlist end) as a hint to the
+    /// player where to begin; players that ignore it are unaffected. Nil keeps the output unchanged.
+    static func media(_ segments: [MediaSegment], startOffset: Double? = nil) -> String {
         var lines = [
             "#EXTM3U",
             "#EXT-X-VERSION:7",
             "#EXT-X-INDEPENDENT-SEGMENTS",
+        ]
+        if let startOffset {
+            lines.append("#EXT-X-START:TIME-OFFSET=" + String(format: "%.1f", startOffset) + ",PRECISE=NO")
+        }
+        lines += [
             "#EXT-X-TARGETDURATION:\(targetDuration(segments))",
             "#EXT-X-MEDIA-SEQUENCE:\(segments.first?.sequence ?? 0)",
             "#EXT-X-MAP:URI=\"\(initName)\"",

@@ -7,12 +7,11 @@ import ReplayKit
 /// All mutable state lives on `queue`.
 final class MirrorPipeline: HLSSegmenterDelegate {
     static let preferredPort: UInt16 = 8765
-    /// The app waits for this many segments before telling the TV to play.
-    static let segmentsBeforeReady = 3
 
     private let queue = DispatchQueue(label: "com.mirrordrop.pipeline")
     private let status = StatusPublisher()
     private let config: HLSSegmenter.Config
+    private let preset: LatencyPreset
     private let store: StreamStore
     private let token: String
     private var server: HTTPServer?
@@ -32,11 +31,16 @@ final class MirrorPipeline: HLSSegmenterDelegate {
 
     init() {
         let includeAudio = AppGroup.defaults?.bool(forKey: AppGroup.includeAudioKey) ?? false
-        let config = HLSSegmenter.Config(includeAudio: includeAudio)
+        let preset = LatencyPreset.load()
+        self.preset = preset
+        let config = HLSSegmenter.Config(segmentSeconds: preset.segmentSeconds, includeAudio: includeAudio)
         self.config = config
         store = StreamStore(format: .init(width: config.width, height: config.height,
                                           frameRate: Double(config.frameRate),
-                                          bandwidth: config.bitRate + (includeAudio ? 128_000 : 0)))
+                                          bandwidth: config.bitRate + (includeAudio ? 128_000 : 0)),
+                            playlistWindow: preset.playlistWindow,
+                            storedSegments: preset.storedSegments,
+                            startOffset: preset.startOffset)
         token = Self.randomToken()
     }
 
@@ -60,8 +64,12 @@ final class MirrorPipeline: HLSSegmenterDelegate {
             $0.state = .starting
             $0.startedAt = Date()
             $0.audioEnabled = self.config.includeAudio
+            $0.latencyPreset = self.preset.code
         }
-        status.log("broadcast started, ip=\(ip), audio=\(config.includeAudio)")
+        let start = preset.startOffset.map { String($0) } ?? "-"
+        status.log("broadcast started, ip=\(ip), audio=\(config.includeAudio), preset=\(preset.code) "
+                   + "(segment \(preset.segmentSeconds)s, window \(preset.playlistWindow), "
+                   + "stored \(preset.storedSegments), start \(start))")
 
         let server = HTTPServer(router: StreamRouter(token: token), snapshot: { [store] in store.snapshot() })
         server.onReady = { [weak self] port in self?.serverReady(port: port) }
@@ -199,14 +207,16 @@ final class MirrorPipeline: HLSSegmenterDelegate {
     func segmenter(_ segmenter: HLSSegmenter, didOutputSegment data: Data, duration: Double) {
         store.addSegment(duration: duration, data: data)
         let count = store.segmentCount
+        // The app waits for this many segments before telling the TV to play.
+        let ready = preset.segmentsBeforeReady
         status.update {
             $0.segmentsProduced += 1
             $0.segmentsInWindow = count
             $0.lastSegmentDuration = duration
             $0.lastSegmentBytes = data.count
-            if $0.segmentsProduced >= Self.segmentsBeforeReady, $0.state == .starting { $0.state = .streaming }
+            if $0.segmentsProduced >= ready, $0.state == .starting { $0.state = .streaming }
         }
-        if count == Self.segmentsBeforeReady { status.flush(force: true) }
+        if count == ready { status.flush(force: true) }
     }
 
     func segmenter(_ segmenter: HLSSegmenter, didFail message: String) {

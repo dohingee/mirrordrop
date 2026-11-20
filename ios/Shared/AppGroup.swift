@@ -6,6 +6,8 @@ enum AppGroup {
     static let broadcastExtensionID = "com.mirrordrop.app.broadcast"
     static let statusKey = "broadcastStatus"
     static let includeAudioKey = "includeAppAudio"
+    /// `LatencyPreset.rawValue`, read by the extension at broadcast start.
+    static let latencyPresetKey = "latencyPreset"
     /// Darwin notification posted by the extension whenever it writes a new status.
     static let statusNotification = "com.mirrordrop.app.status-changed"
 
@@ -40,6 +42,8 @@ struct BroadcastStatus: Codable, Equatable {
     var framesSkipped = 0
     var framesDropped = 0
     var audioEnabled = false
+    /// `LatencyPreset.code` the extension actually used for this broadcast.
+    var latencyPreset: String?
     var audioSamplesIn = 0
     var segmentsProduced = 0
     var segmentsInWindow = 0
