@@ -31,12 +31,12 @@ final class LatencyPresetTests: XCTestCase {
         }
     }
 
-    func testDefaultMatchesPreviousBehaviour() {
+    func testDefaultIsL1() {
         let preset = LatencyPreset.default
-        XCTAssertEqual(preset, .l0)
+        XCTAssertEqual(preset, .l1)
         XCTAssertEqual(preset.segmentSeconds, 1.0)
-        XCTAssertEqual(preset.playlistWindow, 4)
-        XCTAssertEqual(preset.storedSegments, 7)
+        XCTAssertEqual(preset.playlistWindow, 3)
+        XCTAssertEqual(preset.storedSegments, 6)
         XCTAssertNil(preset.startOffset)
         XCTAssertEqual(preset.segmentsBeforeReady, 3)
     }
@@ -50,21 +50,21 @@ final class LatencyPresetTests: XCTestCase {
     }
 
     func testUnknownStoredValueFallsBackToDefault() {
-        XCTAssertEqual(LatencyPreset(storedValue: nil), .l0)
-        XCTAssertEqual(LatencyPreset(storedValue: "L9"), .l0)
-        XCTAssertEqual(LatencyPreset(storedValue: ""), .l0)
-        XCTAssertEqual(LatencyPreset(storedValue: "l1"), .l0)
+        XCTAssertEqual(LatencyPreset(storedValue: nil), .l1)
+        XCTAssertEqual(LatencyPreset(storedValue: "L9"), .l1)
+        XCTAssertEqual(LatencyPreset(storedValue: ""), .l1)
+        XCTAssertEqual(LatencyPreset(storedValue: "l3"), .l1)
     }
 
     func testSaveAndLoadThroughUserDefaults() throws {
         let suite = "LatencyPresetTests"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defer { defaults.removePersistentDomain(forName: suite) }
-        XCTAssertEqual(LatencyPreset.load(from: defaults), .l0)
+        XCTAssertEqual(LatencyPreset.load(from: defaults), .l1)
         LatencyPreset.l3.save(to: defaults)
         XCTAssertEqual(LatencyPreset.load(from: defaults), .l3)
         defaults.set("bogus", forKey: AppGroup.latencyPresetKey)
-        XCTAssertEqual(LatencyPreset.load(from: defaults), .l0)
+        XCTAssertEqual(LatencyPreset.load(from: defaults), .l1)
     }
 }
 

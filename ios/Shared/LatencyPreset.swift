@@ -10,7 +10,9 @@ enum LatencyPreset: String, CaseIterable, Identifiable {
     case l2 = "L2"
     case l3 = "L3"
 
-    static let `default` = LatencyPreset.l0
+    /// L1: on a real TV (2026-11-21, build 13) the tester found L0 and L2 unusable and L1 and L3 fine.
+    /// L1 keeps 1 s segments (fewer keyframes and requests than L3).
+    static let `default` = LatencyPreset.l1
 
     var id: String { rawValue }
 
@@ -19,8 +21,8 @@ enum LatencyPreset: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .l0: return "L0 기본 (1초 조각, 목록 4개)"
-        case .l1: return "L1 (1초 조각, 목록 3개)"
+        case .l0: return "L0 (1초 조각, 목록 4개)"
+        case .l1: return "L1 기본 (1초 조각, 목록 3개)"
         case .l2: return "L2 (L1 + 시작 위치 끝에서 2초)"
         case .l3: return "L3 (0.5초 조각, 목록 6개)"
         }

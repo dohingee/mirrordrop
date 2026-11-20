@@ -18,7 +18,10 @@ final class StreamStore {
     private var initSegment: Data?
     private var codecs: String?
 
-    init(format: Format, playlistWindow: Int = 4, storedSegments: Int = 7, startOffset: Double? = nil) {
+    init(format: Format,
+         playlistWindow: Int = LatencyPreset.default.playlistWindow,
+         storedSegments: Int = LatencyPreset.default.storedSegments,
+         startOffset: Double? = LatencyPreset.default.startOffset) {
         precondition(storedSegments >= playlistWindow)
         self.format = format
         self.playlistWindow = playlistWindow
