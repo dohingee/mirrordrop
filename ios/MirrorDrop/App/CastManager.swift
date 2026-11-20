@@ -9,17 +9,37 @@ final class CastManager: NSObject, ObservableObject {
 
     enum SegmentFormat { case fmp4, ts }
 
+    /// GCKCastState in our own terms, so views do not need to import GoogleCast.
+    enum Connection { case noDevices, notConnected, connecting, connected }
+
+    /// What the TV is doing with the last media we sent, simplified for the main screen.
+    enum TVPlayback { case none, loading, playing, paused, ended, failed }
+
     @Published private(set) var stateText = "준비 중"
+    @Published private(set) var connection = Connection.notConnected
     @Published private(set) var isConnected = false
+    /// When discovery started reporting "no devices" (nil otherwise). Discovery needs a few seconds
+    /// after launch, so the main screen waits a little before showing the "TV not found" help.
+    @Published private(set) var noDevicesSince: Date?
     @Published private(set) var deviceName: String?
     @Published private(set) var mediaText = "-"
+    @Published private(set) var tvPlayback = TVPlayback.none
+    /// Mirror stream URL last sent to the current session; nil after a disconnect, so the mirror
+    /// is sent again when the session comes back (new session, resume, or reconnect).
+    @Published private(set) var loadedMirrorURL: URL?
+    /// `BroadcastStatus.urlRevision` of the mirror last sent. The same URL text can come back after
+    /// a Wi-Fi outage with a new revision; the TV has to be asked again then.
+    private var loadedMirrorRevision: Int?
     @Published private(set) var lastError: String?
     @Published private(set) var events: [String] = []
     /// Receiver's live seekable range end and playback position (seconds), or nil when unknown.
     @Published private(set) var liveLag: (end: Double, position: Double)?
     private(set) var sdkLog: [String] = []
+    /// Per-broadcast secret path parts of every mirror URL sent, so diagnostics can hide them.
+    private(set) var mirrorTokens: Set<String> = []
     private var isSetUp = false
     private weak var observedClient: GCKRemoteMediaClient?
+    private var loadRequest: GCKRequest?
     private var lagTimer: Timer?
 
     func setUp() {
@@ -42,6 +62,11 @@ final class CastManager: NSObject, ObservableObject {
 
     private var remoteClient: GCKRemoteMediaClient? {
         GCKCastContext.sharedInstance().sessionManager.currentCastSession?.remoteMediaClient
+    }
+
+    /// Opens the SDK's own device chooser (same dialog as the Cast button).
+    func presentDeviceChooser() {
+        GCKCastContext.sharedInstance().presentCastDialog()
     }
 
     /// Asks the connected receiver to play an HLS URL.
@@ -71,14 +96,45 @@ final class CastManager: NSObject, ObservableObject {
         request.mediaInformation = builder.build()
         let pending = client.loadMedia(with: request.build())
         pending.delegate = self
+        loadRequest = pending
+        // Anything else loaded replaces the mirror on the TV; castMirror sets this again.
+        loadedMirrorURL = nil
+        tvPlayback = .loading
         lastError = nil
         addEvent("재생 요청: \(title)")
         return true
     }
 
+    /// Sends the iPhone screen stream to the TV. Without `force`, does nothing when this URL and
+    /// revision were already sent in the current session (a new URL or revision, e.g. after a
+    /// Wi-Fi change or outage, is always sent).
+    @discardableResult
+    func castMirror(_ url: URL, revision: Int, force: Bool) -> Bool {
+        guard isConnected else { return false }
+        if !force, loadedMirrorURL == url, loadedMirrorRevision == revision { return false }
+        guard load(url: url, title: "내 iPhone 화면", live: true, format: .fmp4) else { return false }
+        loadedMirrorURL = url
+        loadedMirrorRevision = revision
+        if let token = Self.token(of: url) { mirrorTokens.insert(token) }
+        return true
+    }
+
+    /// Stops the TV when it is playing our mirror stream (the broadcast ended), leaving other media alone.
+    func stopMirror() {
+        guard loadedMirrorURL != nil else { return }
+        loadedMirrorURL = nil
+        stopMedia()
+    }
+
     func stopMedia() {
         remoteClient?.stop()
         addEvent("TV 재생 중지 요청")
+    }
+
+    /// First path component of a stream URL (`/<token>/live.m3u8`), the per-broadcast secret.
+    static func token(of url: URL) -> String? {
+        let parts = url.pathComponents.filter { $0 != "/" }
+        return parts.count >= 2 ? parts[0] : nil
     }
 
     @objc private func castStateDidChange(_ notification: Notification) {
@@ -88,13 +144,23 @@ final class CastManager: NSObject, ObservableObject {
     private func refreshState() {
         let context = GCKCastContext.sharedInstance()
         switch context.castState {
-        case .noDevicesAvailable: stateText = "기기를 찾지 못함"
-        case .notConnected: stateText = "연결 안 됨"
-        case .connecting: stateText = "연결 중…"
-        case .connected: stateText = "연결됨"
-        @unknown default: stateText = "알 수 없음"
+        case .noDevicesAvailable: stateText = "기기를 찾지 못함"; connection = .noDevices
+        case .notConnected: stateText = "연결 안 됨"; connection = .notConnected
+        case .connecting: stateText = "연결 중…"; connection = .connecting
+        case .connected: stateText = "연결됨"; connection = .connected
+        @unknown default: stateText = "알 수 없음"; connection = .notConnected
         }
-        isConnected = context.castState == .connected
+        if connection == .noDevices {
+            if noDevicesSince == nil { noDevicesSince = Date() }
+        } else {
+            noDevicesSince = nil
+        }
+        isConnected = connection == .connected
+        if !isConnected {
+            // The next connection (new, resumed or reconnected session) gets the mirror again.
+            loadedMirrorURL = nil
+            tvPlayback = .none
+        }
         let session = context.sessionManager.currentCastSession
         deviceName = session?.device.friendlyName
         // Attach to the session's media client here (cast-state changes cover start and resume).
@@ -164,6 +230,22 @@ final class CastManager: NSObject, ObservableObject {
         return "\(state), 이유: \(reason)"
     }
 
+    private func playback(of status: GCKMediaStatus) -> TVPlayback {
+        switch status.playerState {
+        case .playing: return .playing
+        case .paused: return .paused
+        case .buffering, .loading: return .loading
+        case .idle:
+            switch status.idleReason {
+            case .error: return .failed
+            case .finished, .cancelled, .interrupted: return .ended
+            // Idle with no reason: nothing loaded yet, or a load just sent and not started.
+            default: return tvPlayback == .loading ? .loading : .none
+            }
+        default: return tvPlayback
+        }
+    }
+
     static func stamp() -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm:ss"
@@ -191,10 +273,11 @@ extension CastManager: GCKSessionManagerListener {
 
 extension CastManager: GCKRemoteMediaClientListener {
     func remoteMediaClient(_ client: GCKRemoteMediaClient, didUpdate mediaStatus: GCKMediaStatus?) {
-        guard let mediaStatus else { mediaText = "-"; return }
+        guard let mediaStatus else { mediaText = "-"; tvPlayback = .none; return }
         let text = describe(mediaStatus)
         if text != mediaText { addEvent("TV 상태: \(text)") }
         mediaText = text
+        tvPlayback = playback(of: mediaStatus)
         if mediaStatus.playerState == .idle, mediaStatus.idleReason == .error {
             lastError = "TV가 재생에 실패했어요 (idleReason=error). 진단 화면의 요청 기록을 확인하세요."
         }
@@ -203,15 +286,21 @@ extension CastManager: GCKRemoteMediaClientListener {
 
 extension CastManager: GCKRequestDelegate {
     func requestDidComplete(_ request: GCKRequest) {
+        if request === loadRequest { loadRequest = nil }
         addEvent("요청 완료 (#\(request.requestID))")
     }
 
     func request(_ request: GCKRequest, didFailWithError error: GCKError) {
+        if request === loadRequest {
+            loadRequest = nil
+            tvPlayback = .failed
+        }
         lastError = "요청 실패: \(error.localizedDescription) (code \(error.code))"
         addEvent(lastError ?? "")
     }
 
     func request(_ request: GCKRequest, didAbortWith abortReason: GCKRequestAbortReason) {
+        if request === loadRequest { loadRequest = nil }
         addEvent("요청 중단 (reason \(abortReason.rawValue))")
     }
 }

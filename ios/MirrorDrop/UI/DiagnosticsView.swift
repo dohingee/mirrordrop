@@ -48,7 +48,7 @@ struct DiagnosticsView: View {
                 if s.errors.isEmpty && cast.lastError == nil { Text("없음").foregroundStyle(.secondary) }
                 if let error = cast.lastError { Text(error).font(.caption).foregroundStyle(.red) }
                 ForEach(Array(s.errors.reversed().enumerated()), id: \.offset) { _, line in
-                    Text(line).font(.caption2.monospaced()).foregroundStyle(.red)
+                    Text(DiagnosticsReport.redact(url: line)).font(.caption2.monospaced()).foregroundStyle(.red)
                 }
             }
             Section {
@@ -64,12 +64,13 @@ struct DiagnosticsView: View {
                 }
             }
             Section {
+                ProblemReportLink(selfTest: selfTest)
                 Button(copied ? "복사했어요" : "로그 전체 복사") {
                     UIPasteboard.general.string = report()
                     copied = true
                 }
             } footer: {
-                Text("복사한 내용을 그대로 Claude에게 붙여 넣으면 됩니다. 접속 주소의 비밀 토큰은 빠져 있습니다.")
+                Text("\"문제 보내기\"를 누르면 메일·메시지 등 보낼 곳을 직접 고를 수 있습니다. 앱이 저절로 어디로 보내지는 않습니다. 접속 주소의 비밀 부분은 가려져 있습니다. 문의 메일: \(DiagnosticsReport.supportEmail)")
             }
         }
         .navigationTitle("진단")
@@ -93,6 +94,48 @@ struct DiagnosticsView: View {
     }
 
     private func report() -> String {
+        DiagnosticsReport.make(cast: cast, monitor: monitor, selfTest: selfTest)
+    }
+
+    private static let formatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss"
+        return formatter
+    }()
+
+    static func time(_ date: Date) -> String { formatter.string(from: date) }
+
+    private static func presetText(_ code: String?) -> String {
+        guard let code else { return "-" }
+        return LatencyPreset(rawValue: code)?.label ?? code
+    }
+}
+
+/// "문제 보내기": hands the diagnostics text to the share sheet; the user picks where it goes.
+struct ProblemReportLink: View {
+    @EnvironmentObject private var cast: CastManager
+    @EnvironmentObject private var monitor: BroadcastMonitor
+    private let selfTest: String
+
+    init(selfTest: String = "-") {
+        self.selfTest = selfTest
+    }
+
+    var body: some View {
+        ShareLink(item: DiagnosticsReport.make(cast: cast, monitor: monitor, selfTest: selfTest),
+                  subject: Text("MirrorDrop 문제 보고"),
+                  message: Text("받는 곳: \(DiagnosticsReport.supportEmail)")) {
+            Label("문제 보내기", systemImage: "square.and.arrow.up")
+        }
+    }
+}
+
+/// Plain-text diagnostics for copying or sharing. Stream tokens are masked (CLAUDE.md invariant).
+enum DiagnosticsReport {
+    /// User-facing support mail (CLAUDE.md: app users see kimyeoware@gmail.com for now).
+    static let supportEmail = "kimyeoware@gmail.com"
+
+    static func make(cast: CastManager, monitor: BroadcastMonitor, selfTest: String) -> String {
         let s = monitor.status
         var lines: [String] = []
         lines.append("MirrorDrop 진단 \(Date())")
@@ -108,7 +151,7 @@ struct DiagnosticsView: View {
         lines.append("요청: \(s.requestCount), 클라이언트: \(s.clients)")
         lines.append("서버 점검: \(selfTest)")
         lines.append("--- 요청 기록")
-        lines += s.recentRequests.map { "\(Self.time($0.time)) \($0.client) \($0.method) \($0.path) \($0.status) \($0.bytes)B" }
+        lines += s.recentRequests.map { "\(DiagnosticsView.time($0.time)) \($0.client) \($0.method) \($0.path) \($0.status) \($0.bytes)B" }
         lines.append("--- 확장 오류")
         lines += s.errors
         lines.append("--- 확장 로그")
@@ -117,19 +160,30 @@ struct DiagnosticsView: View {
         lines += cast.events
         lines.append("--- Cast SDK 로그 (최근 80줄)")
         lines += cast.sdkLog.suffix(80)
-        return lines.joined(separator: "\n")
+
+        var tokens = cast.mirrorTokens
+        if let text = s.url, let url = URL(string: text), let token = CastManager.token(of: url) {
+            tokens.insert(token)
+        }
+        return redact(lines.joined(separator: "\n"), tokens: tokens)
     }
 
-    private static let formatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss"
-        return formatter
-    }()
+    /// Masks stream tokens: every known token, plus the first path part of any URL whose host is
+    /// an IPv4 address (the stream server), also in JSON-escaped form (`\/`) as SDK logs print it.
+    static func redact(_ text: String, tokens: Set<String>) -> String {
+        var result = text
+        for token in tokens where !token.isEmpty {
+            result = result.replacingOccurrences(of: token, with: "…")
+        }
+        // http://1.2.3.4:8765/<token>/  or  http:\/\/1.2.3.4:8765\/<token>\/  →  <token> becomes …
+        let pattern = #"((?:\\?/){2}[0-9]{1,3}(?:\.[0-9]{1,3}){3}(?::[0-9]+)?\\?/)[^/\\\s"'<>]+(?=\\?/)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return result }
+        let range = NSRange(result.startIndex..., in: result)
+        return regex.stringByReplacingMatches(in: result, range: range, withTemplate: "$1…")
+    }
 
-    private static func time(_ date: Date) -> String { formatter.string(from: date) }
-
-    private static func presetText(_ code: String?) -> String {
-        guard let code else { return "-" }
-        return LatencyPreset(rawValue: code)?.label ?? code
+    /// For showing a stream URL on screen without its token.
+    static func redact(url: String) -> String {
+        redact(url, tokens: [])
     }
 }

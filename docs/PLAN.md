@@ -34,6 +34,14 @@
   - PoC는 ReplayKit로 만든다. iOS 27에서도 아직 동작하고, iOS 17~26 기기도 지원하기 때문이다.
   - 인코딩·HLS·서버 코드(`FrameScaler`, `HLSSegmenter`, `StreamStore`, `HTTPServer`)는 ReplayKit에 묶이지 않게 만들어서, 2단계에서 ScreenCaptureKit 경로를 추가할 때 그대로 쓸 수 있다.
   - **결정 (2026-10-25): 둘 다 지원한다.** iOS 17~26은 ReplayKit 방송 확장, iOS 27 이상은 ScreenCaptureKit. 무료·광고 앱이라 지원 기기 수가 중요하고, ReplayKit은 deprecated일 뿐 아직 동작하기 때문이다. ScreenCaptureKit 경로는 2단계에서 추가하고, iOS 17~26 기기가 충분히 줄면 ReplayKit 경로를 걷어낸다.
+  - **문서 확인 (2026-11-21, developer.apple.com 원문과 개발자 포럼):**
+    - `RPBroadcastSampleHandler`·`RPSystemBroadcastPickerView`는 iOS 27.0까지로 표시(지원 중단 예정). ScreenCaptureKit 문서: "ScreenCaptureKit replaces ReplayKit for screen streaming and mirroring."
+    - 다른 앱까지 포함한 전체 화면: `SCContentSharingPicker.shared.present()` → 관찰자 `contentSharingPicker(_:didUpdateWith:for:)`로 받은 `SCContentFilter`로 `SCStream` 시작(`@available(iOS 27.0, *)`). 사용자가 멈추면 `SCStreamError.Code.userStopped`.
+    - 백그라운드: `UIBackgroundModes`에 `screen-capture`. 없으면 백그라운드로 갈 때 `missingBackgroundMode`(-3824). 무음 오디오로 버티기는 통하지 않는다는 보고가 있다(SPEC 8번 방향과 같음). App Store Connect가 이 값을 거절하던 문제는 2026-08 해결.
+    - 엔타이틀먼트는 필요 없다(Apple 답변, 포럼 856067). `NSScreenCaptureUsageDescription`은 iOS에서 꼭 필요한지 확인 못 해 넣어 둔다.
+    - 프레임레이트: `minimumFrameInterval`·`queueDepth`는 iOS SDK에서 쓸 수 없다(포럼 848296). 최대 60fps이므로 지금처럼 우리 코드에서 프레임을 버린다. 방향 값은 `SCStreamFrameInfo.videoOrientation`(CGImagePropertyOrientation과 같은 뜻).
+    - 확인 못 함: 백그라운드에서 앱 본체의 `NWListener`가 계속 도는지(앱이 멈춤 상태가 아니면 돌 것으로 추론), 백그라운드 메모리 한도, 보호 영상이 검게 나오는지, 스토어·TestFlight 판 실측 보고. → iPhone(iOS 27)에서 화면 잠금·다른 앱 앞에 둔 상태로 TV가 조각을 계속 받아 가는지 실측해야 한다.
+    - 만드는 순서: 앱 화면·안정성 작업이 끝난 뒤, 인코딩·HLS·서버 코드를 앱 본체에서도 쓰도록 옮기고 ScreenCaptureKit 경로를 붙인다.
 
 ### 3. 수신기: 먼저 Google의 기본 미디어 수신기(Default Media Receiver, `CC1AD845`)
 - Cast 개발자 콘솔 등록(유료 5달러)이나 수신기 웹페이지 호스팅이 필요 없다.

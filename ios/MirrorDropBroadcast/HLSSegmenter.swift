@@ -4,7 +4,10 @@ import UniformTypeIdentifiers
 protocol HLSSegmenterDelegate: AnyObject {
     func segmenter(_ segmenter: HLSSegmenter, didOutputInitSegment data: Data)
     func segmenter(_ segmenter: HLSSegmenter, didOutputSegment data: Data, duration: Double)
+    /// The writer is dead; the owner should replace this segmenter.
     func segmenter(_ segmenter: HLSSegmenter, didFail message: String)
+    /// Something went wrong but encoding goes on.
+    func segmenter(_ segmenter: HLSSegmenter, didWarn message: String)
 }
 
 /// H.264 (+ optional AAC) encoder that emits fMP4 HLS segments in memory via AVAssetWriterDelegate.
@@ -109,7 +112,7 @@ final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
                 writer.add(input)
                 audio = input
             } else {
-                delegate?.segmenter(self, didFail: "cannot add audio input; continuing video-only")
+                delegate?.segmenter(self, didWarn: "cannot add audio input; continuing video-only")
             }
         }
 

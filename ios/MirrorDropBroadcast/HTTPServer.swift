@@ -14,18 +14,32 @@ final class HTTPServer {
     private var listener: NWListener?
     private var connections: [ObjectIdentifier: HTTPConnection] = [:]
     private let maxConnections = 16
+    private var stopped = false
+    private var preferredPort: NWEndpoint.Port = .any
+    /// Last port the listener was ready on; a restart tries it first so the stream URL stays the same.
+    private var boundPort: NWEndpoint.Port?
+    private var retryDelay = HTTPServer.firstRetryDelay
+    private var restartAttempts = 0
+    private var loggedWaiting = false
+    private static let firstRetryDelay = 0.5
+    private static let maxRetryDelay = 8.0
 
     init(router: StreamRouter, snapshot: @escaping () -> StreamSnapshot) {
         self.router = router
         self.snapshot = snapshot
     }
 
+    /// `onReady` can fire again later with a different port if the listener had to be restarted.
     func start(preferredPort: UInt16) {
-        queue.async { self.listen(on: NWEndpoint.Port(rawValue: preferredPort) ?? .any, fallbackToAny: true) }
+        queue.async {
+            self.preferredPort = NWEndpoint.Port(rawValue: preferredPort) ?? .any
+            self.listen(on: self.preferredPort, fallbackToAny: true)
+        }
     }
 
     func stop() {
         queue.async {
+            self.stopped = true
             self.listener?.cancel()
             self.listener = nil
             self.connections.values.forEach { $0.close() }
@@ -34,6 +48,7 @@ final class HTTPServer {
     }
 
     private func listen(on port: NWEndpoint.Port, fallbackToAny: Bool) {
+        guard !stopped else { return }
         let parameters = NWParameters.tcp
         parameters.allowLocalEndpointReuse = true
         let listener: NWListener
@@ -41,19 +56,35 @@ final class HTTPServer {
             listener = try NWListener(using: parameters, on: port)
         } catch {
             onError?("listener create failed: \(error)")
-            if fallbackToAny { listen(on: .any, fallbackToAny: false) }
+            if fallbackToAny, port != .any, boundPort == nil {
+                listen(on: .any, fallbackToAny: false)
+            } else {
+                scheduleRestart()
+            }
             return
         }
         listener.stateUpdateHandler = { [weak self, weak listener] state in
-            guard let self else { return }
+            guard let self, let listener, self.listener === listener else { return }
             switch state {
             case .ready:
-                self.onReady?(listener?.port?.rawValue ?? 0)
+                self.retryDelay = Self.firstRetryDelay
+                self.restartAttempts = 0
+                self.loggedWaiting = false
+                self.boundPort = listener.port
+                self.onReady?(listener.port?.rawValue ?? 0)
+            case .waiting(let error):
+                // Usually no network for the moment; Network.framework retries by itself.
+                if !self.loggedWaiting { self.onError?("listener waiting: \(error)") }
+                self.loggedWaiting = true
             case .failed(let error):
                 self.onError?("listener failed: \(error)")
-                listener?.cancel()
-                if fallbackToAny, self.listener === listener {
+                listener.cancel()
+                self.listener = nil
+                if fallbackToAny, port != .any, self.boundPort == nil {
+                    // First start and the preferred port is taken: take any port right away.
                     self.listen(on: .any, fallbackToAny: false)
+                } else {
+                    self.scheduleRestart()
                 }
             default:
                 break
@@ -64,6 +95,22 @@ final class HTTPServer {
         }
         self.listener = listener
         listener.start(queue: queue)
+    }
+
+    /// A failed listener is reopened (with growing delays) instead of leaving the stream dead,
+    /// e.g. after Wi-Fi drops and comes back during a long broadcast. Open connections are kept.
+    private func scheduleRestart() {
+        guard !stopped, listener == nil else { return }
+        let delay = retryDelay
+        retryDelay = min(retryDelay * 2, Self.maxRetryDelay)
+        queue.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self, !self.stopped, self.listener == nil else { return }
+            // Keep the old port for a few tries; if it stays unusable (taken), any port will do
+            // (the new port reaches the app through onReady and a new status.url).
+            self.restartAttempts += 1
+            let port = self.restartAttempts <= 3 ? (self.boundPort ?? self.preferredPort) : .any
+            self.listen(on: port, fallbackToAny: false)
+        }
     }
 
     private func accept(_ connection: NWConnection) {

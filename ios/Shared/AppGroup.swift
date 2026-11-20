@@ -31,7 +31,14 @@ struct RequestLogEntry: Codable, Equatable, Identifiable {
 /// Snapshot of the extension's state, written by the extension and read by the app.
 struct BroadcastStatus: Codable, Equatable {
     var state: BroadcastState = .idle
+    /// Stream URL. Nil until the server is ready, and again while there is no Wi-Fi address
+    /// (see `networkIssue`). It changes when the Wi-Fi IP or the listener port changes.
     var url: String?
+    /// Rises by one every time a usable `url` is published, including when the same URL comes back
+    /// after a Wi-Fi outage, so the app can re-send it to the TV even if the text is unchanged.
+    var urlRevision = 0
+    /// Why the stream is unreachable right now (for example no Wi-Fi), or nil when it is reachable.
+    var networkIssue: String?
     var startedAt: Date?
     var updatedAt = Date()
     var memoryMB: Double = 0

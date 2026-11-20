@@ -1,158 +1,298 @@
 import SwiftUI
+import UIKit
 
+/// The one screen a first-time user needs: ① pick a TV, ② start sending, see what is happening.
 struct ContentView: View {
     @EnvironmentObject private var cast: CastManager
     @EnvironmentObject private var monitor: BroadcastMonitor
-    @AppStorage("autoCast") private var autoCast = true
-    @State private var includeAudio = AppGroup.defaults?.bool(forKey: AppGroup.includeAudioKey) ?? false
-    @State private var latencyPreset = LatencyPreset.load()
-    @State private var sampleURL = SampleStream.fmp4.url
-    @State private var sentURL: URL?
-    @State private var path = LaunchScreen.fromArguments.map { [$0] } ?? []
+    @State private var path = LaunchScreen.fromArguments?.navigationPath ?? []
+
+    /// Discovery needs a few seconds after launch before "no devices" means anything.
+    private let noDevicesGrace: TimeInterval = 5
 
     var body: some View {
         NavigationStack(path: $path) {
-            List {
-                connectSection
-                testASection
-                testBSection
-                tvSection
-                Section {
-                    NavigationLink("진단 (메모리 · 요청 기록 · 로그)") { DiagnosticsView() }
-                    NavigationLink("지연 측정 시계") { ClockView() }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    statusCard
+                    if showsNoTVHelp { noTVHelpCard }
+                    tvCard
+                    broadcastCard
+                    noticeCard
+                    footer
                 }
+                .padding(16)
             }
-            .navigationTitle("MirrorDrop 테스트")
+            .background(Color(uiColor: .systemGroupedBackground))
+            .navigationTitle("MirrorDrop")
             .navigationDestination(for: LaunchScreen.self) { screen in
                 switch screen {
+                case .advanced: AdvancedView()
                 case .diagnostics: DiagnosticsView()
                 case .clock: ClockView()
                 }
             }
         }
-        .onChange(of: monitor.readyURL) { _, url in sendMirrorIfNeeded(url) }
-        .onChange(of: cast.isConnected) { _, _ in sendMirrorIfNeeded(monitor.readyURL) }
-    }
-
-    private var connectSection: some View {
-        Section("1. TV 연결") {
-            HStack(spacing: 12) {
-                CastButtonView().frame(width: 44, height: 44)
-                VStack(alignment: .leading) {
-                    Text(cast.stateText).font(.headline)
-                    Text(cast.deviceName ?? "왼쪽 버튼을 눌러 TV를 고르세요").font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            Text("처음 누르면 \"로컬 네트워크\" 허용 질문이 나옵니다. 꼭 허용하세요.")
-                .font(.caption).foregroundStyle(.secondary)
+        // Always cast automatically once the stream is ready and a TV is connected. CastManager
+        // forgets the sent URL on disconnect, so a reconnect sends it again, and a new URL
+        // (new broadcast, or a new address after a Wi-Fi change) is always sent.
+        .onAppear { castIfReady() }
+        .onChange(of: monitor.readyURL) { _, _ in castIfReady() }
+        .onChange(of: monitor.status.urlRevision) { _, _ in castIfReady() }
+        .onChange(of: cast.isConnected) { _, _ in castIfReady() }
+        .onChange(of: monitor.isLive) { _, live in
+            // Broadcast ended or the extension died: clear the TV instead of leaving it spinning.
+            if !live { cast.stopMirror() }
         }
     }
 
-    private var testASection: some View {
-        Section("테스트 A · 인터넷 샘플 영상") {
-            Picker("샘플", selection: $sampleURL) {
-                ForEach(SampleStream.allCases) { Text($0.title).tag($0.url) }
+    private func castIfReady() {
+        guard let url = monitor.readyURL else { return }
+        cast.castMirror(url, revision: monitor.status.urlRevision, force: false)
+    }
+
+    // MARK: - Status
+
+    private enum Tone { case action, progress, ok, problem }
+
+    private struct Status {
+        var text: String
+        var detail: String?
+        var tone: Tone
+        var offersRecast = false
+    }
+
+    private var status: Status {
+        if cast.connection == .connecting {
+            return Status(text: "TV에 연결하는 중…", tone: .progress)
+        }
+        if monitor.stoppedUnexpectedly {
+            return Status(text: "화면 보내기가 갑자기 멈췄어요",
+                          detail: "② 버튼을 눌러 다시 시작해 주세요.", tone: .problem)
+        }
+        if monitor.failedRecently && !monitor.isLive {
+            return Status(text: "화면 보내기를 시작하지 못했어요",
+                          detail: "② 버튼을 눌러 다시 시작해 주세요.", tone: .problem)
+        }
+        guard cast.isConnected else {
+            let ready = monitor.isLive ? " 화면은 준비됐어요." : ""
+            if showsNoTVHelp {
+                return Status(text: "TV를 찾지 못했어요", detail: "아래 확인할 것을 봐 주세요.", tone: .problem)
             }
-            TextField("HLS 주소", text: $sampleURL, axis: .vertical)
-                .font(.caption.monospaced())
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            Button("TV로 보내기") {
-                guard let url = URL(string: sampleURL) else { return }
-                let format: CastManager.SegmentFormat = sampleURL == SampleStream.ts.url ? .ts : .fmp4
-                cast.load(url: url, title: "테스트 A 샘플", live: false, format: format)
+            if cast.connection == .noDevices {
+                return Status(text: "TV를 찾는 중…", detail: "같은 Wi-Fi에 있는 TV를 찾고 있어요.", tone: .progress)
             }
-            .disabled(!cast.isConnected)
+            return Status(text: "① TV를 골라 주세요", detail: "TV 버튼을 눌러 화면을 보낼 TV를 고르세요." + ready, tone: .action)
+        }
+        guard monitor.isLive else {
+            return Status(text: "② 보내기를 시작하세요", detail: "아래 큰 버튼을 누른 다음 \"방송 시작\"을 누르세요.", tone: .action)
+        }
+        guard let ready = monitor.readyURL else {
+            return Status(text: "화면을 준비하는 중…", detail: "TV에 화면이 뜰 때까지 이 앱에 머물러 주세요.", tone: .progress)
+        }
+        guard cast.loadedMirrorURL == ready else {
+            // Not sent to this TV (another video was played, or the request could not be sent).
+            return Status(text: "TV에 내 화면이 나오지 않고 있어요", detail: "\"다시 TV에 띄우기\"를 눌러 주세요.",
+                          tone: .problem, offersRecast: true)
+        }
+        switch cast.tvPlayback {
+        case .playing:
+            return Status(text: "TV에 보내는 중", detail: "이제 다른 앱으로 가도 됩니다. 멈출 때는 ② 버튼을 누르세요.", tone: .ok)
+        case .failed:
+            return Status(text: "TV가 화면을 틀지 못했어요", detail: "\"다시 TV에 띄우기\"를 눌러 보세요.",
+                          tone: .problem, offersRecast: true)
+        case .ended, .paused:
+            return Status(text: "TV 재생이 멈췄어요", detail: "\"다시 TV에 띄우기\"를 누르면 다시 나옵니다.",
+                          tone: .problem, offersRecast: true)
+        case .none, .loading:
+            return Status(text: "TV에 띄우는 중…", detail: "몇 초 걸려요. TV에 화면이 뜰 때까지 이 앱에 머물러 주세요.", tone: .progress)
         }
     }
 
-    private var testBSection: some View {
-        Section("테스트 B · 내 화면 보내기") {
-            Toggle("앱 소리 포함 (실험)", isOn: $includeAudio)
-                .disabled(monitor.isLive)
-                .onChange(of: includeAudio) { _, value in
-                    AppGroup.defaults?.set(value, forKey: AppGroup.includeAudioKey)
-                }
-            Picker("지연 실험", selection: $latencyPreset) {
-                ForEach(LatencyPreset.allCases) { Text($0.label).tag($0) }
-            }
-            .disabled(monitor.isLive)
-            .onChange(of: latencyPreset) { _, value in value.save() }
-            Text("소리·지연 실험 설정은 다음 방송 시작부터 적용됩니다.")
-                .font(.caption).foregroundStyle(.secondary)
-            Toggle("준비되면 자동으로 TV에 띄우기", isOn: $autoCast)
-            HStack(spacing: 16) {
-                BroadcastPickerView().frame(width: 60, height: 60)
+    private var showsNoTVHelp: Bool {
+        guard cast.connection == .noDevices, let since = cast.noDevicesSince else { return false }
+        return monitor.now.timeIntervalSince(since) >= noDevicesGrace
+    }
+
+    private var statusCard: some View {
+        let status = self.status
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 12) {
+                statusIcon(status.tone)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("왼쪽 동그라미 → \"방송 시작\"").font(.subheadline)
-                    Text("멈출 때도 같은 버튼(또는 상단 빨간 표시)을 누릅니다.").font(.caption).foregroundStyle(.secondary)
+                    Text(status.text).font(.title3.bold())
+                    if let detail = status.detail {
+                        Text(detail).font(.subheadline).foregroundStyle(.secondary)
+                    }
                 }
+                Spacer(minLength: 0)
             }
-            LabeledContent("공유 상태", value: monitor.stateText)
-            LabeledContent("만든 조각", value: "\(monitor.status.segmentsProduced)개")
-            if let url = monitor.status.url, monitor.isLive {
-                Text(url).font(.caption2.monospaced()).textSelection(.enabled)
+            if status.offersRecast, let url = monitor.readyURL {
+                Button {
+                    cast.castMirror(url, revision: monitor.status.urlRevision, force: true)
+                } label: {
+                    Label("다시 TV에 띄우기", systemImage: "arrow.clockwise")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
             }
-            Button("지금 TV에 띄우기") { sendMirror(force: true) }
-                .disabled(!cast.isConnected || monitor.readyURL == nil)
-            Text("TV에 화면이 뜰 때까지 이 앱에 머물러 주세요. 뜬 다음에는 다른 앱으로 가도 됩니다.")
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+        .accessibilityElement(children: .contain)
+    }
+
+    @ViewBuilder
+    private func statusIcon(_ tone: Tone) -> some View {
+        switch tone {
+        case .action:
+            Image(systemName: "hand.point.right.fill").font(.title2).foregroundStyle(.tint)
+        case .progress:
+            ProgressView().controlSize(.regular).frame(width: 28, height: 28)
+        case .ok:
+            Image(systemName: "checkmark.circle.fill").font(.title2).foregroundStyle(.green)
+        case .problem:
+            Image(systemName: "exclamationmark.triangle.fill").font(.title2).foregroundStyle(.orange)
+        }
+    }
+
+    // MARK: - ① TV
+
+    private var tvCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("① TV 연결").font(.headline)
+            HStack(spacing: 12) {
+                // The SDK's own Cast button (not redrawn).
+                CastButtonView().frame(width: 44, height: 44)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(cast.isConnected ? (cast.deviceName ?? "TV") : tvStateText).font(.body.weight(.semibold))
+                    Text(cast.isConnected ? "연결됨" : "왼쪽 버튼을 눌러 TV를 고르세요")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                Button(cast.isConnected ? "바꾸기" : "TV 고르기") { cast.presentDeviceChooser() }
+                    .buttonStyle(.bordered)
+                    .disabled(cast.connection == .noDevices)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var tvStateText: String {
+        switch cast.connection {
+        case .noDevices: return "TV를 찾지 못함"
+        case .notConnected: return "TV를 고르지 않음"
+        case .connecting: return "연결하는 중…"
+        case .connected: return "연결됨"
+        }
+    }
+
+    private var noTVHelpCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("이것을 확인해 주세요").font(.headline)
+            helpRow("wifi", "iPhone과 TV가 같은 Wi-Fi에 연결돼 있나요?")
+            helpRow("tv", "TV(또는 TV에 꽂은 스틱)가 켜져 있나요?")
+            helpRow("person.2.slash", "게스트 Wi-Fi나 공유기의 \"AP 격리\"(기기끼리 서로 못 보게 막는 설정)가 켜져 있으면 TV를 찾을 수 없어요.")
+            helpRow("lock.shield", "설정 앱에서 MirrorDrop의 \"로컬 네트워크\"가 켜져 있어야 해요.")
+            Button {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            } label: {
+                Label("설정 열기", systemImage: "gear").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            Text("Google Cast를 지원하는 TV·스틱에서 쓸 수 있어요.")
                 .font(.caption).foregroundStyle(.secondary)
         }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
     }
 
-    private var tvSection: some View {
-        Section("TV 재생 상태") {
-            LabeledContent("상태", value: cast.mediaText)
-            if let error = cast.lastError {
-                Text(error).font(.caption).foregroundStyle(.red)
-            }
-            Button("TV 재생 멈추기", role: .destructive) { cast.stopMedia() }
-                .disabled(!cast.isConnected)
+    private func helpRow(_ symbol: String, _ text: String) -> some View {
+        Label {
+            Text(text).font(.subheadline)
+        } icon: {
+            Image(systemName: symbol).foregroundStyle(.tint)
         }
     }
 
-    private func sendMirrorIfNeeded(_ url: URL?) {
-        guard autoCast, url != nil else { return }
-        sendMirror(force: false)
+    // MARK: - ② Broadcast
+
+    private var broadcastCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("② 화면 보내기").font(.headline)
+            ZStack {
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(monitor.isLive ? Color.red : Color.accentColor)
+                VStack(spacing: 4) {
+                    Spacer()
+                    Text(monitor.isLive ? "보내기 멈추기" : "TV로 보내기 시작").font(.title3.bold())
+                    Text(monitor.isLive ? "누른 다음 \"방송 중단\"을 누르세요" : "누른 다음 \"방송 시작\"을 누르세요")
+                        .font(.footnote)
+                }
+                .foregroundStyle(.white)
+                .padding(.bottom, 18)
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+                // On top so the system picker itself receives the tap (its button fills the card).
+                BroadcastPickerView(glyphColor: .white)
+                    .accessibilityLabel(monitor.isLive ? "보내기 멈추기" : "TV로 보내기 시작")
+            }
+            .frame(height: 160)
+            Text("멈출 때는 이 버튼이나 화면 위쪽의 빨간 표시를 누릅니다.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
     }
 
-    private func sendMirror(force: Bool) {
-        guard cast.isConnected, let url = monitor.readyURL else { return }
-        if !force, sentURL == url { return }
-        if cast.load(url: url, title: "내 iPhone 화면", live: true, format: .fmp4) {
-            sentURL = url
+    private var noticeCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("TV로 보낼 때 iPhone 화면 전체가 TV에 보입니다. 알림·메시지도 함께 보일 수 있어요.",
+                  systemImage: "eye")
+            Label("저작권 보호 영상(넷플릭스 등)은 TV에 검게 나옵니다.", systemImage: "film")
+            Label("화면은 집 Wi-Fi 안에서만 TV로 갑니다. 인터넷으로 나가지 않아요.", systemImage: "house")
+        }
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 4)
+    }
+
+    private var footer: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Divider()
+            HStack {
+                ProblemReportLink()
+                Spacer()
+                NavigationLink("고급·진단", value: LaunchScreen.advanced)
+            }
+            .font(.subheadline)
+            Text("Google Cast 지원 TV에서 쓸 수 있습니다. MirrorDrop은 Google과 관계없는 독립 앱입니다.")
+                .font(.caption2).foregroundStyle(.secondary)
         }
     }
 }
 
-/// Screen to open at launch, for CI screenshots only (.github/scripts/ios-launch-check.sh):
-/// `-MDScreen diagnostics|clock` (any other value, e.g. `main`, keeps the main screen). Launch
-/// arguments land in UserDefaults' volatile argument domain, so a normal launch has no value here
-/// and the path starts empty.
+/// Screens reachable from the main screen. `-MDScreen diagnostics|clock|advanced` opens one at
+/// launch for CI screenshots (.github/scripts/ios-launch-check.sh); any other value, e.g. `main`,
+/// keeps the main screen. Launch arguments land in UserDefaults' volatile argument domain, so a
+/// normal launch has no value here and the path starts empty.
 enum LaunchScreen: String, Hashable {
-    case diagnostics, clock
+    case advanced, diagnostics, clock
 
     static var fromArguments: LaunchScreen? {
         UserDefaults.standard.string(forKey: "MDScreen").flatMap(LaunchScreen.init(rawValue:))
     }
-}
 
-enum SampleStream: String, CaseIterable, Identifiable {
-    case fmp4, ts
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .fmp4: return "Apple bipbop (fMP4)"
-        case .ts: return "Apple bipbop (TS)"
-        }
-    }
-
-    var url: String {
-        switch self {
-        case .fmp4: return "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8"
-        case .ts: return "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8"
-        }
+    /// Diagnostics and the clock live under the advanced screen, so Back leads there.
+    var navigationPath: [LaunchScreen] {
+        self == .advanced ? [.advanced] : [.advanced, self]
     }
 }

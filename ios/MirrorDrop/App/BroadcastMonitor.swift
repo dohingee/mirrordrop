@@ -41,6 +41,19 @@ final class BroadcastMonitor: ObservableObject {
 
     var isLive: Bool { (status.state == .starting || status.state == .streaming) && !isStale }
 
+    /// A status this old is from an earlier broadcast; the main screen does not report it as a problem.
+    private static let recentProblemWindow: TimeInterval = 600
+
+    /// The extension stopped updating while it said it was running (killed or crashed), recently.
+    var stoppedUnexpectedly: Bool {
+        isStale && now.timeIntervalSince(status.updatedAt) < Self.recentProblemWindow
+    }
+
+    /// The extension reported a failure recently.
+    var failedRecently: Bool {
+        status.state == .failed && now.timeIntervalSince(status.updatedAt) < Self.recentProblemWindow
+    }
+
     /// Set once enough segments exist for the TV to start playing.
     var readyURL: URL? {
         guard status.state == .streaming, !isStale, let url = status.url else { return nil }

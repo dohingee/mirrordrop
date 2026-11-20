@@ -113,6 +113,16 @@ struct StreamSnapshot {
     var frameRate: Double
     /// EXT-X-START TIME-OFFSET for the media playlist, if the latency preset asks for one.
     var startOffset: Double? = nil
+    /// The stream's fixed EXT-X-TARGETDURATION; nil computes it from the listed segments.
+    var targetDuration: Int? = nil
+    /// Version of `initSegment` (0 = init.mp4). Rises when the encoder is replaced after a failure.
+    var initVersion = 0
+    /// Init segments of earlier encoders that stored segments still refer to.
+    var olderInitSegments: [Int: Data] = [:]
+
+    func initData(version: Int) -> Data? {
+        version == initVersion ? initSegment : olderInitSegments[version]
+    }
 }
 
 /// Maps a request to a response. Paths look like /<token>/live.m3u8.
@@ -145,11 +155,13 @@ struct StreamRouter {
                                           width: snapshot.width, height: snapshot.height, frameRate: snapshot.frameRate)
             return playlist(text)
         case HLSPlaylist.mediaName:
-            return playlist(HLSPlaylist.media(snapshot.playlistSegments, startOffset: snapshot.startOffset))
-        case HLSPlaylist.initName:
-            guard let data = snapshot.initSegment else { return plain(404, "not ready") }
-            return media(data, cache: "max-age=3600")
+            return playlist(HLSPlaylist.media(snapshot.playlistSegments, startOffset: snapshot.startOffset,
+                                              targetDuration: snapshot.targetDuration))
         default:
+            if let version = HLSPlaylist.initVersion(fromName: name) {
+                guard let data = snapshot.initData(version: version) else { return plain(404, "not ready") }
+                return media(data, cache: "max-age=3600")
+            }
             guard let sequence = HLSPlaylist.sequence(fromSegmentName: name),
                   let segment = snapshot.storedSegments.first(where: { $0.sequence == sequence })
             else { return plain(404, "not found") }
