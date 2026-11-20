@@ -10,8 +10,8 @@ enum LatencyPreset: String, CaseIterable, Identifiable {
     case l2 = "L2"
     case l3 = "L3"
 
-    /// L3: on a real TV (2026-11-21, build 13) the tester found L0, L1 and L2 unusable and L3 the
-    /// smoothest. Delay was about the same (L0 4.0 s, L3 4.3 s).
+    /// L3: on a real TV (2026-11-21, build 13) the tester found L0 and L1 not smooth right
+    /// after the broadcast starts (fine after a while) and L3 smooth at once. Delay was about the same (L0 4.0 s, L3 4.3 s).
     static let `default` = LatencyPreset.l3
 
     var id: String { rawValue }
