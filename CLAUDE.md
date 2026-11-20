@@ -1,6 +1,6 @@
 # MirrorDrop
 
-iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 지금은 Phase 1 PoC(가능성 확인)다. 계획: `docs/PLAN.md`.
+iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 지금은 Phase 2 MVP(첫 출시용 기능 다듬기)다. PoC 시험 결과는 `docs/POC_TEST.md`. 계획: `docs/PLAN.md`.
 
 기획서와 App Store 심사 위험 점검: `docs/SPEC.md`.
 
