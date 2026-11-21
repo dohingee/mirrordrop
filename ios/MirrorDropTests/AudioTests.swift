@@ -220,7 +220,7 @@ final class PCMTests: XCTestCase {
 
     func testEncoderInterleavesAndMutes() {
         XCTAssertEqual(PCMEncoder.interleavedInt16(left: [0.5, -1], right: [1, 0], muted: false),
-                       [16_384, -32_768, 32_767, 0])
+                       [16_384, 32_767, -32_768, 0]) // L0, R0 (1.0 clamped), L1, R1
         XCTAssertEqual(PCMEncoder.interleavedInt16(left: [0.5, -1], right: [1, 0], muted: true), [0, 0, 0, 0])
     }
 }
