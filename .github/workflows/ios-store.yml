@@ -198,13 +198,24 @@ jobs:
           # Runs from ios/ so it finds fastlane/Deliverfile (empty: without it deliver asks to set up).
           # Not passed on purpose: price, availability, submission information. automatic_release
           # false makes the version "manually release" (docs/RELEASE.md 11).
+          # The output goes to deliver.log (published with upload.txt) so a failure can be read from
+          # the PC without a GitHub login; the last lines also become an error annotation.
+          log="$RUNNER_TEMP/store-results/deliver.log"
+          set +e
           fastlane deliver --api_key_path "$RUNNER_TEMP/asc.json" --app_identifier "$BUNDLE_ID" \
             --app_version "$version" --platform ios \
             --metadata_path fastlane/metadata --screenshots_path "$RUNNER_TEMP/store-results/screenshots" \
             --app_rating_config_path fastlane/age_rating.json \
             --skip_binary_upload true --overwrite_screenshots true --force true \
-            --submit_for_review false --run_precheck_before_submit false --automatic_release false
+            --submit_for_review false --run_precheck_before_submit false --automatic_release false \
+            2>&1 | sed -E 's/\x1b\[[0-9;]*m//g' | tee "$log"
+          status=${PIPESTATUS[0]}
+          set -e
           rm -f "$RUNNER_TEMP/asc.json"
+          if [ "$status" != 0 ]; then
+            echo "::error::fastlane deliver failed: $(grep -iE 'error|invalid|exception|\[!\]' "$log" | tail -8 | tr '\n' ' ' | cut -c1-900)"
+            exit "$status"
+          fi
           echo "Uploaded the listing for version $version. Not submitted: the rest is in docs/RELEASE.md." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Check what App Store Connect has now
