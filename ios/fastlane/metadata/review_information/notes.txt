@@ -1,0 +1,33 @@
+MirrorDrop mirrors the iPhone screen to a Google Cast TV or streaming stick on the same Wi-Fi. No sign-in or account, so no demo account is needed.
+
+DEMO VIDEO (iPhone + TV, start to stop)
+https://mirrordrop-app.web.app/review/demo.mp4
+The main feature needs a Google Cast receiver (e.g. Chromecast with Google TV, Google TV Streamer, a TV with Google Cast built in). If you have none, please watch the video. Without one the app does not crash or go blank: after a few seconds it shows "TV를 찾지 못했어요" (TV not found) with a checklist (same Wi-Fi, guest Wi-Fi / AP isolation, Local Network permission) and a button to open Settings.
+
+HOW IT WORKS
+1. Tap the Cast button or "TV 고르기" (Choose TV) and pick the TV.
+2. Tap the large blue card "TV로 보내기 시작" (Start sending to TV): Apple's system broadcast picker (RPSystemBroadcastPickerView) limited to our Broadcast Upload Extension, then "Start Broadcast". iOS shows its countdown and red recording indicator (2.5.14: started by the user, indicated by iOS).
+3. The extension encodes the screen (VideoToolbox/AVAssetWriter) into in-memory HLS segments. A small HTTP server on the iPhone (Network.framework) serves them only to private (local) addresses, at a new random path per broadcast. Via the Google Cast SDK and the Default Media Receiver the TV plays that local URL, fetching directly from the iPhone. The screen never leaves the home Wi-Fi; nothing is recorded.
+4. Stop with the red card "보내기 멈추기" (Stop sending) or the red indicator at the top.
+
+PERMISSIONS
+- Local Network: to find Google Cast devices (Bonjour _googlecast._tcp) and let the TV fetch the stream. Asked when the user first looks for a TV.
+- Notifications (optional): one local alert, "TV 보내기가 멈췄어요" (Sending stopped), when iOS ends the broadcast (e.g. the iPhone locks). Asked at the first broadcast. No remote push.
+- No background modes. A short finite-length task (beginBackgroundTask) only finishes the play request if the user leaves right after starting.
+
+ADS (Google AdMob)
+- A banner at the bottom of the main screen, removed while sending (the whole screen shows on the TV). At most one interstitial a day before a broadcast (never in the first 3 broadcasts, within 10 minutes of an unexpected stop, or from the stop alert). On that tap the start card shows the ad first; once closed, the card is the broadcast picker again and says "이제 눌러서 시작하세요" (Tap to start now), so the ad closes before sharing begins. The picker is never triggered programmatically. No ads while sending, no app-open or rewarded ads, none in the extension; ads never cover Start or Stop.
+- This build shows Google TEST ads: live ads only in apps downloaded from the App Store (StoreKit AppTransaction), so TestFlight and App Review never touch live ads. You will most likely see only the banner.
+- After the first broadcast ends, the app shows Google's UMP consent form where required (EEA/UK/Switzerland), then the App Tracking Transparency prompt, so neither interrupts the first setup. Where consent is required, no ad is requested before a choice. Everything works if the user declines. "광고 개인정보 설정" (Ad privacy settings) and "광고 신고" (Report an ad) are in "고급·진단" (Advanced & Diagnostics).
+
+WHAT MAKES IT DIFFERENT (4.3)
+- Local only: no cloud relay, no account, no analytics SDK.
+- Every feature is free: no subscription, paywall, time limit or watermark. Ads stay off the TV.
+- Made for families sharing photos and videos: numbered steps (1 choose TV, 2 start), sound on TV or phone (switchable while sending), TV volume and mute, a stop alert, a step-by-step guide ("사용 방법").
+- Honest limits stated: about 4 s delay, 720p, copy-protected video appears black (no DRM workaround).
+
+MirrorDrop is not affiliated with Google. "Google Cast" only describes compatibility; the Cast button is the official Google Cast SDK one.
+
+CONTACT: kimyeoware@gmail.com
+Support: https://mirrordrop-app.web.app/en/support.html
+Privacy: https://mirrordrop-app.web.app/en/privacy.html

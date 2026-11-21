@@ -46,6 +46,7 @@ iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 
 - push만으로는 아무것도 돌지 않는다(Mac 시간 절약). Mac 실행은 일부러 시작할 때만:
   - `ios-build.yml`: Claude가 `ios-check-<날짜>` 태그를 push하면 시작(손 실행, 같은 저장소의 PR도 가능). 단위 테스트 + iPhone(6.9인치: iPhone 17 Pro Max부터 이름 순서로 고름, 없거나 크기가 틀리면 실패)·iPad 시뮬레이터 실행 확인과 화면 캡처, 스토어 스크린샷(`iphone-store-*.png`), Google Cast SDK 개인정보 파일(`cast-sdk-privacy/`).
   - `ios-testflight.yml`: Claude가 이 PC에서 `testflight-<번호>` 태그를 push하면 시작(손 실행도 가능). 같은 앱 내용의 통과한 검사가 있으면 다시 하지 않고, 출시용 빌드(archive) → TestFlight 업로드.
+  - `ios-store.yml`: Claude가 `store-<아무거나>` 태그를 push하면 시작. 스토어 글(`docs/store`가 원본, `.github/scripts/store-metadata.py`가 `ios/fastlane/metadata`를 만들고 글자 수 검사)·연령 등급(`ios/fastlane/age_rating.json`)·6.9인치 데모 스크린샷을 fastlane deliver로 준비 중인 버전에 올린다. 심사 제출·가격·국가는 손대지 않는다(`docs/RELEASE.md` 8번).
   - 캡처·결과는 `ci-results` 브랜치에 올라오므로 Claude가 PC에서 git으로 받아 본다.
 - 비용·비밀값·처음 설정용 웹 관리 화면(Apple Developer, App Store Connect, GitHub 설정) 순서와 누가 하는지(🤖/✋)는 `docs/SETUP.md`에만, 출시(AdMob·Firebase Hosting·App Store Connect 제출) 순서는 `docs/RELEASE.md`에만 적는다.
 - iPhone에 설치하기 전에 Claude가 공통 스킬 `ios-pc-test`로 PC에서 먼저 화면·로직을 확인하고(이 앱은 `ios-build.yml` 시뮬레이터 캡처), 사용자에게는 iPhone에서만 볼 것을 짧게 추려 준다.

@@ -20,10 +20,11 @@ on:
   # Tags only, never branches (see above).
   push:
     tags: ["ios-check-*"]
-  # Keep these paths in sync with APP_PATHS in find-launch-check.py.
+  # Keep these paths in sync with APP_PATHS and NOT_APP_PATHS in find-launch-check.py.
   pull_request:
     paths:
       - "ios/**"
+      - "!ios/fastlane/**"
       - ".github/actions/ios-setup/**"
       - ".github/scripts/ios-unit-tests.sh"
       - ".github/scripts/ios-launch-check.sh"

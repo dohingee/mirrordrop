@@ -27,8 +27,12 @@ APP_PATHS = ("ios/", ".github/actions/ios-setup/", ".github/scripts/ios-unit-tes
              ".github/scripts/ios-launch-check.sh", ".github/workflows/ios-build.yml")
 
 
+# The App Store listing (text, age rating) under ios/fastlane is not part of the app build.
+NOT_APP_PATHS = ("ios/fastlane/",)
+
+
 def app_affected(path: str) -> bool:
-    return path.startswith(APP_PATHS)
+    return path.startswith(APP_PATHS) and not path.startswith(NOT_APP_PATHS)
 
 
 def get(url: str):

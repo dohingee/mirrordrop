@@ -24,8 +24,13 @@
 # (ReplayKit) and Google Cast discovery cannot run in a simulator: those stay on the device test.
 # Run from ios/ after .github/actions/ios-setup. Writes png, entitlements.txt, summary.txt and any
 # crash reports to $RESULTS_DIR (default build/ci-results).
+# LAUNCH_CHECK_SCOPE=store (iOS App Store listing, ios-store.yml): the same build and the same store
+# captures (main as the first, slow launch; guide, store-sending/-connected in Korean and English),
+# iPhone only, without the iPad and the diagnostics/clock/English main screens (several minutes less).
 set -euo pipefail
 out=${RESULTS_DIR:-build/ci-results}
+scope=${LAUNCH_CHECK_SCOPE:-full}
+case "$scope" in full|store) ;; *) echo "::error::LAUNCH_CHECK_SCOPE must be full or store, not $scope"; exit 1 ;; esac
 bundle=com.mirrordrop.app
 mkdir -p "$out"
 summary() { echo "$1" | tee -a "$out/summary.txt" >> "${GITHUB_STEP_SUMMARY:-/dev/null}"; }
@@ -161,7 +166,8 @@ check() {  # udid kind name wait [app arguments...]
 touch "$out/.started"
 retried=0
 launch_retried=0
-for kind in iphone ipad; do
+kinds="iphone ipad"; [ "$scope" = store ] && kinds=iphone
+for kind in $kinds; do
   devtype=$([ "$kind" = iphone ] && echo "$iphone" || echo "$ipad")
   echo "[$(date +%H:%M:%S)] create $kind ($devtype)"
   udid=$(limit 60 xcrun simctl create "launch-$kind" "$devtype" "$runtime") || {
@@ -195,8 +201,10 @@ for kind in iphone ipad; do
   # First launch is slow (fresh install); 25 s also covers a crash shortly after start.
   check "$udid" "$kind" main 25 "${ko[@]}"
   if [ "$kind" = iphone ]; then
-    check "$udid" iphone diagnostics 15 "${ko[@]}" -MDScreen diagnostics
-    check "$udid" iphone clock 15 "${ko[@]}" -MDScreen clock
+    if [ "$scope" = full ]; then
+      check "$udid" iphone diagnostics 15 "${ko[@]}" -MDScreen diagnostics
+      check "$udid" iphone clock 15 "${ko[@]}" -MDScreen clock
+    fi
     check "$udid" iphone guide 15 "${ko[@]}" -MDScreen guide
     # App Store screenshots: first-run tips already seen (plist values in the argument domain).
     seen=(-volumeTipSeen '<true/>' -usageGuideSeen '<true/>')
@@ -206,7 +214,7 @@ for kind in iphone ipad; do
     # tip, not seen in its argument domain) and the guide, to check the translated layout.
     check "$udid" iphone store-en-sending 15 "${en[@]}" "${seen[@]}" -MDDemo sending
     check "$udid" iphone store-en-connected 15 "${en[@]}" "${seen[@]}" -MDDemo connected
-    check "$udid" iphone en-main 15 "${en[@]}"
+    [ "$scope" = full ] && check "$udid" iphone en-main 15 "${en[@]}"
     check "$udid" iphone en-guide 15 "${en[@]}" -MDScreen guide
     size=$(sips -g pixelWidth -g pixelHeight "$out/iphone-store-sending.png" 2>/dev/null \
       | awk '/pixelWidth/ {w=$2} /pixelHeight/ {h=$2} END {if (w && h) print w "x" h}' || true)
@@ -236,5 +244,5 @@ if [ -n "$crashes" ]; then
   while IFS= read -r crash; do cp "$crash" "$out/"; head -c 4000 "$crash"; done <<<"$crashes"
   failed=1
 fi
-summary "Launch check: $([ $failed = 0 ] && echo passed || echo FAILED) on iPhone and iPad simulators ($runtime)"
+summary "Launch check: $([ $failed = 0 ] && echo passed || echo FAILED) on $([ "$scope" = full ] && echo "iPhone and iPad simulators" || echo "the iPhone simulator (store scope)") ($runtime)"
 exit $failed

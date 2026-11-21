@@ -81,6 +81,11 @@ GitHub 비밀값은 **저장소마다 따로**입니다. Bottlepost에 넣은 �
 | Name | 넣을 값 | 누가 |
 |---|---|---|
 | `APPLE_TEAM_ID` | 1번의 Team ID | 🤖 |
+| `REVIEW_FIRST_NAME`, `REVIEW_LAST_NAME` | App Store 심사 연락처의 이름·성(심사관만 봄) | ✋ 값을 알려 주면 🤖 |
+| `REVIEW_PHONE` | 심사 연락처 전화번호, 국가 번호부터(예: `+82 10 …`) | ✋ 값을 알려 주면 🤖 |
+| `REVIEW_EMAIL` | 심사 연락처 메일: 심사 연락용(밖에 안 보이는) 아이디 주소. 없으면 `kimyeoware@gmail.com` | 🤖 |
+
+`REVIEW_*`는 스토어 올리기(`store-*` 태그, `docs/RELEASE.md` 8번)가 심사 정보에 넣는다. 이름·전화번호는 개인 정보라 공개 저장소의 파일에 적지 않고 여기에만 두며, 공개 실행 기록(로그)에서는 가려진다. 이름·성·전화번호 셋이 다 있어야 넣고, 하나라도 없으면 연락처는 건너뛴다(App Store Connect에서 직접 넣어도 된다).
 
 AdMob 광고 ID는 GitHub 변수로 넣지 않습니다. 비밀값이 아니어서 `ios/project.yml`의 빌드 설정 `ADMOB_APP_ID`·`ADMOB_BANNER`·`ADMOB_INTERSTITIAL` 한 곳에 적어 둡니다(값과 시험 광고 규칙은 `docs/RELEASE.md` 2-3).
 

@@ -8,7 +8,8 @@ App Store Connect에 넣을 한국어 글과 심사 메모를 이 파일 한 곳
   - 개인정보 처리방침 URL: `https://mirrordrop-app.web.app/privacy.html`
   - 지원 URL: `https://mirrordrop-app.web.app/support.html`
   - 마케팅 URL: `https://mirrordrop-app.web.app/` (AdMob이 이 주소의 도메인에서 `app-ads.txt`를 찾는다. 비워 두지 않는다)
-- 글자 수 제한(App Store Connect 도움말 "Platform version information" 2026-11-22 확인): 이름·부제 30자, 홍보 문구 170자, 설명 4000자, 키워드 **100바이트**(한글 한 글자 = 3바이트), 새로운 기능 4000자.
+- 글자 수 제한(App Store Connect 도움말 "Platform version information" 2026-11-22 확인): 이름·부제 30자, 홍보 문구 170자, 설명 4000자, 키워드 **100바이트**(한글 한 글자 = 3바이트), 새로운 기능 4000자, 심사 메모 4000자(`<VIDEO_URL>`이 주소로 바뀐 뒤 길이, 2026-11-22에 5011자라 줄였다).
+- 이 파일과 `en.md`의 ```` ```text ```` 칸이 스토어 글의 **유일한 원본**이다. 고친 뒤 `python .github/scripts/store-metadata.py`로 `ios/fastlane/metadata/`를 다시 만들고 함께 커밋한다. 이 스크립트가 위 글자 수와 쓰지 않는 말(이름·부제·키워드의 Chromecast·Google)을 검사하고, 스토어 올리기(`store-*` 태그, `docs/RELEASE.md` 8번)도 맨 먼저 같은 검사를 해서 어긋나면 Mac을 쓰기 전에 멈춘다. 그래서 칸 제목의 번호(1~6, 7 카테고리 줄, 8, 9-1)와 URL 줄의 이름표를 바꾸면 스크립트도 고친다.
 - 쓰지 않는 말: "Chromecast", "Google"을 이름·부제·키워드에 넣지 않는다. "Google Cast"는 설명의 호환 문장과 상표 문장에서만 쓴다(Google Cast UX 가이드라인: 앱 이름에 Google Cast를 넣지 말 것, 마케팅 글에 "Google Cast is a trademark of Google LLC." 표기 — https://developers.google.com/cast/docs/ux_guidelines). 다른 미러링 앱 이름, "실시간·지연 없음", "넷플릭스도 됨", "게임용"은 쓰지 않는다(SPEC 5번).
 
 ## 1. 앱 이름 (30자)
@@ -99,45 +100,44 @@ MirrorDrop을 처음 선보여요. iPhone 화면을 같은 Wi-Fi의 TV로 보내
 
 ## 9. 심사 메모 (App Review Information → Notes)
 
-App Store Connect → 버전 화면 → **앱 심사 정보**. 로그인 필요는 **끔**. 연락처(이름·전화·이메일)는 심사관만 보는 칸이고 `docs/RELEASE.md`에 누가 넣는지 적혀 있다. 메모는 언어별이 아니라 하나이므로 영어로 넣고, 아래 우리말은 사용자 확인용이다. `<VIDEO_URL>`은 시연 영상 주소로 바꾼다(`docs/RELEASE.md` "시연 영상").
+App Store Connect → 버전 화면 → **앱 심사 정보**. 로그인 필요는 **끔**. 연락처(이름·전화·이메일)는 심사관만 보는 칸이고 `docs/RELEASE.md`에 누가 넣는지 적혀 있다. 메모는 언어별이 아니라 하나이므로 영어로 넣고, 아래 우리말은 사용자 확인용이다. `<VIDEO_URL>`은 `store-metadata.py`가 시연 영상 주소 `https://mirrordrop-app.web.app/review/demo.mp4`로 바꿔 넣는다(`docs/RELEASE.md` 5번 "시연 영상").
 
 ### 9-1. 붙여 넣을 글 (영어)
 
 ```text
-MirrorDrop mirrors the iPhone screen to a Google Cast TV or streaming stick on the same Wi-Fi network. There is no sign-in or account, so no demo account is needed.
+MirrorDrop mirrors the iPhone screen to a Google Cast TV or streaming stick on the same Wi-Fi. No sign-in or account, so no demo account is needed.
 
 DEMO VIDEO (iPhone + TV, start to stop)
 <VIDEO_URL>
-If you have no Google Cast device, please watch this video: the main feature needs a Google Cast receiver (for example Chromecast with Google TV, Google TV Streamer, or a TV with Google Cast built in). Without one, the app does not crash or go blank: after a few seconds it shows "TV를 찾지 못했어요" (TV not found) with a checklist (same Wi-Fi, guest Wi-Fi / AP isolation, Local Network permission) and a button to open Settings.
+The main feature needs a Google Cast receiver (e.g. Chromecast with Google TV, Google TV Streamer, a TV with Google Cast built in). If you have none, please watch the video. Without one the app does not crash or go blank: after a few seconds it shows "TV를 찾지 못했어요" (TV not found) with a checklist (same Wi-Fi, guest Wi-Fi / AP isolation, Local Network permission) and a button to open Settings.
 
 HOW IT WORKS
 1. Tap the Cast button or "TV 고르기" (Choose TV) and pick the TV.
-2. Tap the large blue card "TV로 보내기 시작" (Start sending to TV). This is Apple's system broadcast picker (RPSystemBroadcastPickerView) limited to our Broadcast Upload Extension; tap "Start Broadcast". iOS shows its own countdown and the red screen-recording indicator while sharing (guideline 2.5.14: started only by the user in the system sheet, clearly indicated by iOS).
-3. The extension encodes the screen with VideoToolbox/AVAssetWriter into HLS segments kept in memory, and a small HTTP server on the iPhone (Network.framework) serves them only to devices with private (local) addresses, at a new random path for each broadcast. The app tells the TV, through the Google Cast SDK and Google's Default Media Receiver, to play that local URL. The TV fetches the video directly from the iPhone; the screen never leaves the home Wi-Fi and nothing is recorded.
-4. Stop with the red card "보내기 멈추기" (Stop sending) or the red indicator at the top of the screen.
+2. Tap the large blue card "TV로 보내기 시작" (Start sending to TV): Apple's system broadcast picker (RPSystemBroadcastPickerView) limited to our Broadcast Upload Extension, then "Start Broadcast". iOS shows its countdown and red recording indicator (2.5.14: started by the user, indicated by iOS).
+3. The extension encodes the screen (VideoToolbox/AVAssetWriter) into in-memory HLS segments. A small HTTP server on the iPhone (Network.framework) serves them only to private (local) addresses, at a new random path per broadcast. Via the Google Cast SDK and the Default Media Receiver the TV plays that local URL, fetching directly from the iPhone. The screen never leaves the home Wi-Fi; nothing is recorded.
+4. Stop with the red card "보내기 멈추기" (Stop sending) or the red indicator at the top.
 
 PERMISSIONS
-- Local Network: needed to discover Google Cast devices (Bonjour _googlecast._tcp) and to let the TV fetch the stream from the iPhone. Asked when the user first looks for a TV.
-- Notifications (optional): one local notification, "TV 보내기가 멈췄어요" (Sending stopped), when iOS ends the broadcast, e.g. when the iPhone locks. Asked when the first broadcast starts. No remote push, no marketing.
-- No background modes are used. The app uses a short finite-length background task (beginBackgroundTask) only to finish sending the play request to the TV if the user leaves the app right after starting.
+- Local Network: to find Google Cast devices (Bonjour _googlecast._tcp) and let the TV fetch the stream. Asked when the user first looks for a TV.
+- Notifications (optional): one local alert, "TV 보내기가 멈췄어요" (Sending stopped), when iOS ends the broadcast (e.g. the iPhone locks). Asked at the first broadcast. No remote push.
+- No background modes. A short finite-length task (beginBackgroundTask) only finishes the play request if the user leaves right after starting.
 
-ADS
-- Google AdMob: a banner at the bottom of the main screen, removed while the screen is being sent (the whole screen is visible on the TV), and at most one interstitial per day before a broadcast starts (never during the first 3 broadcasts, never within 10 minutes of an unexpected stop or after opening the stop notification). On that one tap a day the start card first shows the ad; after it is closed the card is Apple's broadcast picker again and says "이제 눌러서 시작하세요" (Tap to start now), so the ad always closes before sharing begins. The picker is never triggered programmatically. No ads while sending, no app-open or rewarded ads, no ads in the extension. Ads never cover the Start or Stop button.
-- This review build shows Google TEST ads: the app checks the App Store environment (StoreKit AppTransaction) and requests live ads only in apps downloaded from the App Store, so TestFlight and App Review never touch live ads. Because the first 3 broadcasts never show the interstitial, you will most likely see only the banner.
-- Consent and tracking: at launch the app only refreshes Google's consent status. After the first broadcast has ended, while the app is in front, it shows Google's UMP consent form where required (EEA/UK/Switzerland) and then the App Tracking Transparency prompt, so neither interrupts the first TV setup. In regions that require consent, no ad is requested before a choice is made. Everything works if the user declines. "광고 개인정보 설정" (Ad privacy settings, shown where Google requires it) and "광고 신고" (Report an ad, opens an email to the support address) are in "고급·진단" (Advanced & Diagnostics).
+ADS (Google AdMob)
+- A banner at the bottom of the main screen, removed while sending (the whole screen shows on the TV). At most one interstitial a day before a broadcast (never in the first 3 broadcasts, within 10 minutes of an unexpected stop, or from the stop alert). On that tap the start card shows the ad first; once closed, the card is the broadcast picker again and says "이제 눌러서 시작하세요" (Tap to start now), so the ad closes before sharing begins. The picker is never triggered programmatically. No ads while sending, no app-open or rewarded ads, none in the extension; ads never cover Start or Stop.
+- This build shows Google TEST ads: live ads only in apps downloaded from the App Store (StoreKit AppTransaction), so TestFlight and App Review never touch live ads. You will most likely see only the banner.
+- After the first broadcast ends, the app shows Google's UMP consent form where required (EEA/UK/Switzerland), then the App Tracking Transparency prompt, so neither interrupts the first setup. Where consent is required, no ad is requested before a choice. Everything works if the user declines. "광고 개인정보 설정" (Ad privacy settings) and "광고 신고" (Report an ad) are in "고급·진단" (Advanced & Diagnostics).
 
-WHAT MAKES IT DIFFERENT (Guideline 4.3)
-- Local only: the stream goes from the iPhone directly to the TV on the same Wi-Fi. No cloud relay, no account, no analytics SDK.
-- Every feature is free: no subscription, no paywall, no time limit, no watermark. Ads are the only monetization and are kept away from the TV.
-- Built for families watching photos and videos: one screen with numbered steps (1 choose TV, 2 start), sound output choice (TV or phone) that can be changed while sending, TV volume and mute, a stop alert when iOS ends the broadcast, and a step-by-step guide ("사용 방법").
-- Honest limits stated in the app and the description: about 4 seconds of delay, 720p, copy-protected video appears black (no DRM workaround).
+WHAT MAKES IT DIFFERENT (4.3)
+- Local only: no cloud relay, no account, no analytics SDK.
+- Every feature is free: no subscription, paywall, time limit or watermark. Ads stay off the TV.
+- Made for families sharing photos and videos: numbered steps (1 choose TV, 2 start), sound on TV or phone (switchable while sending), TV volume and mute, a stop alert, a step-by-step guide ("사용 방법").
+- Honest limits stated: about 4 s delay, 720p, copy-protected video appears black (no DRM workaround).
 
-MirrorDrop is an independent app, not affiliated with Google. "Google Cast" is used only to describe compatibility, and the Cast button is the official one from the Google Cast SDK.
+MirrorDrop is not affiliated with Google. "Google Cast" only describes compatibility; the Cast button is the official Google Cast SDK one.
 
-CONTACT
-kimyeoware@gmail.com
+CONTACT: kimyeoware@gmail.com
 Support: https://mirrordrop-app.web.app/en/support.html
-Privacy policy: https://mirrordrop-app.web.app/en/privacy.html
+Privacy: https://mirrordrop-app.web.app/en/privacy.html
 ```
 
 - 버튼 이름은 앱 화면 글자와 같다(`ios/MirrorDrop/UI/ContentView.swift`, `AdvancedView.swift`). 영어 화면을 만든 뒤에는 괄호 안 영어를 실제 영어 버튼 글자로 맞춘다. 광고 줄은 광고 코드(`ios/MirrorDrop/App/AdsManager.swift`, `ios/Shared/AdPolicy.swift`)의 실제 동작대로 썼다(2026-11-22): 심사·TestFlight 빌드는 시험 광고, ATT는 첫 보내기가 끝난 뒤.

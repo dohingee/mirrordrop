@@ -4,8 +4,9 @@
 #   git fetch origin ci-results && git archive origin/ci-results | tar -x -C <folder>
 # The branch is always one orphan commit, force-pushed (no history piles up in the repository).
 #   publish-ci-results.sh launch-check <dir> : <dir> becomes <short sha>/, replacing the previous
-#                                              commit's folder (asc-status/ is kept)
+#                                              commit's folder (asc-status/ and store/ are kept)
 #   publish-ci-results.sh asc-status <dir>   : <dir> becomes asc-status/ (everything else is kept)
+#   publish-ci-results.sh store <dir>        : <dir> becomes store/ (everything else is kept)
 # Env: GITHUB_TOKEN (contents: write), GITHUB_REPOSITORY, SOURCE_SHA (the checked commit),
 # optional RUN_URL. Never touches any other branch.
 set -euo pipefail
@@ -24,11 +25,11 @@ if git -C "$work" fetch -q --depth=1 "$remote" "$branch" 2>/dev/null; then
 fi
 case "$kind" in
   launch-check)
-    find "$work" -mindepth 1 -maxdepth 1 ! -name .git ! -name asc-status -exec rm -rf {} +
+    find "$work" -mindepth 1 -maxdepth 1 ! -name .git ! -name asc-status ! -name store -exec rm -rf {} +
     dest="$work/$sha7" ;;
-  asc-status)
-    rm -rf "$work/asc-status"
-    dest="$work/asc-status" ;;
+  asc-status|store)
+    rm -rf "${work:?}/$kind"
+    dest="$work/$kind" ;;
   *) echo "unknown kind $kind"; exit 1 ;;
 esac
 mkdir -p "$dest"
@@ -40,6 +41,8 @@ cat > "$work/README.md" <<MD
 - \`<short sha>/\`: launch check of that commit (.github/scripts/ios-launch-check.sh): screenshots,
   summary.txt, unit-tests.txt, entitlements.txt, crash reports if any.
 - \`asc-status/\`: App Store Connect / TestFlight state (.github/workflows/ios-asc-status.yml).
+- \`store/\`: App Store listing run (.github/workflows/ios-store.yml): screenshots/<locale>/ as
+  uploaded, summary.txt, upload.txt (what App Store Connect has afterwards).
 MD
 git -C "$work" add -A
 # Orphan commit: drop the fetched history so the branch stays a single commit.

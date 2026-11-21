@@ -1,0 +1,227 @@
+# App Store listing: takes the 6.9-inch iPhone screenshots from the real app in demo mode and uploads
+# them, with the store text in ios/fastlane/metadata (made from docs/store by store-metadata.py) and
+# the age rating answers in ios/fastlane/age_rating.json, to the App Store version being prepared
+# (MARKETING_VERSION in ios/project.yml). fastlane deliver only: never submits for review, never
+# uploads a binary, never touches price or availability. Steps and what stays in the web UI:
+# docs/RELEASE.md 8.
+# Start it from the PC by pushing a tag store-<anything> (renders and uploads), or Actions > iOS App
+# Store listing > Run workflow (upload off: screenshots only).
+#  1. metadata (Ubuntu, seconds): text limits, trademarks, files up to date with docs/store; secrets.
+#     A failure here stops the run before any macOS time.
+#  2. screenshots (macOS): the launch check's Release simulator build with MD_DEMO and its store
+#     captures (.github/scripts/ios-launch-check.sh, LAUNCH_CHECK_SCOPE=store: iPhone only), arranged
+#     as <locale>/1_sending, 2_connected, 3_guide. Pushed to the ci-results branch (store/).
+#  3. upload (Ubuntu: deliver needs only Ruby and the API): review contact from repository variables,
+#     fastlane deliver, then a read-back of App Store Connect (GET only) added to store/upload.txt.
+name: iOS App Store listing
+
+on:
+  push:
+    tags: ["store-*"]
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: "Upload screenshots and text to App Store Connect (otherwise only the screenshots, on the ci-results branch)"
+        type: boolean
+        default: false
+      runner:
+        description: "macOS runner for the screenshots (if one waits too long or stalls, try the other)"
+        type: choice
+        options: [macos-26, macos-26-intel]
+        default: macos-26
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-store
+  cancel-in-progress: false
+
+env:
+  # Pinned (2.241.2, 2026-10-26: has the 2025 age rating questions, e.g. advertising, ageAssurance).
+  # To update: a release at least two weeks old from https://rubygems.org/gems/fastlane/versions.
+  FASTLANE_VERSION: "2.241.2"
+  BUNDLE_ID: com.mirrordrop.app
+  UPLOAD: ${{ inputs.upload || startsWith(github.ref, 'refs/tags/store-') }}
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the store text (limits, trademarks, up to date with docs/store)
+        run: python3 .github/scripts/store-metadata.py --check
+
+      - name: Check secrets
+        if: env.UPLOAD == 'true'
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          KEY: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          missing=0
+          for name in KEY_ID:ASC_KEY_ID ISSUER:ASC_ISSUER_ID KEY:ASC_KEY_P8; do
+            var="${name%%:*}"
+            if [ -z "${!var}" ]; then echo "::error::GitHub secret ${name#*:} is not set (docs/SETUP.md 5)"; missing=1; fi
+          done
+          exit $missing
+
+  screenshots:
+    needs: metadata
+    runs-on: ${{ inputs.runner || 'macos-26' }}
+    timeout-minutes: 50
+    # Only to push the screenshots to the ci-results branch (publish-ci-results.sh touches no other branch).
+    permissions:
+      contents: write
+    env:
+      RESULTS_DIR: ${{ github.workspace }}/ios/build/store-results
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Xcode, XcodeGen and Swift packages
+        uses: ./.github/actions/ios-setup
+
+      # Same build and captures as the launch check (no second copy of the simulator steps).
+      - name: Build and capture (6.9-inch iPhone, demo mode, Korean and English)
+        working-directory: ios
+        timeout-minutes: 40
+        env:
+          LAUNCH_CHECK_SCOPE: store
+        run: bash ../.github/scripts/ios-launch-check.sh
+
+      - name: Arrange the screenshots for App Store Connect
+        run: |
+          set -euo pipefail
+          cd "$RESULTS_DIR"
+          # App Store Connect locale : file prefix of the launch check (Korean has none). Order on the
+          # store page = file name order.
+          for pair in ko: en-US:en-; do
+            loc=${pair%%:*} p=${pair#*:}
+            mkdir -p "screenshots/$loc"
+            mv "iphone-store-${p}sending.png" "screenshots/$loc/1_sending.png"
+            mv "iphone-store-${p}connected.png" "screenshots/$loc/2_connected.png"
+            mv "iphone-${p}guide.png" "screenshots/$loc/3_guide.png"
+          done
+          # The 6.9-inch slot takes these sizes. App Store Connect refuses PNGs with an alpha channel:
+          # such a file is turned into a JPEG (no alpha) instead of failing.
+          for f in screenshots/*/*.png; do
+            size=$(sips -g pixelWidth -g pixelHeight "$f" | awk '/pixelWidth/ {w=$2} /pixelHeight/ {h=$2} END {print w "x" h}')
+            case "$size" in 1320x2868|1290x2796|1260x2736) ;; *) echo "::error::$f is $size, not a 6.9-inch size"; exit 1 ;; esac
+            if [ "$(sips -g hasAlpha "$f" | awk '/hasAlpha/ {print $2}')" = yes ]; then
+              sips -s format jpeg -s formatOptions best "$f" --out "${f%.png}.jpg" >/dev/null && rm "$f"
+              echo "::notice::$f had an alpha channel, uploaded as JPEG"
+            fi
+          done
+          echo "Store screenshots ($size): $(cd screenshots && ls */* | paste -sd ' ' -)" | tee -a summary.txt >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: store-results
+          path: ${{ env.RESULTS_DIR }}
+
+      # Also after a failure, so the reason (summary.txt, build-errors.txt) is readable from the PC.
+      - name: Publish to the ci-results branch (store/)
+        if: ${{ !cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash .github/scripts/publish-ci-results.sh store "$RESULTS_DIR"
+
+  upload:
+    needs: [metadata, screenshots]
+    if: ${{ inputs.upload || startsWith(github.ref, 'refs/tags/store-') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: store-results
+          path: ${{ runner.temp }}/store-results
+
+      # Name and phone are personal: GitHub repository variables only (never in this public
+      # repository), masked in the public logs, and only "set / not set" goes to ci-results.
+      - name: Review contact (repository variables REVIEW_*)
+        env:
+          FIRST: ${{ vars.REVIEW_FIRST_NAME }}
+          LAST: ${{ vars.REVIEW_LAST_NAME }}
+          PHONE: ${{ vars.REVIEW_PHONE }}
+          EMAIL: ${{ vars.REVIEW_EMAIL }}
+        run: |
+          set -euo pipefail
+          for v in "$FIRST" "$LAST" "$PHONE" "$EMAIL"; do [ -z "$v" ] || echo "::add-mask::$v"; done
+          dir=ios/fastlane/metadata/review_information
+          if [ -n "$FIRST" ] && [ -n "$LAST" ] && [ -n "$PHONE" ]; then
+            printf '%s\n' "$FIRST" > "$dir/first_name.txt"
+            printf '%s\n' "$LAST" > "$dir/last_name.txt"
+            printf '%s\n' "$PHONE" > "$dir/phone_number.txt"
+            printf '%s\n' "${EMAIL:-kimyeoware@gmail.com}" > "$dir/email_address.txt"
+            echo "Review contact: from the REVIEW_* repository variables" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Review contact skipped: set the repository variables REVIEW_FIRST_NAME, REVIEW_LAST_NAME and REVIEW_PHONE (docs/SETUP.md 5), or enter it in App Store Connect"
+            echo "Review contact: NOT uploaded (REVIEW_* variables not set)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # The review notes link to it; uploading still goes on (the video can be added later, docs/RELEASE.md 5).
+      - name: Check the demo video link
+        run: |
+          url=$(grep -oE 'https://[^ ]+/review/demo\.mp4' ios/fastlane/metadata/review_information/notes.txt | head -1)
+          if curl -sfIL --max-time 30 "$url" >/dev/null; then
+            echo "Demo video: $url opens" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::the demo video $url does not open yet (docs/RELEASE.md 5)"
+            echo "Demo video: $url does NOT open yet" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload to App Store Connect (no review submission)
+        working-directory: ios
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          KEY: ${{ secrets.ASC_KEY_P8 }}
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_HIDE_CHANGELOG: "1"
+        run: |
+          set -euo pipefail
+          gem install fastlane -v "$FASTLANE_VERSION" --no-document --user-install >/dev/null
+          export PATH="$(ruby -e 'print Gem.user_dir')/bin:$PATH"
+          python3 -c 'import json, os; print(json.dumps({"key_id": os.environ["KEY_ID"], "issuer_id": os.environ["ISSUER"], "key": os.environ["KEY"], "in_house": False}))' \
+            > "$RUNNER_TEMP/asc.json"
+          version=$(grep -E '^\s+MARKETING_VERSION:' project.yml | head -1 | sed -E 's/.*"(.*)".*/\1/')
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          # Runs from ios/ so it finds fastlane/Deliverfile (empty: without it deliver asks to set up).
+          # Not passed on purpose: price, availability, submission information. automatic_release
+          # false makes the version "manually release" (docs/RELEASE.md 11).
+          fastlane deliver --api_key_path "$RUNNER_TEMP/asc.json" --app_identifier "$BUNDLE_ID" \
+            --app_version "$version" --platform ios \
+            --metadata_path fastlane/metadata --screenshots_path "$RUNNER_TEMP/store-results/screenshots" \
+            --app_rating_config_path fastlane/age_rating.json \
+            --skip_binary_upload true --overwrite_screenshots true --force true \
+            --submit_for_review false --run_precheck_before_submit false --automatic_release false
+          rm -f "$RUNNER_TEMP/asc.json"
+          echo "Uploaded the listing for version $version. Not submitted: the rest is in docs/RELEASE.md." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check what App Store Connect has now
+        if: ${{ !cancelled() && env.VERSION != '' }}
+        env:
+          KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ISSUER: ${{ secrets.ASC_ISSUER_ID }}
+          KEY: ${{ secrets.ASC_KEY_P8 }}
+          SCREENSHOTS: ${{ runner.temp }}/store-results/screenshots
+          METADATA: ios/fastlane/metadata
+          OUT: ${{ runner.temp }}/store-results
+        run: python3 -u .github/scripts/asc-listing-check.py
+
+      - name: Publish to the ci-results branch (store/, with upload.txt)
+        if: ${{ !cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash .github/scripts/publish-ci-results.sh store "$RUNNER_TEMP/store-results"

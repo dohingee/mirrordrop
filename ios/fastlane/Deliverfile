@@ -1,0 +1,3 @@
+# Intentionally empty. Every deliver option is on the command line in .github/workflows/ios-store.yml
+# ("Upload to App Store Connect"). Without this file `fastlane deliver` stops to ask whether to set
+# deliver up, which fails on a CI runner (seen in palja-note's store workflow).
