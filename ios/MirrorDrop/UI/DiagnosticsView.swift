@@ -44,7 +44,7 @@ struct DiagnosticsView: View {
                 LabeledContent("마지막 조각", value: String(format: "%.2f초, %ld KB", s.lastSegmentDuration, s.lastSegmentBytes / 1024))
                 LabeledContent("코덱", value: s.codecs ?? "-")
                 LabeledContent("화면 방향 값", value: "\(s.orientation)")
-                LabeledContent("지연 실험 (확장이 쓴 값)", value: Self.presetText(s.latencyPreset))
+                LabeledContent("조각 설정 (확장이 쓴 값)", value: Self.presetText(s.latencyPreset))
             }
             Section {
                 LabeledContent("소리 나오는 곳 (확장이 쓰는 값)", value: Self.audioOutputText(s.audioOutput))
@@ -183,7 +183,7 @@ enum DiagnosticsReport {
         lines.append("Cast: \(cast.stateText), 기기: \(cast.deviceName ?? "-"), TV 상태: \(cast.mediaText)")
         lines.append("TV 재생 위치: \(cast.liveLagText)")
         lines.append("Cast 오류: \(cast.lastError ?? "-")")
-        lines.append("확장 상태: \(monitor.stateText), 소리 출력: \(s.audioOutput ?? "-"), 지연 실험: \(s.latencyPreset ?? "-")")
+        lines.append("확장 상태: \(monitor.stateText), 소리 출력: \(s.audioOutput ?? "-"), 조각 설정: \(s.latencyPreset ?? "-")")
         lines.append(String(format: "소리: 묶음 %ld, 형식 %@, 크기 최근 %.3f 최고 %.3f, 보냄 %ld, 무음 %ld, 버림 %ld (48kHz 프레임)",
                             s.audioSamplesIn, s.audioSourceFormat ?? "-", s.audioPeakRecent, s.audioPeakMax,
                             s.audioRealFrames, s.audioSilentFrames, s.audioDroppedFrames))

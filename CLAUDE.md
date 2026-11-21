@@ -1,6 +1,6 @@
 # MirrorDrop
 
-iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 지금은 Phase 2 MVP(첫 출시용 기능 다듬기)다. PoC 시험 결과는 `docs/POC_TEST.md`. 계획: `docs/PLAN.md`.
+iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 지금은 3단계 출시 준비(빌드 17 = 1.0 출시 후보, 광고·영어 포함, 세계 출시)다. 출시 순서표: `docs/RELEASE.md`. 기기 시험 결과는 `docs/POC_TEST.md`. 계획: `docs/PLAN.md`.
 
 기획서와 App Store 심사 위험 점검: `docs/SPEC.md`.
 
@@ -10,7 +10,9 @@ iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 
   - `App/PhoneVolumeMonitor.swift`: 앱이 앞에 있을 때 휴대폰 볼륨을 읽기만 함(0이면 "휴대폰 소리 꺼짐 ✓"). 다른 앱 소리를 끊지 않게 `.ambient`일 때만 오디오 세션을 켠다.
   - `App/BroadcastMonitor.swift`: App Group에서 확장 상태를 읽음(Darwin 알림 + 1초 폴링). 하나만 만들어(`shared`) 화면과 `MirrorCastCoordinator`가 같이 쓴다.
   - `App/MirrorCastCoordinator.swift`: 화면 밖(백그라운드에서도 도는 곳)에서 "준비되면 TV에 재생 요청, 방송이 끝나면 TV 정리"를 한다. 보내기 시작 직후 사용자가 다른 앱으로 가도 재생 요청을 마저 보내도록 그동안만 유한 길이 백그라운드 작업(`beginBackgroundTask`)을 잡고 바로 끝낸다(백그라운드 모드는 쓰지 않음, SPEC 2.5.4). Cast 세션도 뒤에서 멈추지 않게 `suspendSessionsWhenBackgrounded = false`. 판단 로직은 `Shared/BackgroundCastHold.swift`. 앱이 이미 잠든 뒤에는 코드가 돌지 않으므로 그때의 Wi-Fi 변경은 앱을 열어야 다시 보낸다.
-  - `UI/`: 첫 화면(`ContentView`: TV 연결 → 소리 나오는 곳(TV/휴대폰, TV 볼륨) → 보내기 시작/멈추기, 상태 한 줄, TV 못 찾을 때 안내, 문제 보내기), 사용 방법(`UsageGuideView`: 중학생도 따라 할 순서 안내. 버튼·글자 이름은 실제 화면 글자를 그대로 옮겨 적으므로 화면 글자를 바꾸면 함께 고친다. 첫 화면 "처음이세요? 사용 방법 보기"는 한 번 열면 숨김, 맨 아래 링크는 늘 있음), 고급·진단(`AdvancedView`: 옛 시험 기능·지연 실험), 진단(`DiagnosticsView`, 공유용 로그는 토큰을 가림), 지연 측정 시계, Cast 버튼·방송 선택기 래퍼.
+  - `UI/`: 첫 화면(`ContentView`: TV 연결 → 소리 나오는 곳(TV/휴대폰, TV 볼륨) → 보내기 시작/멈추기, 상태 한 줄, TV 못 찾을 때 안내, 문제 보내기), 사용 방법(`UsageGuideView`: 중학생도 따라 할 순서 안내. 버튼·글자 이름은 실제 화면 글자를 그대로 옮겨 적으므로 화면 글자를 바꾸면 함께 고친다. 첫 화면 "처음이세요? 사용 방법 보기"는 한 번 열면 숨김, 맨 아래 링크는 늘 있음), 고급·진단(`AdvancedView`: 진단·시계 링크, 공유 상태와 "지금 TV에 띄우기", TV 재생 상태, 처리방침·지원 링크와 버전. PoC 시험 도구(인터넷 샘플 영상·지연 실험)는 빌드 17에서 뺐다. 공개 웹 주소는 같은 파일의 `AppLinks` 한 곳), 진단(`DiagnosticsView`, 공유용 로그는 토큰을 가림), 지연 측정 시계, Cast 버튼·방송 선택기 래퍼.
+  - 첫 화면 맨 아래: 문제 보내기·사용 방법·고급·진단, "개인정보 처리방침" 링크(심사 5.1.1), Google Cast 상표 문장.
+  - `App/DemoMode.swift`: 스토어 스크린샷용 데모 상태(`-MDDemo connected|sending`). `MD_DEMO` 조건으로만 컴파일되는 코드(`CastManager`·`BroadcastMonitor`·`MirrorDropApp`의 `#if MD_DEMO`)라 시뮬레이터 검사 빌드에만 들어가고 TestFlight·App Store 빌드에는 없다. 광고·권한 창도 데모에서는 띄우지 않는다.
   - 연결이 끊겼다 돌아오거나 스트림 주소·`urlRevision`이 바뀌면 `MirrorCastCoordinator`가 `CastManager`로 TV에 다시 재생 요청한다(판단은 `Shared/BackgroundCastHold.swift`의 `AutoCastTrigger`).
 - `MirrorDropBroadcast/` Broadcast Upload Extension (`RPBroadcastSampleHandler`)
   - `MirrorPipeline`: ReplayKit 프레임 → `FrameScaler`(VideoToolbox, 1280x720 레터박스, 가로 화면 회전) → `HLSSegmenter`(AVAssetWriter `.mpeg4AppleHLS`, fMP4 조각, 길이는 `LatencyPreset`에 따름(기본 L3, 0.5초), 메모리에서만) → `StreamStore` → `HTTPServer`(Network.framework `NWListener`).
@@ -21,6 +23,8 @@ iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 
   - `StopAlertArmer`: 멈춤 알림. 보내는 동안 "6초 뒤 알림"을 2초마다 다시 넣어 미루고(확장이 꺼지면 뜸, iPhone 잠금 대비), 정상으로 멈추면 지운다. 판단 로직은 `Shared/StopAlert.swift`, 앱 쪽(권한·누르면 ② 시작 버튼으로·앱이 앞이면 숨김)은 `App/StopAlertCenter.swift`.
 - `Shared/` 앱·확장·테스트가 함께 컴파일: App Group 상수와 상태 모델, 설정(`LatencyPreset`, `AudioOutput`), 소리 무음 채우기·형식 변환 로직, 시작 기록(`StartupTrace`, 방송 시작 뒤 30초의 시간표), 백그라운드 재생 요청 판단(`BackgroundCastHold`), HLS 재생목록, HTTP 파서·라우터, 조각 링버퍼, IP·메모리 측정.
 - `MirrorDropTests/` 순수 로직 단위 테스트(호스트 앱 없음, `Shared/`를 직접 컴파일).
+- `web/` 공개 웹 페이지(Firebase Hosting, 프로젝트 `mirrordrop-app`): `hosting/`에 한국어 `index.html`·`privacy.html`·`support.html`, 영어는 `hosting/en/`, `app-ads.txt`. 손으로 쓴 정적 파일이고, 앱 동작(수집하는 것, 버튼 이름)이 바뀌면 함께 고친다. 올리기·시연 영상(`hosting/review/`, git 제외)은 `docs/RELEASE.md` 4·5번.
+- `docs/store/` 스토어 글: `ko.md`(한국어 + 심사 메모), `en.md`(영어).
 
 스트림 주소: `http://<Wi-Fi IPv4>:8765/<방송마다 새 랜덤 토큰>/live.m3u8` (마스터) → `media.m3u8` → `init.mp4`, `segN.m4s`.
 
@@ -37,9 +41,9 @@ iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 
 - Mac이 없다(이 PC는 Windows). 여기서는 컴파일할 수 없으므로 Apple·Google API 서명을 문서로 확인하고 쓴다.
 - 코드는 이 PC의 git과 공개 저장소 `dohingee/mirrordrop`에 둔다(Mac 빌드 무료. 이유·주의는 `docs/SETUP.md` 비용 안내). GitHub은 iOS 빌드에 Mac이 필요해서만 쓴다(GitHub Actions의 macOS 서버).
 - push만으로는 아무것도 돌지 않는다(Mac 시간 절약). Mac 실행은 일부러 시작할 때만:
-  - `ios-build.yml`: Claude가 `ios-check-<날짜>` 태그를 push하면 시작(손 실행, 같은 저장소의 PR도 가능). 단위 테스트 + iPhone·iPad 시뮬레이터 실행 확인과 화면 캡처.
+  - `ios-build.yml`: Claude가 `ios-check-<날짜>` 태그를 push하면 시작(손 실행, 같은 저장소의 PR도 가능). 단위 테스트 + iPhone(6.9인치 Pro Max)·iPad 시뮬레이터 실행 확인과 화면 캡처, 스토어 스크린샷(`iphone-store-*.png`), Google Cast SDK 개인정보 파일(`cast-sdk-privacy/`).
   - `ios-testflight.yml`: Claude가 이 PC에서 `testflight-<번호>` 태그를 push하면 시작(손 실행도 가능). 같은 앱 내용의 통과한 검사가 있으면 다시 하지 않고, 출시용 빌드(archive) → TestFlight 업로드.
   - 캡처·결과는 `ci-results` 브랜치에 올라오므로 Claude가 PC에서 git으로 받아 본다.
-- 비용·비밀값·웹 관리 화면(Apple Developer, App Store Connect, GitHub 설정) 순서와 누가 하는지(🤖/✋)는 `docs/SETUP.md`에만 적는다.
+- 비용·비밀값·처음 설정용 웹 관리 화면(Apple Developer, App Store Connect, GitHub 설정) 순서와 누가 하는지(🤖/✋)는 `docs/SETUP.md`에만, 출시(AdMob·Firebase Hosting·App Store Connect 제출) 순서는 `docs/RELEASE.md`에만 적는다.
 - iPhone에 설치하기 전에 Claude가 공통 스킬 `ios-pc-test`로 PC에서 먼저 화면·로직을 확인하고(이 앱은 `ios-build.yml` 시뮬레이터 캡처), 사용자에게는 iPhone에서만 볼 것을 짧게 추려 준다.
 - 기기 시험 절차: `docs/POC_TEST.md`.

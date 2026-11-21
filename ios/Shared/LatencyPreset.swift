@@ -72,9 +72,11 @@ enum LatencyPreset: String, CaseIterable, Identifiable {
         self = storedValue.flatMap(LatencyPreset.init(rawValue:)) ?? .default
     }
 
-    /// Set once the pre-L3 choice has been cleared (2026-11-21: the latency experiment ended and
-    /// L3 became the default, but testers' phones still kept the L0/L1 they had picked).
-    static let l3ResetKey = "latencyPresetResetToL3"
+    /// Set once an earlier choice has been cleared. First reset 2026-11-21 (key "latencyPresetResetToL3":
+    /// the latency experiment ended and L3 became the default, but testers' phones still kept the
+    /// L0/L1 they had picked). Second reset from build 17: the app no longer offers the picker
+    /// (AdvancedView), so a value picked in builds 16 and earlier would otherwise stay for good.
+    static let l3ResetKey = "latencyPresetResetToL3.build17"
 
     static func load(from defaults: UserDefaults? = AppGroup.defaults) -> LatencyPreset {
         if let defaults, !defaults.bool(forKey: l3ResetKey) {

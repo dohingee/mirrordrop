@@ -10,7 +10,8 @@ options:
   createIntermediateGroups: true
 settings:
   base:
-    MARKETING_VERSION: "0.1.0"
+    # First App Store release (docs/RELEASE.md). Raise it for every App Store update (1.1 = ads).
+    MARKETING_VERSION: "1.0"
     # The TestFlight workflow overrides this with the GitHub run number (app and extension must match).
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.0"

@@ -17,6 +17,8 @@ final class StopAlertCenter: NSObject, ObservableObject, UNUserNotificationCente
 
     /// Asks once (only while undecided), when the first broadcast starts. Alert only: no sound or badge.
     func requestPermissionIfNeeded() {
+        // No permission prompt over a store screenshot (App/DemoMode.swift; nil in the shipped app).
+        if DemoMode.current != nil { return }
         let center = UNUserNotificationCenter.current()
         center.getNotificationSettings { settings in
             guard settings.authorizationStatus == .notDetermined else { return }

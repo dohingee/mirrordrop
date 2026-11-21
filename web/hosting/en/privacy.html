@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MirrorDrop Privacy Policy</title>
+<meta name="description" content="Privacy policy of the MirrorDrop app">
+<link rel="alternate" hreflang="ko" href="../privacy.html">
+<style>
+:root{color-scheme:light dark;--bg:#f6f8fb;--card:#ffffff;--text:#1d232b;--muted:#4f5965;--line:#dde3ea;--accent:#1f6fd1}
+@media (prefers-color-scheme:dark){:root{--bg:#12161b;--card:#1b2129;--text:#eef2f6;--muted:#b6c0cb;--line:#2f3843;--accent:#7fb2f0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.65;overflow-wrap:anywhere}
+main{max-width:720px;margin:0 auto;padding:24px 16px 48px}
+nav{display:flex;gap:16px;flex-wrap:wrap;font-size:15px;margin-bottom:24px}
+a{color:var(--accent)}
+h1{font-size:26px;line-height:1.35;margin:0 0 4px}
+h2{font-size:19px;margin:32px 0 8px}
+h3{font-size:16px;margin:16px 0 4px}
+p{margin:8px 0;color:var(--muted)}
+ul{margin:8px 0;padding-left:20px;color:var(--muted)}
+li{margin:4px 0}
+.meta{font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:16px 0}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<main>
+<nav><a href="index.html">MirrorDrop</a><a href="support.html">Support</a><a href="privacy.html">Privacy Policy</a><a href="../privacy.html" lang="ko">한국어</a></nav>
+<h1>MirrorDrop Privacy Policy</h1>
+<p class="meta">Version 1.0 · Effective November 22, 2026</p>
+<p>MirrorDrop ("the app") shows your iPhone screen on a TV with Google Cast on the same Wi-Fi network. This policy explains what information the app handles and why. The Korean version is the original; if the two differ, the Korean version applies to users in Korea.</p>
+
+<section class="card">
+<h2 style="margin-top:0">Summary</h2>
+<ul>
+<li>No account, no sign-in. The app never asks for your name, email address or phone number.</li>
+<li>The screen and sound you send go only from your iPhone to your TV inside your home Wi-Fi. They are never sent to the developer or any other company's server, and they are not recorded.</li>
+<li>The developer runs no server that collects user data.</li>
+<li>The app is free and shows Google AdMob ads. The ad SDK processes advertising data such as device identifiers. Personalized ads are shown only if you allow tracking (and, where the law requires it, give consent).</li>
+<li>"Report a problem" sends diagnostics only to a destination you choose yourself.</li>
+</ul>
+</section>
+
+<section>
+<h2>1. Why we process information</h2>
+<ul>
+<li>Screen sending: to find and connect to a TV on the same Wi-Fi and show your iPhone screen on it.</li>
+<li>Stop alert: to tell you when sending stopped, for example because the iPhone locked.</li>
+<li>Advertising: to show ads, measure them and prevent ad fraud.</li>
+<li>Support: to answer the messages and reports you send us and fix bugs.</li>
+</ul>
+</section>
+
+<section>
+<h2>2. Information the app handles</h2>
+<h3>a. Screen and sound (inside your home Wi-Fi only)</h3>
+<ul>
+<li>When you tap "Start Broadcast", the iPhone turns the screen and app sound into short video segments, and the TV on the same Wi-Fi fetches them directly from the iPhone.</li>
+<li>Only the last few seconds are kept in the iPhone's memory and are deleted continuously. Nothing is written to a file.</li>
+<li>The small server inside the iPhone accepts only devices on the local network (private addresses) and uses a new, hard-to-guess address for every broadcast. Nothing goes to the internet.</li>
+<li>While sending, everything shown on the iPhone screen (including notifications and messages) appears on the TV. iOS sends copy-protected video as black.</li>
+</ul>
+<h3>b. Stored only on this iPhone</h3>
+<ul>
+<li>App settings: where the sound plays (TV or phone) and whether you have seen the tips.</li>
+<li>Diagnostics: sending state, memory use, a log of the TV fetching video from the iPhone (the TV's local IP address and time), the name of the connected TV, and the Google Cast connection log. They are used only to find problems and never leave the iPhone unless you use "Report a problem".</li>
+</ul>
+<h3>c. When you use "Report a problem"</h3>
+<ul>
+<li>It opens the iOS share sheet and you choose where it goes (mail, messages and so on). The app never sends it by itself.</li>
+<li>It contains the app version, the iOS version and the diagnostics above. The secret part of the stream address is masked. No screen or sound content is included.</li>
+<li>If you email us, we use your email address and message only to answer you.</li>
+</ul>
+<h3>d. Advertising (Google AdMob)</h3>
+<ul>
+<li>The ad SDK processes: device identifiers (the advertising identifier IDFA only if you allow tracking; otherwise app- or developer-scoped identifiers), approximate location derived from the IP address, ads viewed and tapped, usage such as app launches and taps, device and OS information, and app performance and crash data.</li>
+<li>Ads are a banner at the bottom of the main screen and, at most once a day, a full-screen ad before you start sending. No ads are shown while your screen is being sent to the TV.</li>
+<li>Screen and sound content and diagnostics are never used for ads.</li>
+</ul>
+<h3>e. Google Cast</h3>
+<ul>
+<li>The app uses Google's Google Cast SDK to find and connect to TVs. It exchanges the device name, connection state and play requests with the TV on your Wi-Fi.</li>
+<li>Google states that the SDK may send technical information, such as how it is working, to Google. It never includes screen or sound content. See Google's Privacy Policy (policies.google.com/privacy).</li>
+</ul>
+</section>
+
+<section>
+<h2>3. iPhone permissions</h2>
+<ul>
+<li>Local Network: required to find the TV and to let the TV fetch the video from the iPhone. Without it the TV cannot be found. Change it in Settings &gt; MirrorDrop &gt; Local Network.</li>
+<li>Notifications: used only for the "sending stopped" alert, scheduled on the iPhone itself. No ads or promotions. Sending works without it.</li>
+<li>Tracking (App Tracking Transparency): asks whether the advertising identifier may be used for personalized ads. Everything works if you decline; ads are then not personalized. Change it any time in Settings &gt; Privacy &amp; Security &gt; Tracking.</li>
+<li>Bluetooth: the app does not use Bluetooth itself. The Google Cast SDK may use it to find nearby devices, so iOS may ask. TVs on the same Wi-Fi are still found if you decline.</li>
+</ul>
+</section>
+
+<section>
+<h2>4. Retention and deletion</h2>
+<ul>
+<li>Screen and sound: not retained (a few seconds in memory, then deleted).</li>
+<li>Settings and diagnostics on the iPhone: deleted when you delete the app; diagnostics are replaced at the start of each broadcast.</li>
+<li>Support emails: deleted within one year after the matter is closed.</li>
+<li>Advertising data: according to Google's policies (policies.google.com/privacy).</li>
+</ul>
+</section>
+
+<section>
+<h2>5. Third parties and international transfers</h2>
+<p>We do not sell your personal information. The following company processes information through the SDKs in the app, and the information may be transferred outside your country.</p>
+<ul>
+<li>Google LLC (USA), 1600 Amphitheatre Parkway, Mountain View, CA 94043, USA: advertising (AdMob, section 2d) and Google Cast (section 2e), over encrypted connections (HTTPS). How Google uses data from apps that use its services: policies.google.com/technologies/partner-sites.</li>
+</ul>
+</section>
+
+<section>
+<h2>6. Ad consent and your choices</h2>
+<ul>
+<li>The app uses no web cookies. The ad SDK uses advertising identifiers and device information.</li>
+<li>In the European Economic Area, the UK, Switzerland and other places where the law requires it, Google's consent form is shown first. You can change your choice at any time with "Ad privacy settings" on the Advanced &amp; Diagnostics screen.</li>
+<li>The advertising identifier (IDFA) is used for personalized ads only if you allow tracking in the iOS App Tracking Transparency prompt.</li>
+<li>You can also manage Google ads at myadcenter.google.com.</li>
+</ul>
+</section>
+
+<section>
+<h2>7. Your rights</h2>
+<p>Depending on where you live (for example under the GDPR in the EEA and UK, the Korean Personal Information Protection Act, or US state privacy laws such as the CCPA), you may have the right to access, correct, delete or restrict the processing of your personal information, to object, to data portability, and to withdraw consent. Because the developer keeps no user data on servers, deleting the app removes everything stored on the iPhone. For advertising data, use the choices in section 6 or Google's tools. For any other request, email kimyeoware@gmail.com; we answer within 30 days. EEA and UK users may also complain to their data protection authority.</p>
+<p>Legal bases (GDPR): personalized advertising is based on your consent; non-personalized ads, ad measurement and fraud prevention are based on our legitimate interest in offering the app for free; the screen-sending features are necessary to provide the service you request.</p>
+</section>
+
+<section>
+<h2>8. Children</h2>
+<p>The app is not directed to children and we do not knowingly collect personal information from children under 13 (under 14 in Korea, under 16 where local law sets that age). Ads are limited to content ratings suitable for general audiences and teens.</p>
+</section>
+
+<section>
+<h2>9. Security</h2>
+<ul>
+<li>The server inside the iPhone accepts only devices on the local network, uses a new secret address for every broadcast and stops when you stop sending.</li>
+<li>The secret part of the stream address is masked when you share diagnostics.</li>
+<li>Transfer inside your home Wi-Fi is not encrypted (it is the format the TV's standard player accepts). We recommend not using the app on Wi-Fi networks shared with people you do not trust, such as public Wi-Fi.</li>
+</ul>
+</section>
+
+<section>
+<h2>10. Contact</h2>
+<p>MirrorDrop is run by an individual developer in the Republic of Korea, who is also responsible for privacy. Contact: <a href="mailto:kimyeoware@gmail.com">kimyeoware@gmail.com</a></p>
+</section>
+
+<section>
+<h2>11. Changes</h2>
+<p>If this policy changes, we update this page and the app, and change the version and effective date.</p>
+</section>
+<p class="meta">Version 1.0 · Effective November 22, 2026</p>
+<footer>MirrorDrop · <a href="mailto:kimyeoware@gmail.com">kimyeoware@gmail.com</a><br>Google Cast is a trademark of Google LLC. MirrorDrop is an independent app and is not affiliated with Google.</footer>
+</main>
+</body>
+</html>

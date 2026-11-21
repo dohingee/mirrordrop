@@ -6,8 +6,17 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // The Cast context must exist before any Cast UI is created.
         CastManager.shared.setUp()
+        #if MD_DEMO
+        // Store screenshots (App/DemoMode.swift): fake TV, and no real play requests.
+        if let demo = DemoMode.current {
+            CastManager.shared.applyDemo(demo)
+        } else {
+            MirrorCastCoordinator.shared.start()
+        }
+        #else
         // Sends the mirror when ready, also while the app is in the background.
         MirrorCastCoordinator.shared.start()
+        #endif
         AudioOutput.removeLegacySettings()
         // Notification delegate before launch finishes, so a tap that launched the app is handled.
         StopAlertCenter.shared.setUp()

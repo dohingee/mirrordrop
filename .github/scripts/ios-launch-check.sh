@@ -7,7 +7,14 @@
 #    compatibility mode, as App Review tests it) and fails if it does not stay up;
 #  - screenshots the main, diagnostics, clock and usage guide screens on the iPhone (Korean, status bar 9:41,
 #    full battery) through the app's `-MDScreen` launch argument (UI/ContentView.swift
-#    LaunchScreen), and the launch screen on the iPad.
+#    LaunchScreen), and the launch screen on the iPad;
+#  - App Store screenshots (iphone-store-*.png): the iPhone is a 6.9-inch Pro Max model when the
+#    runtime has one (1320x2868 for iPhone 16/17 Pro Max), and `-MDDemo connected|sending` shows a
+#    connected TV / the screen being sent without a Cast device (MirrorDrop/App/DemoMode.swift);
+#  - copies the Google Cast SDK's privacy files (NutritionLabel.txt, PrivacyInfo.xcprivacy) for the
+#    App Privacy answers (docs/RELEASE.md).
+# The demo needs the MD_DEMO compilation condition, so this build adds it. That only compiles in the
+# `#if MD_DEMO` code; the TestFlight/App Store archive (ios-testflight.yml) is built without it.
 # Unit tests cannot see a launch crash: they run unsigned, without the app. The broadcast itself
 # (ReplayKit) and Google Cast discovery cannot run in a simulator: those stay on the device test.
 # Run from ios/ after .github/actions/ios-setup. Writes png, entitlements.txt, summary.txt and any
@@ -25,6 +32,7 @@ xcodebuild build \
   -destination 'generic/platform=iOS Simulator' -derivedDataPath build/launch \
   -clonedSourcePackagesDirPath "${SPM_PACKAGES_DIR:-build/spm}" -disablePackageRepositoryCache \
   -skipPackagePluginValidation -skipMacroValidation \
+  'SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) MD_DEMO' \
   CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= PROVISIONING_PROFILE_SPECIFIER= \
   2>&1 | tee "$log" | grep -E "error:|\*\* " || true
 if ! grep -q '\*\* BUILD SUCCEEDED \*\*' "$log"; then
@@ -74,9 +82,12 @@ d = json.load(sys.stdin)
 rt = sorted((r for r in d["runtimes"] if r["platform"] == "iOS" and r["isAvailable"]),
             key=lambda r: [int(x) for x in r["version"].split(".")])[-1]
 types = rt.get("supportedDeviceTypes", d["devicetypes"])
-def pick(prefix):
-    return [t["identifier"] for t in types if t["name"].startswith(prefix)][-1]
-print(rt["identifier"], pick("iPhone"), pick("iPad Air"))')"
+def pick(prefix, prefer=""):
+    names = [t for t in types if t["name"].startswith(prefix)]
+    best = [t for t in names if prefer and prefer in t["name"]]
+    return (best or names)[-1]["identifier"]
+# Pro Max: 6.9-inch display, the App Store screenshot size (docs/RELEASE.md).
+print(rt["identifier"], pick("iPhone", "Pro Max"), pick("iPad Air"))')"
 echo "runtime $runtime"
 
 ko=(-AppleLanguages "(ko)" -AppleLocale ko_KR)
@@ -169,9 +180,23 @@ for kind in iphone ipad; do
     check "$udid" iphone diagnostics 15 "${ko[@]}" -MDScreen diagnostics
     check "$udid" iphone clock 15 "${ko[@]}" -MDScreen clock
     check "$udid" iphone guide 15 "${ko[@]}" -MDScreen guide
+    # App Store screenshots: first-run tips already seen (plist values in the argument domain).
+    seen=(-volumeTipSeen '<true/>' -usageGuideSeen '<true/>')
+    check "$udid" iphone store-sending 15 "${ko[@]}" "${seen[@]}" -MDDemo sending
+    check "$udid" iphone store-connected 15 "${ko[@]}" "${seen[@]}" -MDDemo connected
+    size=$(sips -g pixelWidth -g pixelHeight "$out/iphone-store-sending.png" 2>/dev/null | awk '/pixel/ {printf "%s ", $2}' || true)
+    summary "Store screenshots: iPhone $iphone, ${size:-size unknown }(6.9-inch needs 1320 2868, 1290 2796 or 1260 2736)"
   fi
   limit 60 xcrun simctl shutdown "$udid" || true
 done
+
+# Google Cast SDK privacy details for the App Privacy answers (Google: check them for each SDK version).
+mkdir -p "$out/cast-sdk-privacy"
+find "${SPM_PACKAGES_DIR:-build/spm}" "$app/Frameworks" \( -name NutritionLabel.txt -o -name PrivacyInfo.xcprivacy \) \
+  -path '*GoogleCast*' 2>/dev/null | while IFS= read -r f; do
+    cp "$f" "$out/cast-sdk-privacy/$(echo "${f#*GoogleCast}" | tr '/' '_')"
+  done || true
+[ -n "$(ls -A "$out/cast-sdk-privacy" 2>/dev/null)" ] || summary "Cast SDK privacy files: not found"
 
 crashes=$(find ~/Library/Logs/DiagnosticReports -name 'MirrorDrop*' -newer "$out/.started" 2>/dev/null || true)
 rm -f "$out/.started"

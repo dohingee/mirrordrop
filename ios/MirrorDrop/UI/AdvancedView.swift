@@ -1,12 +1,13 @@
 import SwiftUI
 
-/// "고급·진단": the PoC test tools (sample stream, latency experiment, manual cast,
-/// TV playback state) plus links to diagnostics and the latency clock.
+/// "고급·진단": links to diagnostics and the delay clock, the stream state, a manual "send to TV
+/// again", the TV playback state, and the privacy policy / support pages.
+/// Build 17 (first App Store release) removed the PoC tools: "테스트 A · 인터넷 샘플 영상" (it played
+/// Apple's sample streams from the internet) and the "지연 실험" picker (L3 is the fixed setting,
+/// docs/PLAN.md 2단계). Reviewers should see no unfinished or experimental features (guideline 2.1).
 struct AdvancedView: View {
     @EnvironmentObject private var cast: CastManager
     @EnvironmentObject private var monitor: BroadcastMonitor
-    @State private var latencyPreset = LatencyPreset.load()
-    @State private var sampleURL = SampleStream.fmp4.url
 
     var body: some View {
         List {
@@ -17,18 +18,17 @@ struct AdvancedView: View {
             }
             mirrorSection
             tvSection
-            sampleSection
+            Section("정보") {
+                Link("개인정보 처리방침", destination: AppLinks.privacyPolicy)
+                Link("문의·도움말 (웹)", destination: AppLinks.support)
+                LabeledContent("버전", value: AppLinks.versionText)
+            }
         }
         .navigationTitle("고급·진단")
     }
 
     private var mirrorSection: some View {
         Section {
-            Picker("지연 실험", selection: $latencyPreset) {
-                ForEach(LatencyPreset.allCases) { Text($0.label).tag($0) }
-            }
-            .disabled(monitor.isLive)
-            .onChange(of: latencyPreset) { _, value in value.save() }
             LabeledContent("공유 상태", value: monitor.stateText)
             LabeledContent("만든 조각", value: "\(monitor.status.segmentsProduced)개")
             if let url = monitor.status.url, monitor.isLive {
@@ -40,9 +40,9 @@ struct AdvancedView: View {
             }
             .disabled(!cast.isConnected || monitor.readyURL == nil)
         } header: {
-            Text("내 화면 보내기 (실험 설정)")
+            Text("내 화면 보내기")
         } footer: {
-            Text("지연 실험 설정은 다음 방송 시작부터 적용됩니다. 소리 나오는 곳(TV·휴대폰)은 첫 화면에서 보내는 중에도 바꿀 수 있어요. 화면이 준비되면 TV에 자동으로 띄웁니다.")
+            Text("화면이 준비되면 TV에 자동으로 띄웁니다. TV에 안 나올 때만 \"지금 TV에 띄우기\"를 눌러 보세요. 소리 나오는 곳(TV·휴대폰)은 첫 화면에서 보내는 중에도 바꿀 수 있어요.")
         }
     }
 
@@ -57,42 +57,17 @@ struct AdvancedView: View {
                 .disabled(!cast.isConnected)
         }
     }
-
-    private var sampleSection: some View {
-        Section("테스트 A · 인터넷 샘플 영상") {
-            Picker("샘플", selection: $sampleURL) {
-                ForEach(SampleStream.allCases) { Text($0.title).tag($0.url) }
-            }
-            TextField("HLS 주소", text: $sampleURL, axis: .vertical)
-                .font(.caption.monospaced())
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            Button("TV로 보내기") {
-                guard let url = URL(string: sampleURL) else { return }
-                let format: CastManager.SegmentFormat = sampleURL == SampleStream.ts.url ? .ts : .fmp4
-                cast.load(url: url, title: "테스트 A 샘플", live: false, format: format)
-            }
-            .disabled(!cast.isConnected)
-        }
-    }
 }
 
-enum SampleStream: String, CaseIterable, Identifiable {
-    case fmp4, ts
+/// Public web pages (Firebase Hosting, web/hosting/) and the version line. The host must match the
+/// deployed Firebase project (docs/RELEASE.md "웹 페이지"): change it here and in docs/store/ko.md together.
+enum AppLinks {
+    static let site = URL(string: "https://mirrordrop-app.web.app/")!
+    static let privacyPolicy = URL(string: "https://mirrordrop-app.web.app/privacy.html")!
+    static let support = URL(string: "https://mirrordrop-app.web.app/support.html")!
 
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .fmp4: return "Apple bipbop (fMP4)"
-        case .ts: return "Apple bipbop (TS)"
-        }
-    }
-
-    var url: String {
-        switch self {
-        case .fmp4: return "https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8"
-        case .ts: return "https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8"
-        }
+    static var versionText: String {
+        let info = Bundle.main.infoDictionary
+        return "\(info?["CFBundleShortVersionString"] ?? "?") (\(info?["CFBundleVersion"] ?? "?"))"
     }
 }

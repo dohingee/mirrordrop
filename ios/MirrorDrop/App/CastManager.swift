@@ -52,6 +52,29 @@ final class CastManager: NSObject, ObservableObject {
     @Published private(set) var isLoadPending = false
     private var lagTimer: Timer?
 
+    #if MD_DEMO
+    /// App Store screenshots only (App/DemoMode.swift); never compiled into the shipped app.
+    private var isDemo = false
+
+    /// Shows a connected TV, and for `.sending` the mirror playing on it, without a Cast device.
+    func applyDemo(_ demo: DemoMode) {
+        isDemo = true
+        stateText = "연결됨"
+        connection = .connected
+        isConnected = true
+        noDevicesSince = nil
+        deviceName = DemoMode.tvName
+        tvVolume = 0.35
+        tvMuted = false
+        if demo == .sending {
+            loadedMirrorURL = DemoMode.streamURL
+            loadedMirrorRevision = 1
+            tvPlayback = .playing
+            mediaText = "재생 중"
+        }
+    }
+    #endif
+
     func setUp() {
         guard !isSetUp else { return }
         isSetUp = true
@@ -180,6 +203,10 @@ final class CastManager: NSObject, ObservableObject {
     }
 
     private func refreshState() {
+        #if MD_DEMO
+        // Store screenshots: keep the fake TV (the simulator finds no real one).
+        if isDemo { return }
+        #endif
         let context = GCKCastContext.sharedInstance()
         switch context.castState {
         case .noDevicesAvailable: stateText = "기기를 찾지 못함"; connection = .noDevices

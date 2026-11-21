@@ -422,7 +422,10 @@ struct ContentView: View {
                 NavigationLink("고급·진단", value: LaunchScreen.advanced)
             }
             .font(.subheadline)
-            Text("Google Cast 지원 TV에서 쓸 수 있습니다. MirrorDrop은 Google과 관계없는 독립 앱입니다.")
+            // Apple 5.1.1(i): the privacy policy must be reachable inside the app.
+            Link("개인정보 처리방침", destination: AppLinks.privacyPolicy)
+                .font(.footnote)
+            Text("Google Cast 지원 TV에서 쓸 수 있습니다. Google Cast는 Google LLC의 상표이며, MirrorDrop은 Google과 관계없는 독립 앱입니다.")
                 .font(.caption2).foregroundStyle(.secondary)
         }
     }

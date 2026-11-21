@@ -31,6 +31,13 @@ final class BroadcastMonitor: ObservableObject {
 
     func reload() {
         now = Date()
+        #if MD_DEMO
+        // Store screenshots (App/DemoMode.swift): a fresh fake status, or stay idle.
+        if let demo = DemoMode.current {
+            if demo == .sending { status = DemoMode.status(now: now) }
+            return
+        }
+        #endif
         if let latest = StatusStore.read(), latest != status { status = latest }
     }
 

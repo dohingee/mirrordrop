@@ -1,0 +1,4 @@
+.firebase/
+*.log
+# Review demo video: deployed from this PC, not committed (docs/RELEASE.md 5).
+hosting/review/
