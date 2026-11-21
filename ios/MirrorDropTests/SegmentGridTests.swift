@@ -5,7 +5,7 @@ final class SegmentGridTests: XCTestCase {
         // A video frame is 1600 samples, an AAC frame 1024: lcm = 25600 samples = 16 frames = 25 AAC frames.
         XCTAssertEqual(SegmentGrid.periodSamples(), 25_600)
         XCTAssertEqual(SegmentGrid.periodSamples(frameRate: 25), 15_360) // 0.32 s = 8 frames = 15 AAC frames
-        XCTAssertNil(SegmentGrid.periodSamples(frameRate: 30, sampleRate: 44_100), "1/30 s is not whole samples")
+        XCTAssertNil(SegmentGrid.periodSamples(frameRate: 7), "1/7 s is not whole samples at 48 kHz")
         XCTAssertNil(SegmentGrid.periodSamples(frameRate: 0))
     }
 
@@ -14,7 +14,7 @@ final class SegmentGridTests: XCTestCase {
         XCTAssertEqual(SegmentGrid.alignedSeconds(near: 1.0), 32.0 / 30.0, accuracy: 1e-12)
         XCTAssertEqual(SegmentGrid.alignedSeconds(near: 1.6), 1.6, accuracy: 1e-12) // 48 frames = 75 AAC frames
         XCTAssertEqual(SegmentGrid.alignedSeconds(near: 0.1), 16.0 / 30.0, accuracy: 1e-12, "at least one period")
-        XCTAssertEqual(SegmentGrid.alignedSeconds(near: 0.5, frameRate: 30, sampleRate: 44_100), 0.5, "no grid: unchanged")
+        XCTAssertEqual(SegmentGrid.alignedSeconds(near: 0.5, frameRate: 7), 0.5, "no grid: unchanged")
     }
 
     func testAlignment() {
