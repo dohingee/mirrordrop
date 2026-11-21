@@ -1,0 +1,22 @@
+{
+  "sourceLanguage" : "ko",
+  "strings" : {
+    "NSLocalNetworkUsageDescription" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MirrorDrop uses the local network so the TV on the same Wi-Fi can fetch the video of your iPhone screen."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "같은 Wi-Fi에 있는 TV가 iPhone 화면 영상을 가져갈 수 있도록 로컬 네트워크를 사용합니다."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

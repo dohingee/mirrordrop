@@ -1,0 +1,4742 @@
+{
+  "sourceLanguage" : "ko",
+  "strings" : {
+    " (그때 최신 seg%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (newest then seg%lld)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (그때 최신 seg%lld)"
+          }
+        }
+      }
+    },
+    " (만든 뒤 %@초)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (%@ s after it was made)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (만든 뒤 %@초)"
+          }
+        }
+      }
+    },
+    " (아직 안 만든 것 %lld, 이미 지운 것 %lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (not made yet %lld, already removed %lld)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " (아직 안 만든 것 %lld, 이미 지운 것 %lld)"
+          }
+        }
+      }
+    },
+    "\"다시 TV에 띄우기\"를 누르면 다시 나옵니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap \"Show on TV again\" to bring it back."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"다시 TV에 띄우기\"를 누르면 다시 나옵니다."
+          }
+        }
+      }
+    },
+    "\"다시 TV에 띄우기\"를 눌러 보세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Try \"Show on TV again\"."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"다시 TV에 띄우기\"를 눌러 보세요."
+          }
+        }
+      }
+    },
+    "\"다시 TV에 띄우기\"를 눌러 주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap \"Show on TV again\"."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"다시 TV에 띄우기\"를 눌러 주세요."
+          }
+        }
+      }
+    },
+    "\"문제 보내기\"를 누르면 메일·메시지 등 보낼 곳을 직접 고를 수 있습니다. 앱이 저절로 어디로 보내지는 않습니다. 접속 주소의 비밀 부분은 가려져 있습니다. 문의 메일: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Report a problem\" lets you choose where to send it, such as Mail or Messages. The app never sends anything by itself. The secret part of the stream address is hidden. Support email: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"문제 보내기\"를 누르면 메일·메시지 등 보낼 곳을 직접 고를 수 있습니다. 앱이 저절로 어디로 보내지는 않습니다. 접속 주소의 비밀 부분은 가려져 있습니다. 문의 메일: %@"
+          }
+        }
+      }
+    },
+    "%@, 이유: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, reason: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, 이유: %@"
+          }
+        }
+      }
+    },
+    "%@초" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ s"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@초"
+          }
+        }
+      }
+    },
+    "%@초 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ s %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@초 %@"
+          }
+        }
+      }
+    },
+    "%@초 %@ (세션 %lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ s %@ (session %lld)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@초 %@ (세션 %lld)"
+          }
+        }
+      }
+    },
+    "%@초, %lld KB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ s, %lld KB"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@초, %lld KB"
+          }
+        }
+      }
+    },
+    "%lld (반복 %lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld (repeated %lld)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld (반복 %lld)"
+          }
+        }
+      }
+    },
+    "%lld개" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld개"
+          }
+        }
+      }
+    },
+    "%lld초 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld s %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld초 %@"
+          }
+        }
+      }
+    },
+    "%lld초: %lld / %lld (반복 %lld, 버림 %lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld s: %lld / %lld (repeated %lld, dropped %lld)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld초: %lld / %lld (반복 %lld, 버림 %lld)"
+          }
+        }
+      }
+    },
+    "%lld회" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld times"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld회"
+          }
+        }
+      }
+    },
+    "(가득 차서 %lld개 빠짐)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(full: %lld left out)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(가득 차서 %lld개 빠짐)"
+          }
+        }
+      }
+    },
+    "**TV**: 소리가 TV로 가요. 그런데 iPhone에서도 소리가 같이 나요. TV에서만 들으려면 iPhone 옆 볼륨 버튼으로 **iPhone 볼륨을 끝까지 내리세요.** 볼륨 버튼은 언제나 iPhone 소리만 바꿔요. TV 소리는 바뀌지 않아요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**TV**: the sound goes to the TV, but it also plays on the iPhone. To hear it only on the TV, **turn the iPhone volume all the way down** with the side buttons. The volume buttons always change the iPhone's sound only, never the TV's."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**TV**: 소리가 TV로 가요. 그런데 iPhone에서도 소리가 같이 나요. TV에서만 들으려면 iPhone 옆 볼륨 버튼으로 **iPhone 볼륨을 끝까지 내리세요.** 볼륨 버튼은 언제나 iPhone 소리만 바꿔요. TV 소리는 바뀌지 않아요."
+          }
+        }
+      }
+    },
+    "**iPhone이 잠기면 TV 보내기가 끝나요.** 알림을 허용했다면 \"TV 보내기가 멈췄어요\" 알림이 와요. 알림을 누르고 ② 버튼으로 다시 시작하세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Sending ends when the iPhone locks.** If you allowed notifications, you get a \"Sending to TV stopped\" alert. Tap it and start again with the ② button."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**iPhone이 잠기면 TV 보내기가 끝나요.** 알림을 허용했다면 \"TV 보내기가 멈췄어요\" 알림이 와요. 알림을 누르고 ② 버튼으로 다시 시작하세요."
+          }
+        }
+      }
+    },
+    "**휴대폰**: TV에는 화면만 나오고 소리는 iPhone에서만 나요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Phone**: the TV shows the picture only; the sound plays only on the iPhone."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**휴대폰**: TV에는 화면만 나오고 소리는 iPhone에서만 나요."
+          }
+        }
+      }
+    },
+    ", 간격 평균 %@초 (최대 %@초)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", average gap %@ s (max %@ s)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", 간격 평균 %@초 (최대 %@초)"
+          }
+        }
+      }
+    },
+    ", 그 밖의 실패 응답 %lld번" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", other failed responses %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", 그 밖의 실패 응답 %lld번"
+          }
+        }
+      }
+    },
+    ", 처음 가져간 조각 seg%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", first segment fetched seg%lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ", 처음 가져간 조각 seg%lld"
+          }
+        }
+      }
+    },
+    "--- Cast SDK 로그 (최근 80줄)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- Cast SDK log (last 80 lines)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- Cast SDK 로그 (최근 80줄)"
+          }
+        }
+      }
+    },
+    "--- Cast 기록" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- Cast events"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- Cast 기록"
+          }
+        }
+      }
+    },
+    "--- 다시 보내기 기록 (마지막 다시 보내기 뒤 30초)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- Resend record (30 s after the last resend)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- 다시 보내기 기록 (마지막 다시 보내기 뒤 30초)"
+          }
+        }
+      }
+    },
+    "--- 시작 기록 (처음 30초)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- Startup record (first 30 s)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- 시작 기록 (처음 30초)"
+          }
+        }
+      }
+    },
+    "--- 요청 기록" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- Request log"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- 요청 기록"
+          }
+        }
+      }
+    },
+    "--- 확장 로그" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- Extension log"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- 확장 로그"
+          }
+        }
+      }
+    },
+    "--- 확장 오류" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- Extension errors"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "--- 확장 오류"
+          }
+        }
+      }
+    },
+    "; 기록 빈 구간 최대 %@초 (%@초부터, 앱이 멈춰 있었을 수 있어요)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "; longest gap without samples %@ s (from %@ s, the app may have been suspended)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "; 기록 빈 구간 최대 %@초 (%@초부터, 앱이 멈춰 있었을 수 있어요)"
+          }
+        }
+      }
+    },
+    "Cast 기록" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cast events"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cast 기록"
+          }
+        }
+      }
+    },
+    "Cast 오류: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cast error: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cast 오류: %@"
+          }
+        }
+      }
+    },
+    "Cast: %@, 기기: %@, TV 상태: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cast: %@, device: %@, TV state: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cast: %@, 기기: %@, TV 상태: %@"
+          }
+        }
+      }
+    },
+    "Google Cast 지원 TV에서 쓸 수 있습니다. Google Cast는 Google LLC의 상표이며, MirrorDrop은 Google과 관계없는 독립 앱입니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Works with Google Cast TVs. Google Cast is a trademark of Google LLC. MirrorDrop is an independent app and is not affiliated with Google."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google Cast 지원 TV에서 쓸 수 있습니다. Google Cast는 Google LLC의 상표이며, MirrorDrop은 Google과 관계없는 독립 앱입니다."
+          }
+        }
+      }
+    },
+    "Google Cast를 지원하는 TV·스틱에서 쓸 수 있어요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Works with TVs and sticks that support Google Cast."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Google Cast를 지원하는 TV·스틱에서 쓸 수 있어요."
+          }
+        }
+      }
+    },
+    "L0 (1초 조각, 목록 4개)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L0 (1 s segments, 4 in playlist)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L0 (1초 조각, 목록 4개)"
+          }
+        }
+      }
+    },
+    "L1 (1초 조각, 목록 3개)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L1 (1 s segments, 3 in playlist)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L1 (1초 조각, 목록 3개)"
+          }
+        }
+      }
+    },
+    "L2 (L1 + 시작 위치 끝에서 2초)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L2 (L1 + start 2 s from the end)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L2 (L1 + 시작 위치 끝에서 2초)"
+          }
+        }
+      }
+    },
+    "L3 기본 (0.5초 조각, 목록 6개)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L3 default (0.5 s segments, 6 in playlist)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L3 기본 (0.5초 조각, 목록 6개)"
+          }
+        }
+      }
+    },
+    "MirrorDrop 광고 신고" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MirrorDrop ad report"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MirrorDrop 광고 신고"
+          }
+        }
+      }
+    },
+    "MirrorDrop 문제 보고" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MirrorDrop problem report"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MirrorDrop 문제 보고"
+          }
+        }
+      }
+    },
+    "MirrorDrop 진단 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MirrorDrop diagnostics %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MirrorDrop 진단 %@"
+          }
+        }
+      }
+    },
+    "MirrorDrop을 처음 켜면 iPhone이 **로컬 네트워크** 사용을 허용할지 물어요. **허용**을 눌러야 TV를 찾을 수 있어요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first time you open MirrorDrop, the iPhone asks about the **local network**. Tap **Allow** so the app can find your TV."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MirrorDrop을 처음 켜면 iPhone이 **로컬 네트워크** 사용을 허용할지 물어요. **허용**을 눌러야 TV를 찾을 수 있어요."
+          }
+        }
+      }
+    },
+    "TV 고르기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 고르기"
+          }
+        }
+      }
+    },
+    "TV 버튼을 눌러 화면을 보낼 TV를 고르세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the TV button and choose the TV to send to."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 버튼을 눌러 화면을 보낼 TV를 고르세요."
+          }
+        }
+      }
+    },
+    "TV 버튼을 눌러 화면을 보낼 TV를 고르세요. 화면은 준비됐어요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the TV button and choose the TV to send to. Your screen is ready."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 버튼을 눌러 화면을 보낼 TV를 고르세요. 화면은 준비됐어요."
+          }
+        }
+      }
+    },
+    "TV 보내기가 멈췄어요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending to TV stopped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 보내기가 멈췄어요"
+          }
+        }
+      }
+    },
+    "TV 볼륨" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV volume"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 볼륨"
+          }
+        }
+      }
+    },
+    "TV 소리 = TV 리모컨으로, 또는 TV에 연결되면 아래에 나오는 TV 볼륨 막대로 바꿔요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV sound = use the TV remote, or the TV volume slider that appears below once connected."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 소리 = TV 리모컨으로, 또는 TV에 연결되면 아래에 나오는 TV 볼륨 막대로 바꿔요."
+          }
+        }
+      }
+    },
+    "TV 소리 꺼짐" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV muted"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 소리 꺼짐"
+          }
+        }
+      }
+    },
+    "TV 소리 끄기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mute TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 소리 끄기"
+          }
+        }
+      }
+    },
+    "TV 소리 켜기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unmute TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 소리 켜기"
+          }
+        }
+      }
+    },
+    "TV 소리 크기는 **TV 리모컨**으로 바꾸거나, TV에 연결돼 있을 때 MirrorDrop의 **TV 볼륨** 막대로 바꿔요. 스피커 버튼을 누르면 TV 소리가 꺼져요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change the TV's volume with the **TV remote**, or with MirrorDrop's **TV volume** slider while connected. The speaker button mutes the TV."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 소리 크기는 **TV 리모컨**으로 바꾸거나, TV에 연결돼 있을 때 MirrorDrop의 **TV 볼륨** 막대로 바꿔요. 스피커 버튼을 누르면 TV 소리가 꺼져요."
+          }
+        }
+      }
+    },
+    "TV 연결 안 됨" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV not connected"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 연결 안 됨"
+          }
+        }
+      }
+    },
+    "TV 요청 아직 없음" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No TV requests yet"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 요청 아직 없음"
+          }
+        }
+      }
+    },
+    "TV 이름 아래에 **연결됨**이 보이면 끝이에요. 다른 TV로 바꾸려면 **바꾸기**를 눌러요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When **Connected** shows under the TV name, you're done. To switch to another TV, tap **Change**."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 이름 아래에 **연결됨**이 보이면 끝이에요. 다른 TV로 바꾸려면 **바꾸기**를 눌러요."
+          }
+        }
+      }
+    },
+    "TV 재생 기록 없음 (앱이 TV에 화면 재생을 요청하면 그때부터 30초를 기록합니다)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No TV playback record (recorded for 30 s from the app's play request to the TV)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 재생 기록 없음 (앱이 TV에 화면 재생을 요청하면 그때부터 30초를 기록합니다)"
+          }
+        }
+      }
+    },
+    "TV 재생 멈추기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop TV playback"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 재생 멈추기"
+          }
+        }
+      }
+    },
+    "TV 재생 상태" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV playback"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 재생 상태"
+          }
+        }
+      }
+    },
+    "TV 재생 실패(IDLE/ERROR) %@초" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV playback failed (IDLE/ERROR) at %@ s"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 재생 실패(IDLE/ERROR) %@초"
+          }
+        }
+      }
+    },
+    "TV 재생 위치" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV playback position"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 재생 위치"
+          }
+        }
+      }
+    },
+    "TV 재생 위치: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV playback position: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 재생 위치: %@"
+          }
+        }
+      }
+    },
+    "TV 재생이 멈췄어요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The TV stopped playing"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 재생이 멈췄어요"
+          }
+        }
+      }
+    },
+    "TV 첫 요청 %@초" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV's first request %@ s"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 첫 요청 %@초"
+          }
+        }
+      }
+    },
+    "TV 화면은 iPhone보다 **약 4초 늦게** 나와요. 빠르게 반응해야 하는 게임에는 맞지 않아요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The TV shows the screen **about 4 seconds** behind the iPhone. It's not made for fast games."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 화면은 iPhone보다 **약 4초 늦게** 나와요. 빠르게 반응해야 하는 게임에는 맞지 않아요."
+          }
+        }
+      }
+    },
+    "TV(또는 TV에 꽂은 스틱)가 켜져 있나요?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Is the TV (or the stick plugged into it) on?"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV(또는 TV에 꽂은 스틱)가 켜져 있나요?"
+          }
+        }
+      }
+    },
+    "TV가 라이브 범위를 안 알려 줌" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV reported no live range"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV가 라이브 범위를 안 알려 줌"
+          }
+        }
+      }
+    },
+    "TV가 아는 가장 새 조각의 끝에서 얼마나 뒤를 재생하는지입니다. 인코딩 시간은 들어 있지 않습니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How far behind the end of the newest segment the TV knows about it is playing. Encoding time is not included."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV가 아는 가장 새 조각의 끝에서 얼마나 뒤를 재생하는지입니다. 인코딩 시간은 들어 있지 않습니다."
+          }
+        }
+      }
+    },
+    "TV가 재생에 실패했어요 (idleReason=error). 진단 화면의 요청 기록을 확인하세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The TV could not play it (idleReason=error). Check the request log on the Diagnostics screen."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV가 재생에 실패했어요 (idleReason=error). 진단 화면의 요청 기록을 확인하세요."
+          }
+        }
+      }
+    },
+    "TV가 조각을 요청한 시점: 만들어진 뒤 평균 %@초 (최소 %@ / 최대 %@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV fetched segments on average %@ s after they were made (min %@ / max %@)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV가 조각을 요청한 시점: 만들어진 뒤 평균 %@초 (최소 %@ / 최대 %@)"
+          }
+        }
+      }
+    },
+    "TV가 화면을 틀지 못했어요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The TV couldn't play your screen"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV가 화면을 틀지 못했어요"
+          }
+        }
+      }
+    },
+    "TV는 화면만 보여 주고 소리는 휴대폰에서 나요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The TV shows the picture only; the sound plays on the phone."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV는 화면만 보여 주고 소리는 휴대폰에서 나요."
+          }
+        }
+      }
+    },
+    "TV로 보내기 시작" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start sending to TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV로 보내기 시작"
+          }
+        }
+      }
+    },
+    "TV로 보내는 동안에는 광고가 나오지 않아요. 이상한 광고를 봤다면 \"광고 신고\"로 알려 주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No ads are shown while sending to the TV. If you saw an inappropriate ad, tell us with \"Report an ad\"."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV로 보내는 동안에는 광고가 나오지 않아요. 이상한 광고를 봤다면 \"광고 신고\"로 알려 주세요."
+          }
+        }
+      }
+    },
+    "TV로 보낸 소리" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound sent to TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV로 보낸 소리"
+          }
+        }
+      }
+    },
+    "TV로 보낼 때 iPhone 화면 전체가 TV에 보입니다. 알림·메시지도 함께 보일 수 있어요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While sending, everything on the iPhone screen shows on the TV, including notifications and messages."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV로 보낼 때 iPhone 화면 전체가 TV에 보입니다. 알림·메시지도 함께 보일 수 있어요."
+          }
+        }
+      }
+    },
+    "TV를 고르지 않음" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No TV chosen"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV를 고르지 않음"
+          }
+        }
+      }
+    },
+    "TV를 못 찾을 때" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The app can't find my TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV를 못 찾을 때"
+          }
+        }
+      }
+    },
+    "TV를 찾기 전에는 TV 고르기 버튼을 누를 수 없어요. 몇 초 기다려 주세요. 계속 못 찾으면 아래 \"안 될 때\"를 보세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The Choose TV button works once a TV is found. Wait a few seconds. If no TV shows up, see \"If it doesn't work\" below."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV를 찾기 전에는 TV 고르기 버튼을 누를 수 없어요. 몇 초 기다려 주세요. 계속 못 찾으면 아래 \"안 될 때\"를 보세요."
+          }
+        }
+      }
+    },
+    "TV를 찾는 중…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking for TVs…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV를 찾는 중…"
+          }
+        }
+      }
+    },
+    "TV를 찾으면 여기에 버튼이 나타나요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A button appears here once a TV is found"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV를 찾으면 여기에 버튼이 나타나요"
+          }
+        }
+      }
+    },
+    "TV를 찾지 못함" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No TV found"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV를 찾지 못함"
+          }
+        }
+      }
+    },
+    "TV를 찾지 못했어요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No TV found"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV를 찾지 못했어요"
+          }
+        }
+      }
+    },
+    "TV를 켜요. Google Cast를 지원하는 TV나, TV에 꽂은 Google Cast 스틱이어야 해요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on the TV. It needs to support Google Cast, or have a Google Cast stick plugged in."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV를 켜요. Google Cast를 지원하는 TV나, TV에 꽂은 Google Cast 스틱이어야 해요."
+          }
+        }
+      }
+    },
+    "TV에 내 화면이 나오지 않고 있어요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your screen isn't on the TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV에 내 화면이 나오지 않고 있어요"
+          }
+        }
+      }
+    },
+    "TV에 띄우는 중…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Putting it on the TV…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV에 띄우는 중…"
+          }
+        }
+      }
+    },
+    "TV에 보내는 중" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending to TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV에 보내는 중"
+          }
+        }
+      }
+    },
+    "TV에 연결하는 중…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting to the TV…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV에 연결하는 중…"
+          }
+        }
+      }
+    },
+    "TV에 재생 요청: 첫 화면 뒤 %@초 (그때 조각 %@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play request to TV: %@ s after the first frame (segments then: %@)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV에 재생 요청: 첫 화면 뒤 %@초 (그때 조각 %@)"
+          }
+        }
+      }
+    },
+    "TV에 화면이 안 나올 때" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My screen doesn't show on the TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV에 화면이 안 나올 때"
+          }
+        }
+      }
+    },
+    "[TV 상태] (재생 요청부터)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[TV state] (from the play request)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[TV 상태] (재생 요청부터)"
+          }
+        }
+      }
+    },
+    "[TV 요청] 때, 종류 → 상태 (첫 화면부터)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[TV requests] time, kind → status (from the first frame)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[TV 요청] 때, 종류 → 상태 (첫 화면부터)"
+          }
+        }
+      }
+    },
+    "[라이브 끝에서 뒤] (재생 요청부터)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[Behind the live edge] (from the play request)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[라이브 끝에서 뒤] (재생 요청부터)"
+          }
+        }
+      }
+    },
+    "[조각] 번호: 나온 때, 길이, 크기 (첫 화면부터)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[Segments] number: ready at, length, size (from the first frame)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[조각] 번호: 나온 때, 길이, 크기 (첫 화면부터)"
+          }
+        }
+      }
+    },
+    "[초별 프레임] 초: 받음 / 인코딩 (반복, 버림)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[Frames per second] second: received / encoded (repeated, dropped)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "[초별 프레임] 초: 받음 / 인코딩 (반복, 버림)"
+          }
+        }
+      }
+    },
+    "iPhone 안에서 서버 점검" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check the server from the iPhone"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone 안에서 서버 점검"
+          }
+        }
+      }
+    },
+    "iPhone 옆 볼륨 버튼으로 휴대폰 볼륨을 끝까지 내리면 TV에서만 소리가 나요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn the phone volume all the way down with the iPhone's side buttons to hear it only on the TV."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone 옆 볼륨 버튼으로 휴대폰 볼륨을 끝까지 내리면 TV에서만 소리가 나요."
+          }
+        }
+      }
+    },
+    "iPhone 화면에 보이는 것은 **모두** TV에도 보여요. 알림·메시지도 보일 수 있으니 조심하세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "**Everything** on the iPhone screen shows on the TV, including notifications and messages, so be careful."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone 화면에 보이는 것은 **모두** TV에도 보여요. 알림·메시지도 보일 수 있으니 조심하세요."
+          }
+        }
+      }
+    },
+    "iPhone 화면을 TV에 그대로 보여 주는 앱이에요. 아래 순서대로 하면 돼요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This app shows your iPhone screen on a TV, just as it is. Follow the steps below."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone 화면을 TV에 그대로 보여 주는 앱이에요. 아래 순서대로 하면 돼요."
+          }
+        }
+      }
+    },
+    "iPhone과 TV가 같은 Wi-Fi에 연결돼 있나요?" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are the iPhone and the TV on the same Wi-Fi?"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone과 TV가 같은 Wi-Fi에 연결돼 있나요?"
+          }
+        }
+      }
+    },
+    "iPhone과 TV를 **같은 Wi-Fi**에 연결해요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect the iPhone and the TV to the **same Wi-Fi**."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone과 TV를 **같은 Wi-Fi**에 연결해요."
+          }
+        }
+      }
+    },
+    "iPhone이 아래에서 창을 하나 띄워요. **MirrorDrop**이 골라져 있는지 보고(아니면 MirrorDrop을 눌러요), **방송 시작**을 눌러요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The iPhone opens a panel from the bottom. Check that **MirrorDrop** is selected (if not, tap MirrorDrop), then tap **Start Broadcast**."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone이 아래에서 창을 하나 띄워요. **MirrorDrop**이 골라져 있는지 보고(아니면 MirrorDrop을 눌러요), **방송 시작**을 눌러요."
+          }
+        }
+      }
+    },
+    "iPhone이 잠기면 TV 보내기가 끝나요. 눌러서 다시 시작하세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending to the TV ends when your iPhone locks. Tap to start again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone이 잠기면 TV 보내기가 끝나요. 눌러서 다시 시작하세요."
+          }
+        }
+      }
+    },
+    "iPhone이 잠기면 TV 보내기가 끝나요. 오래 볼 때는 설정 → 디스플레이 및 밝기 → 자동 잠금을 '안 함'으로 바꾸세요. (저전력 모드가 켜져 있으면 바꿀 수 없어요.)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending ends when the iPhone locks. For long viewing, set Settings > Display & Brightness > Auto-Lock to Never. (Not possible while Low Power Mode is on.)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone이 잠기면 TV 보내기가 끝나요. 오래 볼 때는 설정 → 디스플레이 및 밝기 → 자동 잠금을 '안 함'으로 바꾸세요. (저전력 모드가 켜져 있으면 바꿀 수 없어요.)"
+          }
+        }
+      }
+    },
+    "seg%lld: %@초, %@초, %lldKB" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "seg%lld: %@ s, %@ s, %lld KB"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "seg%lld: %@초, %@초, %lldKB"
+          }
+        }
+      }
+    },
+    "① TV 연결" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "① Connect TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "① TV 연결"
+          }
+        }
+      }
+    },
+    "① TV를 골라 주세요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "① Choose your TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "① TV를 골라 주세요"
+          }
+        }
+      }
+    },
+    "② 버튼을 눌러 다시 시작해 주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the ② button to start again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "② 버튼을 눌러 다시 시작해 주세요."
+          }
+        }
+      }
+    },
+    "② 보내기를 시작하세요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "② Start sending"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "② 보내기를 시작하세요"
+          }
+        }
+      }
+    },
+    "② 화면 보내기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "② Send your screen"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "② 화면 보내기"
+          }
+        }
+      }
+    },
+    "같은 Wi-Fi에 있는 TV를 찾고 있어요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking for TVs on the same Wi-Fi."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "같은 Wi-Fi에 있는 TV를 찾고 있어요."
+          }
+        }
+      }
+    },
+    "같은 방송을 TV에 다시 보낸 때(다시 연결, 주소 바뀜, 직접 누름)의 기록입니다. 시작 기록은 그대로 둡니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recorded when the same broadcast was sent to the TV again (reconnect, new address, or a tap). The startup record is kept as it was."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "같은 방송을 TV에 다시 보낸 때(다시 연결, 주소 바뀜, 직접 누름)의 기록입니다. 시작 기록은 그대로 둡니다."
+          }
+        }
+      }
+    },
+    "개인정보 처리방침" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Privacy Policy"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "개인정보 처리방침"
+          }
+        }
+      }
+    },
+    "거실 TV" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Living Room TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "거실 TV"
+          }
+        }
+      }
+    },
+    "건너뜀 / 버림" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skipped / dropped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "건너뜀 / 버림"
+          }
+        }
+      }
+    },
+    "게스트 Wi-Fi나 공유기의 \"AP 격리\"(기기끼리 서로 못 보게 막는 설정)가 켜져 있으면 TV를 찾을 수 없어요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guest Wi-Fi or the router's \"AP isolation\" (a setting that hides devices from each other) keeps the TV from being found."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "게스트 Wi-Fi나 공유기의 \"AP 격리\"(기기끼리 서로 못 보게 막는 설정)가 켜져 있으면 TV를 찾을 수 없어요."
+          }
+        }
+      }
+    },
+    "계속 안 되면 **문제 보내기**로 기록을 보내 주세요. 화면 내용은 들어가지 않아요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If it keeps failing, send us the log with **Report a problem**. No screen content is included."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "계속 안 되면 **문제 보내기**로 기록을 보내 주세요. 화면 내용은 들어가지 않아요."
+          }
+        }
+      }
+    },
+    "고급·진단" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Advanced & diagnostics"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "고급·진단"
+          }
+        }
+      }
+    },
+    "공유 상태" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sharing state"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "공유 상태"
+          }
+        }
+      }
+    },
+    "광고" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ads"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "광고"
+          }
+        }
+      }
+    },
+    "광고 개인정보 설정" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ad privacy settings"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "광고 개인정보 설정"
+          }
+        }
+      }
+    },
+    "광고 신고" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report an ad"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "광고 신고"
+          }
+        }
+      }
+    },
+    "그래도 안 되면 보내기를 멈췄다가 다시 시작해요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Still nothing? Stop sending and start again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "그래도 안 되면 보내기를 멈췄다가 다시 시작해요."
+          }
+        }
+      }
+    },
+    "기기를 찾지 못함" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No devices found"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기기를 찾지 못함"
+          }
+        }
+      }
+    },
+    "기록 밖" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "outside the record"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기록 밖"
+          }
+        }
+      }
+    },
+    "기타" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "other"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기타"
+          }
+        }
+      }
+    },
+    "끝남" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "finished"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "끝남"
+          }
+        }
+      }
+    },
+    "나온 목록에서 내 TV 이름을 눌러요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap your TV's name in the list."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "나온 목록에서 내 TV 이름을 눌러요."
+          }
+        }
+      }
+    },
+    "내 iPhone 화면" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My iPhone screen"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내 iPhone 화면"
+          }
+        }
+      }
+    },
+    "내 화면 보내기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending my screen"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내 화면 보내기"
+          }
+        }
+      }
+    },
+    "누른 다음 \"방송 시작\"을 누르세요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap, then \"Start Broadcast\""
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "누른 다음 \"방송 시작\"을 누르세요"
+          }
+        }
+      }
+    },
+    "누른 다음 \"방송 중단\"을 누르세요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap, then \"Stop Broadcast\""
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "누른 다음 \"방송 중단\"을 누르세요"
+          }
+        }
+      }
+    },
+    "다시 TV에 띄우기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show on TV again"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 TV에 띄우기"
+          }
+        }
+      }
+    },
+    "다시 보내기 기록 (마지막 다시 보내기 뒤 30초)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resend record (30 s after the last resend)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 보내기 기록 (마지막 다시 보내기 뒤 30초)"
+          }
+        }
+      }
+    },
+    "다시 보낸 때: 첫 화면 뒤 %@초" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sent again: %@ s after the first frame"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 보낸 때: 첫 화면 뒤 %@초"
+          }
+        }
+      }
+    },
+    "대기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idle"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대기"
+          }
+        }
+      }
+    },
+    "대기(idle)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Idle"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "대기(idle)"
+          }
+        }
+      }
+    },
+    "또는 MirrorDrop 첫 화면의 빨간 버튼 **보내기 멈추기**를 누르고 **방송 중단**을 눌러요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Or tap the red **Stop sending** button on MirrorDrop's main screen, then **Stop Broadcast**."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "또는 MirrorDrop 첫 화면의 빨간 버튼 **보내기 멈추기**를 누르고 **방송 중단**을 눌러요."
+          }
+        }
+      }
+    },
+    "라이브 끝에서 %@초 뒤 (끝 %@, 위치 %@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ s behind the live edge (edge %@, position %@)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브 끝에서 %@초 뒤 (끝 %@, 위치 %@)"
+          }
+        }
+      }
+    },
+    "라이브 끝에서 뒤: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behind the live edge: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "라이브 끝에서 뒤: %@"
+          }
+        }
+      }
+    },
+    "로그 전체 복사" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy full log"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로그 전체 복사"
+          }
+        }
+      }
+    },
+    "마스터 목록" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "master playlist"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마스터 목록"
+          }
+        }
+      }
+    },
+    "마지막 조각" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Last segment"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "마지막 조각"
+          }
+        }
+      }
+    },
+    "만든 조각" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segments made"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "만든 조각"
+          }
+        }
+      }
+    },
+    "만든 조각 / 보관 중" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segments made / kept"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "만든 조각 / 보관 중"
+          }
+        }
+      }
+    },
+    "먼저 TV(Cast 기기)에 연결하세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connect to a TV (Cast device) first."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "먼저 TV(Cast 기기)에 연결하세요."
+          }
+        }
+      }
+    },
+    "멈추기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopping"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "멈추기"
+          }
+        }
+      }
+    },
+    "멈출 때는 이 버튼이나 화면 위쪽의 빨간 표시를 누릅니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To stop, tap this button or the red indicator at the top of the screen."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "멈출 때는 이 버튼이나 화면 위쪽의 빨간 표시를 누릅니다."
+          }
+        }
+      }
+    },
+    "메모리 지금/최고: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Memory now/peak: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메모리 지금/최고: %@"
+          }
+        }
+      }
+    },
+    "몇 초 걸려요. 다른 앱으로 가도 돼요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This takes a few seconds. You can go to another app."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "몇 초 걸려요. 다른 앱으로 가도 돼요."
+          }
+        }
+      }
+    },
+    "몇 초 뒤 TV에 iPhone 화면이 나와요. 첫 화면 맨 위에 **TV에 보내는 중**이 보이면 잘 되고 있는 거예요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your iPhone screen shows on the TV a few seconds later. **Sending to TV** at the top of the main screen means it's working."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "몇 초 뒤 TV에 iPhone 화면이 나와요. 첫 화면 맨 위에 **TV에 보내는 중**이 보이면 잘 되고 있는 거예요."
+          }
+        }
+      }
+    },
+    "몇 초 뒤 TV에 나와요. 다른 앱으로 가도 돼요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "It shows on the TV in a few seconds. You can go to another app."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "몇 초 뒤 TV에 나와요. 다른 앱으로 가도 돼요."
+          }
+        }
+      }
+    },
+    "문의·도움말 (웹)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Support & help (web)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "문의·도움말 (웹)"
+          }
+        }
+      }
+    },
+    "문제 보내기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Report a problem"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "문제 보내기"
+          }
+        }
+      }
+    },
+    "바꾸기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Change"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "바꾸기"
+          }
+        }
+      }
+    },
+    "받는 곳: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send to: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "받는 곳: %@"
+          }
+        }
+      }
+    },
+    "받은 소리 형식" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound format received"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "받은 소리 형식"
+          }
+        }
+      }
+    },
+    "받은 앱 소리 묶음" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App sound buffers received"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "받은 앱 소리 묶음"
+          }
+        }
+      }
+    },
+    "받은 화면 프레임" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screen frames received"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "받은 화면 프레임"
+          }
+        }
+      }
+    },
+    "방송 중" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Broadcasting"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "방송 중"
+          }
+        }
+      }
+    },
+    "버린 소리" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound dropped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "버린 소리"
+          }
+        }
+      }
+    },
+    "버전" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "버전"
+          }
+        }
+      }
+    },
+    "버튼에 3, 2, 1 숫자가 나온 뒤 보내기가 시작돼요. 창 바깥을 눌러 창을 닫아요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "After a 3, 2, 1 countdown on the button, sending starts. Tap outside the panel to close it."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "버튼에 3, 2, 1 숫자가 나온 뒤 보내기가 시작돼요. 창 바깥을 눌러 창을 닫아요."
+          }
+        }
+      }
+    },
+    "버퍼링" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buffering"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "버퍼링"
+          }
+        }
+      }
+    },
+    "보고 싶은 앱으로 가기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go to the app you want to show"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보고 싶은 앱으로 가기"
+          }
+        }
+      }
+    },
+    "보내기 멈추기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stop sending"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보내기 멈추기"
+          }
+        }
+      }
+    },
+    "보내기를 시작하고 처음 몇 초는 화면이 덜 부드러울 수 있어요. 곧 괜찮아져요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first few seconds after starting can be a little choppy. It smooths out soon."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보내기를 시작하고 처음 몇 초는 화면이 덜 부드러울 수 있어요. 곧 괜찮아져요."
+          }
+        }
+      }
+    },
+    "보내기를 시작했으면 홈 화면으로 나가서 사진, 영상, 게임 등 보고 싶은 앱을 열어요. TV가 나오기 전에 나가도 돼요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Once sending has started, go to the Home Screen and open the app you want to show: Photos, videos, games and so on. You can leave before the TV shows it."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보내기를 시작했으면 홈 화면으로 나가서 사진, 영상, 게임 등 보고 싶은 앱을 열어요. TV가 나오기 전에 나가도 돼요."
+          }
+        }
+      }
+    },
+    "보낸 까닭: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Why it was sent: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보낸 까닭: %@"
+          }
+        }
+      }
+    },
+    "복사했어요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copied"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "복사했어요"
+          }
+        }
+      }
+    },
+    "볼륨 버튼 = 휴대폰 소리. 끝까지 내려 두면 TV에서만 소리가 나요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volume buttons = phone sound. Turn it all the way down to hear it only on the TV."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "볼륨 버튼 = 휴대폰 소리. 끝까지 내려 두면 TV에서만 소리가 나요."
+          }
+        }
+      }
+    },
+    "불러오는 중" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "불러오는 중"
+          }
+        }
+      }
+    },
+    "사용 방법" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "How to use"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "사용 방법"
+          }
+        }
+      }
+    },
+    "상태" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "State"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "상태"
+          }
+        }
+      }
+    },
+    "상태 받기 전" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "no state yet"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "상태 받기 전"
+          }
+        }
+      }
+    },
+    "서버 요청 (TV가 iPhone에서 가져갔는지)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server requests (what the TV fetched from the iPhone)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버 요청 (TV가 iPhone에서 가져갔는지)"
+          }
+        }
+      }
+    },
+    "서버 점검: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server check: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버 점검: %@"
+          }
+        }
+      }
+    },
+    "설정 앱에서 MirrorDrop의 \"로컬 네트워크\"가 켜져 있어야 해요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "\"Local Network\" must be on for MirrorDrop in the Settings app."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설정 앱에서 MirrorDrop의 \"로컬 네트워크\"가 켜져 있어야 해요."
+          }
+        }
+      }
+    },
+    "설정 열기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Settings"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설정 열기"
+          }
+        }
+      }
+    },
+    "소리" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소리"
+          }
+        }
+      }
+    },
+    "소리 나오는 곳" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound output"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소리 나오는 곳"
+          }
+        }
+      }
+    },
+    "소리 나오는 곳 (확장이 쓰는 값)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound output (used by the extension)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소리 나오는 곳 (확장이 쓰는 값)"
+          }
+        }
+      }
+    },
+    "소리 크기 (최근 1초 / 최고)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound level (last second / peak)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소리 크기 (최근 1초 / 최고)"
+          }
+        }
+      }
+    },
+    "소리 크기는 휴대폰 볼륨과 관계없이 앱에서 받은 소리의 크기입니다(0은 무음, 1은 가장 큼). \"휴대폰\"을 고르면 TV로는 무음을 보냅니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound level is how loud the app sound is, whatever the phone volume (0 is silent, 1 is loudest). With \"Phone\" chosen, the TV gets silence."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소리 크기는 휴대폰 볼륨과 관계없이 앱에서 받은 소리의 크기입니다(0은 무음, 1은 가장 큼). \"휴대폰\"을 고르면 TV로는 무음을 보냅니다."
+          }
+        }
+      }
+    },
+    "소리: 묶음 %lld, 형식 %@, 크기 최근/최고 %@, 보냄 %lld, 무음 %lld, 버림 %lld (48kHz 프레임)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound: buffers %lld, format %@, level recent/peak %@, sent %lld, silence %lld, dropped %lld (48 kHz frames)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소리: 묶음 %lld, 형식 %@, 크기 최근/최고 %@, 보냄 %lld, 무음 %lld, 버림 %lld (48kHz 프레임)"
+          }
+        }
+      }
+    },
+    "시작 기록 (처음 30초)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Startup record (first 30 s)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시작 기록 (처음 30초)"
+          }
+        }
+      }
+    },
+    "시작 중…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시작 중…"
+          }
+        }
+      }
+    },
+    "실수로 \"허용 안 함\"을 눌렀다면: **설정 → MirrorDrop → 로컬 네트워크**를 켜세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tapped \"Don't Allow\" by mistake? Turn on **Settings > MirrorDrop > Local Network**."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실수로 \"허용 안 함\"을 눌렀다면: **설정 → MirrorDrop → 로컬 네트워크**를 켜세요."
+          }
+        }
+      }
+    },
+    "실패" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실패"
+          }
+        }
+      }
+    },
+    "실패: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "실패: %@"
+          }
+        }
+      }
+    },
+    "아래 ② 버튼으로 다시 시작하세요. (iPhone이 잠기면 TV 보내기가 끝나요.)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start again with the ② button below. (Sending ends when the iPhone locks.)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아래 ② 버튼으로 다시 시작하세요. (iPhone이 잠기면 TV 보내기가 끝나요.)"
+          }
+        }
+      }
+    },
+    "아래 큰 버튼을 누른 다음 \"방송 시작\"을 누르세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the big button below, then \"Start Broadcast\"."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아래 큰 버튼을 누른 다음 \"방송 시작\"을 누르세요."
+          }
+        }
+      }
+    },
+    "아래 확인할 것을 봐 주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please check the list below."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아래 확인할 것을 봐 주세요."
+          }
+        }
+      }
+    },
+    "아직 재생 안 됨 (지금 %@)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not playing yet (now %@)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "아직 재생 안 됨 (지금 %@)"
+          }
+        }
+      }
+    },
+    "안 될 때" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If it doesn't work"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "안 될 때"
+          }
+        }
+      }
+    },
+    "알 수 없음" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알 수 없음"
+          }
+        }
+      }
+    },
+    "알겠어요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Got it"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알겠어요"
+          }
+        }
+      }
+    },
+    "알아 두세요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Good to know"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알아 두세요"
+          }
+        }
+      }
+    },
+    "앱 %@, iOS %@, 언어 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App %@, iOS %@, language %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "앱 %@, iOS %@, 언어 %@"
+          }
+        }
+      }
+    },
+    "어떤 광고였나요? (광고 내용, 본 시각, 가능하면 화면 캡처)\n\n앱 버전: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Which ad was it? (What it showed, when you saw it, a screenshot if you can)\n\nApp version: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "어떤 광고였나요? (광고 내용, 본 시각, 가능하면 화면 캡처)\n\n앱 버전: %@"
+          }
+        }
+      }
+    },
+    "없는 조각 요청(404) %lld번" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requests for missing segments (404): %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "없는 조각 요청(404) %lld번"
+          }
+        }
+      }
+    },
+    "없음" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "없음"
+          }
+        }
+      }
+    },
+    "연결 실패: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not connect: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결 실패: %@"
+          }
+        }
+      }
+    },
+    "연결 안 됨" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not connected"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결 안 됨"
+          }
+        }
+      }
+    },
+    "연결 중…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결 중…"
+          }
+        }
+      }
+    },
+    "연결됨" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connected"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결됨"
+          }
+        }
+      }
+    },
+    "연결하는 중…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결하는 중…"
+          }
+        }
+      }
+    },
+    "영상 만들기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "영상 만들기"
+          }
+        }
+      }
+    },
+    "영상 조각 만드는 중…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Making video segments…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "영상 조각 만드는 중…"
+          }
+        }
+      }
+    },
+    "오래 볼 때는 **설정 → 디스플레이 및 밝기 → 자동 잠금 → 안 함**으로 바꾸세요. (저전력 모드가 켜져 있으면 바꿀 수 없어요.)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For long viewing, set **Settings > Display & Brightness > Auto-Lock > Never**. (Not possible while Low Power Mode is on.)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오래 볼 때는 **설정 → 디스플레이 및 밝기 → 자동 잠금 → 안 함**으로 바꾸세요. (저전력 모드가 켜져 있으면 바꿀 수 없어요.)"
+          }
+        }
+      }
+    },
+    "오류" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "error"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오류"
+          }
+        }
+      }
+    },
+    "왼쪽 버튼을 눌러 TV를 고르세요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the button on the left to choose a TV"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "왼쪽 버튼을 눌러 TV를 고르세요"
+          }
+        }
+      }
+    },
+    "요청 기록이 가득 차 %lld개는 빠짐" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Request record full: %lld left out"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "요청 기록이 가득 차 %lld개는 빠짐"
+          }
+        }
+      }
+    },
+    "요청 실패: %@ (code %lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Request failed: %@ (code %lld)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "요청 실패: %@ (code %lld)"
+          }
+        }
+      }
+    },
+    "요청: %lld, 클라이언트: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Requests: %lld, clients: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "요청: %lld, 클라이언트: %@"
+          }
+        }
+      }
+    },
+    "유튜브처럼 앱 안에 **TV 전송(Cast) 버튼**이 있으면 그 버튼을 쓰세요. 폰을 잠그거나 다른 앱으로 가도 TV에서 계속 나와요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If an app has its own **Cast button** (like YouTube), use that. The TV keeps playing even if you lock the phone or switch apps."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "유튜브처럼 앱 안에 **TV 전송(Cast) 버튼**이 있으면 그 버튼을 쓰세요. 폰을 잠그거나 다른 앱으로 가도 TV에서 계속 나와요."
+          }
+        }
+      }
+    },
+    "유튜브처럼 앱 안에 TV 전송(Cast) 버튼이 있으면 그 버튼을 쓰세요. 폰을 잠그거나 다른 앱으로 가도 TV에서 계속 나와요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If an app has its own Cast button (like YouTube), use that. The TV keeps playing even if you lock the phone or switch apps."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "유튜브처럼 앱 안에 TV 전송(Cast) 버튼이 있으면 그 버튼을 쓰세요. 폰을 잠그거나 다른 앱으로 가도 TV에서 계속 나와요."
+          }
+        }
+      }
+    },
+    "응답 없음 (공유가 끝났거나 확장이 종료됨)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No response (sharing ended or the extension stopped)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "응답 없음 (공유가 끝났거나 확장이 종료됨)"
+          }
+        }
+      }
+    },
+    "이것을 확인해 주세요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please check"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이것을 확인해 주세요"
+          }
+        }
+      }
+    },
+    "이제 눌러서 시작하세요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now tap to start"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이제 눌러서 시작하세요"
+          }
+        }
+      }
+    },
+    "이제 다른 앱으로 가도 됩니다. 멈출 때는 ② 버튼을 누르세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You can go to another app now. To stop, tap the ② button."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이제 다른 앱으로 가도 됩니다. 멈출 때는 ② 버튼을 누르세요."
+          }
+        }
+      }
+    },
+    "인코딩: %@; 첫 5초 반복 %lld, 버림 %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encoding: %@; first 5 s repeated %lld, dropped %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인코딩: %@; 첫 5초 반복 %lld, 버림 %lld"
+          }
+        }
+      }
+    },
+    "인코딩한 프레임" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frames encoded"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인코딩한 프레임"
+          }
+        }
+      }
+    },
+    "일시정지" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "일시정지"
+          }
+        }
+      }
+    },
+    "자동: TV 연결(다시 연결)됨" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "auto: TV connected (or reconnected)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동: TV 연결(다시 연결)됨"
+          }
+        }
+      }
+    },
+    "자동: 같은 주소로 다시 열림(urlRevision)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "auto: same address reopened (urlRevision)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동: 같은 주소로 다시 열림(urlRevision)"
+          }
+        }
+      }
+    },
+    "자동: 스트림 주소가 바뀜" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "auto: stream address changed"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동: 스트림 주소가 바뀜"
+          }
+        }
+      }
+    },
+    "자동: 화면이 준비됨" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "auto: screen ready"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자동: 화면이 준비됨"
+          }
+        }
+      }
+    },
+    "자세한 기록 (TV 상태)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details (TV state)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자세한 기록 (TV 상태)"
+          }
+        }
+      }
+    },
+    "자세한 기록 (초별·조각·요청·TV 상태)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details (per second · segments · requests · TV state)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "자세한 기록 (초별·조각·요청·TV 상태)"
+          }
+        }
+      }
+    },
+    "재생 위치 기록 없음 (그동안 앱이 멈춰 있었을 수 있어요)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No playback position samples (the app may have been suspended)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생 위치 기록 없음 (그동안 앱이 멈춰 있었을 수 있어요)"
+          }
+        }
+      }
+    },
+    "재생 위치 모름" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "position unknown"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생 위치 모름"
+          }
+        }
+      }
+    },
+    "재생 위치: 잰 것 %lld번, 못 잰 것 %lld번" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playback position: measured %lld, not measured %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생 위치: 잰 것 %lld번, 못 잰 것 %lld번"
+          }
+        }
+      }
+    },
+    "재생 중" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playing"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생 중"
+          }
+        }
+      }
+    },
+    "재생 중 아님" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "not playing"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생 중 아님"
+          }
+        }
+      }
+    },
+    "재생목록" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "playlist"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생목록"
+          }
+        }
+      }
+    },
+    "재생목록 요청 %lld번" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playlist requests: %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생목록 요청 %lld번"
+          }
+        }
+      }
+    },
+    "재생목록(최신 seg%lld)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "playlist (newest seg%lld)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생목록(최신 seg%lld)"
+          }
+        }
+      }
+    },
+    "저작권 보호 영상(넷플릭스 등)은 TV에 **검게** 나와요. iPhone이 막는 것이라 고칠 수 없어요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy-protected videos (like Netflix) show as **black** on the TV. The iPhone blocks them, so the app can't change this."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저작권 보호 영상(넷플릭스 등)은 TV에 **검게** 나와요. iPhone이 막는 것이라 고칠 수 없어요."
+          }
+        }
+      }
+    },
+    "저작권 보호 영상(넷플릭스 등)은 TV에 검게 나옵니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy-protected videos (like Netflix) show as black on the TV."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저작권 보호 영상(넷플릭스 등)은 TV에 검게 나옵니다."
+          }
+        }
+      }
+    },
+    "정보" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정보"
+          }
+        }
+      }
+    },
+    "제어 센터에 **화면 기록** 버튼을 넣어 두었다면 그 버튼을 눌러도 멈춰요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If you added the **Screen Recording** button to Control Center, tapping it stops sending too."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "제어 센터에 **화면 기록** 버튼을 넣어 두었다면 그 버튼을 눌러도 멈춰요."
+          }
+        }
+      }
+    },
+    "조각 길이: %@, 크기 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segment length: %@, size %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조각 길이: %@, 크기 %@"
+          }
+        }
+      }
+    },
+    "조각 설정 (확장이 쓴 값)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segment setting (used by the extension)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조각 설정 (확장이 쓴 값)"
+          }
+        }
+      }
+    },
+    "조각 아직 없음" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No segments yet"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조각 아직 없음"
+          }
+        }
+      }
+    },
+    "조각: %lld, 보관 %lld, 마지막 %@, 코덱 %@, 방향 %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segments: %lld, kept %lld, last %@, codecs %@, orientation %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조각: %lld, 보관 %lld, 마지막 %@, 코덱 %@, 방향 %lld"
+          }
+        }
+      }
+    },
+    "준비" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Before you start"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "준비"
+          }
+        }
+      }
+    },
+    "준비 중" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting ready"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "준비 중"
+          }
+        }
+      }
+    },
+    "중단됨" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "interrupted"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "중단됨"
+          }
+        }
+      }
+    },
+    "중지됨" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stopped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "중지됨"
+          }
+        }
+      }
+    },
+    "지금" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Now"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지금"
+          }
+        }
+      }
+    },
+    "지금 TV에 띄우기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show on TV now"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지금 TV에 띄우기"
+          }
+        }
+      }
+    },
+    "지연 측정 시계" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delay clock"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "지연 측정 시계"
+          }
+        }
+      }
+    },
+    "직접: 고급·진단 \"지금 TV에 띄우기\"" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "manual: Advanced \"Show on TV now\""
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "직접: 고급·진단 \"지금 TV에 띄우기\""
+          }
+        }
+      }
+    },
+    "직접: 첫 화면 \"다시 TV에 띄우기\"" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "manual: main screen \"Show on TV again\""
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "직접: 첫 화면 \"다시 TV에 띄우기\""
+          }
+        }
+      }
+    },
+    "진단" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnostics"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진단"
+          }
+        }
+      }
+    },
+    "진단 (메모리 · 요청 기록 · 로그)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diagnostics (memory · requests · logs)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "진단 (메모리 · 요청 기록 · 로그)"
+          }
+        }
+      }
+    },
+    "채운 무음" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Silence filled in"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "채운 무음"
+          }
+        }
+      }
+    },
+    "처음 보낼 때 알림을 허용할지 물어요. **허용**하면 보내기가 멈췄을 때 알려 줘요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The first time, the app asks about notifications. Tap **Allow** to be told when sending stops."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "처음 보낼 때 알림을 허용할지 물어요. **허용**하면 보내기가 멈췄을 때 알려 줘요."
+          }
+        }
+      }
+    },
+    "처음이세요? 사용 방법 보기" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New here? See how to use it"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "처음이세요? 사용 방법 보기"
+          }
+        }
+      }
+    },
+    "첫 재생 뒤 버퍼링 %lld번, 합계 %@초 (처음 10초 안 %lld번)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buffering after first playback: %lld times, %@ s in total (%lld in the first 10 s)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 재생 뒤 버퍼링 %lld번, 합계 %@초 (처음 10초 안 %lld번)"
+          }
+        }
+      }
+    },
+    "첫 재생까지 %@초 (재생 요청부터)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First playback after %@ s (from the play request)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 재생까지 %@초 (재생 요청부터)"
+          }
+        }
+      }
+    },
+    "첫 조각 %@초. 조각 간격: %@ (첫 5초), 그 뒤 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "First segment %@ s. Segment gaps: %@ (first 5 s), then %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 조각 %@초. 조각 간격: %@ (첫 5초), 그 뒤 %@"
+          }
+        }
+      }
+    },
+    "첫 화면 **① TV 연결**에 **연결됨**이 보이는지 확인해요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check that **① Connect TV** on the main screen shows **Connected**."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 화면 **① TV 연결**에 **연결됨**이 보이는지 확인해요."
+          }
+        }
+      }
+    },
+    "첫 화면 아래쪽 **② 화면 보내기** 칸의 큰 버튼 **TV로 보내기 시작**을 눌러요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lower on the main screen, in **② Send your screen**, tap the big **Start sending to TV** button."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 화면 아래쪽 **② 화면 보내기** 칸의 큰 버튼 **TV로 보내기 시작**을 눌러요."
+          }
+        }
+      }
+    },
+    "첫 화면에 **다시 TV에 띄우기** 버튼이 보이면 눌러요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If the main screen shows a **Show on TV again** button, tap it."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 화면에 **다시 TV에 띄우기** 버튼이 보이면 눌러요."
+          }
+        }
+      }
+    },
+    "첫 화면의 **① TV 연결** 칸에서 **TV 고르기** 버튼(또는 그 왼쪽의 TV 모양 버튼)을 눌러요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On the main screen, in **① Connect TV**, tap **Choose TV** (or the TV-shaped button to its left)."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 화면의 **① TV 연결** 칸에서 **TV 고르기** 버튼(또는 그 왼쪽의 TV 모양 버튼)을 눌러요."
+          }
+        }
+      }
+    },
+    "첫 화면의 **소리 나오는 곳**에서 고를 수 있어요. 보내는 중에도 바꿀 수 있어요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose it under **Sound output** on the main screen. You can change it while sending, too."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "첫 화면의 **소리 나오는 곳**에서 고를 수 있어요. 보내는 중에도 바꿀 수 있어요."
+          }
+        }
+      }
+    },
+    "초당 %@ (첫 5초)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "per second %@ (first 5 s)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "초당 %@ (첫 5초)"
+          }
+        }
+      }
+    },
+    "초당 %@ (첫 5초), 그 뒤 %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "per second %@ (first 5 s), then %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "초당 %@ (첫 5초), 그 뒤 %@"
+          }
+        }
+      }
+    },
+    "총 요청 수" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total requests"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "총 요청 수"
+          }
+        }
+      }
+    },
+    "최고" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Peak"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최고"
+          }
+        }
+      }
+    },
+    "최근 오류" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent errors"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최근 오류"
+          }
+        }
+      }
+    },
+    "최소 %@ / 최대 %@초" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min %@ / max %@ s"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최소 %@ / 최대 %@초"
+          }
+        }
+      }
+    },
+    "최소 %lld%@ / 최대 %lld%@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min %lld%@ / max %lld%@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최소 %lld%@ / 최대 %lld%@"
+          }
+        }
+      }
+    },
+    "취소됨" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "cancelled"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "취소됨"
+          }
+        }
+      }
+    },
+    "코덱" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Codecs"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "코덱"
+          }
+        }
+      }
+    },
+    "프레임: 입력 %lld, 인코딩 %lld, 반복 %lld, 건너뜀 %lld, 버림 %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Frames: in %lld, encoded %lld, repeated %lld, skipped %lld, dropped %lld"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프레임: 입력 %lld, 인코딩 %lld, 반복 %lld, 건너뜀 %lld, 버림 %lld"
+          }
+        }
+      }
+    },
+    "화면 공유 중에 이 화면을 켜 두고, iPhone과 TV가 함께 나오게 사진을 찍으세요. 두 시각의 차이가 지연 시간입니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep this screen open while sharing and take a photo showing both the iPhone and the TV. The difference between the two times is the delay."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 공유 중에 이 화면을 켜 두고, iPhone과 TV가 함께 나오게 사진을 찍으세요. 두 시각의 차이가 지연 시간입니다."
+          }
+        }
+      }
+    },
+    "화면 그림(ReplayKit): %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Screen frames (ReplayKit): %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 그림(ReplayKit): %@"
+          }
+        }
+      }
+    },
+    "화면 맨 위의 **빨간 표시**를 누르고, 멈출지 묻는 창에서 **중단**을 눌러요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the **red indicator** at the top of the screen, then tap **Stop** when asked."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 맨 위의 **빨간 표시**를 누르고, 멈출지 묻는 창에서 **중단**을 눌러요."
+          }
+        }
+      }
+    },
+    "화면 방향 값" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Orientation value"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 방향 값"
+          }
+        }
+      }
+    },
+    "화면 보내기를 시작하지 못했어요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't start sending your screen"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 보내기를 시작하지 못했어요"
+          }
+        }
+      }
+    },
+    "화면은 집 Wi-Fi 안에서만 TV로 가요. 인터넷으로 나가지 않아요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your screen goes to the TV only inside your home Wi-Fi. It never goes to the internet."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면은 집 Wi-Fi 안에서만 TV로 가요. 인터넷으로 나가지 않아요."
+          }
+        }
+      }
+    },
+    "화면은 집 Wi-Fi 안에서만 TV로 갑니다. 인터넷으로 나가지 않아요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your screen goes to the TV only inside your home Wi-Fi. It never goes to the internet."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면은 집 Wi-Fi 안에서만 TV로 갑니다. 인터넷으로 나가지 않아요."
+          }
+        }
+      }
+    },
+    "화면을 준비하는 중…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Getting your screen ready…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면을 준비하는 중…"
+          }
+        }
+      }
+    },
+    "화면이 준비되면 TV에 자동으로 띄웁니다. TV에 안 나올 때만 \"지금 TV에 띄우기\"를 눌러 보세요. 소리 나오는 곳(TV·휴대폰)은 첫 화면에서 보내는 중에도 바꿀 수 있어요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your screen appears on the TV by itself once it is ready. Tap \"Show on TV now\" only if it does not. You can change the sound output (TV or phone) on the main screen, even while sending."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면이 준비되면 TV에 자동으로 띄웁니다. TV에 안 나올 때만 \"지금 TV에 띄우기\"를 눌러 보세요. 소리 나오는 곳(TV·휴대폰)은 첫 화면에서 보내는 중에도 바꿀 수 있어요."
+          }
+        }
+      }
+    },
+    "확인 중…" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Checking…"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확인 중…"
+          }
+        }
+      }
+    },
+    "확장 기록 없음 (방송을 시작하면 첫 화면부터 30초를 기록합니다)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No extension record (a broadcast records 30 s from its first frame)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확장 기록 없음 (방송을 시작하면 첫 화면부터 30초를 기록합니다)"
+          }
+        }
+      }
+    },
+    "확장 메모리 (한도 약 %lldMB)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extension memory (limit about %lld MB)"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확장 메모리 (한도 약 %lldMB)"
+          }
+        }
+      }
+    },
+    "확장 상태: %@, 소리 출력: %@, 조각 설정: %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extension state: %@, sound output: %@, segment setting: %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확장 상태: %@, 소리 출력: %@, 조각 설정: %@"
+          }
+        }
+      }
+    },
+    "확장 쪽 시간은 첫 화면 프레임부터, TV 상태와 재생 위치는 TV에 재생을 요청한 때부터 잽니다. 방송을 시작하고 30초 뒤에 이 부분을 캡처해 주세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extension times count from the first screen frame; TV state and position count from the play request to the TV. Please screenshot this part 30 seconds after starting a broadcast."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확장 쪽 시간은 첫 화면 프레임부터, TV 상태와 재생 위치는 TV에 재생을 요청한 때부터 잽니다. 방송을 시작하고 30초 뒤에 이 부분을 캡처해 주세요."
+          }
+        }
+      }
+    },
+    "휴대폰" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "휴대폰"
+          }
+        }
+      }
+    },
+    "휴대폰 소리 꺼짐 ✓" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Phone sound off ✓"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "휴대폰 소리 꺼짐 ✓"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

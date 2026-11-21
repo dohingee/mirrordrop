@@ -43,7 +43,7 @@ jobs:
     # (iOS TestFlight #8 and #9, 2026-11-19). The arm64 queue sometimes gives up ("not acquired by
     # Runner", GitHub capacity: 2026-11-18 and TestFlight #12); then run again or pick macos-26-intel.
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 50
     # Public repository: pull requests from forks never run here (they are not ours to check).
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     # Only to push the results to the ci-results branch (publish-ci-results.sh touches no other branch).
@@ -65,7 +65,7 @@ jobs:
       - name: Launch on iPhone and iPad simulators (Xcode ${{ steps.setup.outputs.xcode }})
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         working-directory: ios
-        timeout-minutes: 35
+        timeout-minutes: 40
         run: bash ../.github/scripts/ios-launch-check.sh
 
       # Fork pull requests never get here (job condition); kept as a second guard.

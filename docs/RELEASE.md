@@ -36,7 +36,7 @@
 - 버전 1.0.
 - 스토어 스크린샷 데모 모드(7번).
 
-### 2-2. 다른 에이전트가 할 것과 지켜야 할 약속 (광고는 2-3에서 끝남, 영어 화면은 남음)
+### 2-2. 다른 에이전트가 할 것과 지켜야 할 약속 (광고는 2-3, 영어 화면은 2-4에서 끝남)
 광고 코드와 영어 화면은 따로 만든다. 아래 글자·자리는 웹 페이지·심사 메모에 이미 적혀 있으므로 **그대로** 쓰거나, 바꾸면 그 문서들도 함께 고친다.
 - 광고(`docs/MONETIZATION.md` 그대로): 첫 화면 아래 배너(보내는 중·시작하는 중에는 숨김), 시작 전 전면 광고(하루 1번, 5가지 조건), 앱 열기·보상형 광고 없음, 확장에는 광고 없음.
 - 고급·진단 화면에 **"광고 개인정보 설정"**(영어 "Ad privacy settings", UMP의 privacy options. 동의가 필요한 지역에서만 보여도 됨)과 **"광고 신고"**(영어 "Report an ad", 메일 `kimyeoware@gmail.com`로)를 둔다. 처리방침 6번·지원 페이지·심사 메모가 이 이름을 쓴다.
@@ -44,7 +44,7 @@
 - `Info.plist`(`ios/project.yml`): `GADApplicationIdentifier`, `SKAdNetworkItems`(Google이 공개한 목록), `NSUserTrackingUsageDescription`(한국어·영어). 앱 `PrivacyInfo.xcprivacy`를 Google 광고 SDK와 맞춘다(SDK가 자체 매니페스트를 갖고 있는지 확인).
 - 순서: UMP 동의 → ATT 창. 거부해도 모든 기능. 심사 빌드에서 시험 광고를 보일지(팔자노트처럼 TestFlight·심사 환경은 시험 광고)는 광고 담당이 정하고, 정한 대로 심사 메모 ADS 줄을 고친다.
 - **데모 모드에서는 광고를 띄우지 않는다**(`DemoMode.current != nil`이면 배너·전면 광고·UMP·ATT를 건너뜀). 스토어 스크린샷에 시험 광고가 찍히지 않게.
-- 영어 화면을 만들면 `ios-launch-check.sh`에 영어 스토어 캡처(`-AppleLanguages "(en)"`으로 `store-sending`·`store-connected`·`guide`)를 더한다.
+- 영어 화면을 만들면 `ios-launch-check.sh`에 영어 스토어 캡처(`-AppleLanguages "(en)"`으로 `store-sending`·`store-connected`·`guide`)를 더한다. → 2-4에서 함.
 - 영어 화면 담당에게: 광고 글자는 `AdsManager.swift`·`ContentView.swift`("이제 눌러서 시작하세요")·`AdvancedView.swift`("광고", "광고 개인정보 설정", "광고 신고", 칸 아래 설명, 신고 메일 제목·본문)에 있다. 추적 허용 창 문구 `NSUserTrackingUsageDescription`은 지금 한국어만 `ios/project.yml`에 있으므로 영어는 InfoPlist 문자열(현지화)로 더한다.
 
 ### 2-3. 광고 코드 (2026-11-22 끝남)
@@ -59,7 +59,18 @@
 
   - Debug 구성은 두 광고 단위를 Google 시험 단위(`ca-app-pub-3940256099942544/2435281174` 배너, `/4411468910` 전면)로 덮어쓴다. 코드도 Debug·시뮬레이터 빌드, TestFlight·심사(StoreKit `sandbox`)에서는 시험 단위를 쓴다. 진짜 단위는 App Store에서 받은 앱에서만.
   - GitHub Actions 변수는 쓰지 않는다(값이 바뀌면 `ios/project.yml`만 고친다).
-- Info.plist: `SKAdNetworkItems`(Google 빠른 시작 문서의 50개, 2026-11-22 확인), `NSUserTrackingUsageDescription`(한국어, 영어는 현지화 때). 앱 `PrivacyInfo.xcprivacy`에 광고가 모으는 데이터 종류(아래 10번 표와 같음)를 적었다.
+- Info.plist: `SKAdNetworkItems`(Google 빠른 시작 문서의 50개, 2026-11-22 확인), `NSUserTrackingUsageDescription`(한국어, 영어는 2-4의 `InfoPlist.xcstrings`). 앱 `PrivacyInfo.xcprivacy`에 광고가 모으는 데이터 종류(아래 10번 표와 같음)를 적었다.
+
+### 2-4. 영어 화면 (2026-11-22 끝남, 기기 확인 남음)
+- 방식: Xcode 문자열 카탈로그(String Catalog). 원문(개발 언어)은 한국어 그대로, 영어를 더했다. 코드의 한국어 글자가 그대로 "열쇠"이고, 카탈로그에 영어 값이 있다.
+  - 앱: `ios/MirrorDrop/Resources/Localizable.xcstrings`(화면 글자, 상태 글, 진단·시작 기록 요약, 광고 신고 메일, 문제 보내기), `InfoPlist.xcstrings`(로컬 네트워크·블루투스·추적 허용 창 문구).
+  - 확장: `ios/MirrorDropBroadcast/Localizable.xcstrings`(멈춤 알림 제목·본문, 시작 실패 글), `InfoPlist.xcstrings`(로컬 네트워크 문구).
+  - Mac이 없어 Xcode가 열쇠를 뽑아 주지 않으므로 손으로 쓴 JSON이다. **화면 글자를 바꾸거나 더하면 카탈로그에도 같은 열쇠로 넣는다**(빠지면 영어 화면에 한국어가 나온다. 앱이 죽지는 않는다). `\(…)`가 든 글은 열쇠에서 `%@`(글자)·`%lld`(정수)로 바뀐다.
+  - 로그(확장 로그, Cast 기록, SDK 로그)는 언어와 관계없이 영어다.
+- 언어 고르기: `CFBundleLocalizations` ko·en. 한국어도 영어도 아닌 사람(예: 일본어만 쓰는 사람)에게는 영어가 나오게 `CFBundleDevelopmentRegion`을 en으로 했다(세계 출시라 영어가 기본 언어). 프로젝트의 개발 언어(카탈로그 원문)는 ko 그대로.
+- 웹 링크: 앱이 영어로 보이면 처리방침·지원 링크도 `/en/` 페이지로 연다(`AppLinks`).
+- 약속한 이름: "Ad privacy settings", "Report an ad", "Report a problem". iOS 쪽 글자("Start Broadcast", "Stop Broadcast", 설정 경로 "Settings > Display & Brightness > Auto-Lock > Never", "Settings > MirrorDrop > Local Network")는 Apple 영어 화면 기준으로 적었고 **기기에서 아직 확인 안 함**(`docs/POC_TEST.md` "영어 화면").
+- 영어 캡처: `ios-launch-check.sh`가 `iphone-store-en-sending.png`·`iphone-store-en-connected.png`·`iphone-en-main.png`·`iphone-en-guide.png`를 찍는다(7번).
 
 ## 3. 광고 계정 준비 (AdMob)
 1. ✋ AdMob **결제 프로필**: 이름·주소·은행 계좌와 미국 세금 정보(개인 W-8BEN)를 넣는다. 금융·세금 정보라 사용자만 한다. 이미 팔자노트 때 했으면 넘어간다(광고 계정은 한 사람에 하나, 같은 계정을 쓴다).
@@ -97,7 +108,7 @@
   - `iphone-main.png`: TV를 못 찾을 때의 안내(넣을지는 보고 정함)
 - 데모 모드: 실행 인자 `-MDDemo connected|sending`이 있을 때만 TV 연결·보내는 중 상태를 꾸며 보인다(`ios/MirrorDrop/App/DemoMode.swift`). 이 코드는 시뮬레이터 검사 빌드(`MD_DEMO` 조건)에만 들어가고, TestFlight·App Store용 빌드에는 들어가지 않는다. 화면 글자·모양은 실제 앱 그대로다(2.3 정확성).
   - 한계: 시뮬레이터에는 진짜 Cast 기기가 없어 Cast SDK 버튼이 안 보일 수 있고, 보내는 중 화면 위 빨간 표시도 없다. 캡처를 보고 어색하면 그 장은 빼거나 ✋ 실제 iPhone 화면 캡처(보내는 중 상태)로 바꾼다.
-- 언어: 한국어 3~4장, 영어 3~4장(영어 화면이 생긴 뒤 같은 방법으로).
+- 언어: 한국어 3~4장, 영어 3~4장. 영어는 같은 검사가 `-AppleLanguages "(en)"`으로 찍은 `iphone-store-en-sending.png`·`iphone-store-en-connected.png`·`iphone-en-guide.png`(`iphone-en-main.png`는 영어 첫 화면 확인용).
 - 글귀·테두리(기기 그림, 위에 한 줄 설명)는 **선택**이다. 1.0은 꾸미지 않은 화면 그대로 올린다(가장 빠르고 2.3에 안전). TV 사진을 합성하지 않는다.
 - 올리기: 🤖 내장 브라우저로 버전 페이지의 스크린샷 칸에 파일을 올린다. 브라우저가 파일 선택을 못 하면 ✋ 🤖가 PC 폴더(`ios/build/ci-results/…`)를 열어 둔 상태에서 끌어다 놓기만.
 

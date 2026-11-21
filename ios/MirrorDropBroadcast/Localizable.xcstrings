@@ -1,0 +1,86 @@
+{
+  "sourceLanguage" : "ko",
+  "strings" : {
+    "TV 보내기가 멈췄어요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending to TV stopped"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 보내기가 멈췄어요"
+          }
+        }
+      }
+    },
+    "Wi-Fi 연결이 끊겼어요. Wi-Fi가 다시 연결되면 새 주소로 이어서 보냅니다." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi was disconnected. Sending continues at a new address once Wi-Fi is back."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi 연결이 끊겼어요. Wi-Fi가 다시 연결되면 새 주소로 이어서 보냅니다."
+          }
+        }
+      }
+    },
+    "Wi-Fi에 연결되어 있지 않아요. Wi-Fi를 켜고 다시 시작하세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The iPhone isn't on Wi-Fi. Turn on Wi-Fi and start again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wi-Fi에 연결되어 있지 않아요. Wi-Fi를 켜고 다시 시작하세요."
+          }
+        }
+      }
+    },
+    "iPhone이 잠기면 TV 보내기가 끝나요. 눌러서 다시 시작하세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending to the TV ends when your iPhone locks. Tap to start again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "iPhone이 잠기면 TV 보내기가 끝나요. 눌러서 다시 시작하세요."
+          }
+        }
+      }
+    },
+    "화면 변환기를 만들 수 없어요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't set up the screen converter."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면 변환기를 만들 수 없어요."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

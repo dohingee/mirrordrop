@@ -71,13 +71,13 @@ final class BroadcastMonitor: ObservableObject {
     }
 
     var stateText: String {
-        if isStale { return "응답 없음 (공유가 끝났거나 확장이 종료됨)" }
+        if isStale { return String(localized: "응답 없음 (공유가 끝났거나 확장이 종료됨)") }
         switch status.state {
-        case .idle: return "대기"
-        case .starting: return status.url == nil ? "시작 중…" : "영상 조각 만드는 중…"
-        case .streaming: return "방송 중"
-        case .stopped: return "중지됨"
-        case .failed: return "실패"
+        case .idle: return String(localized: "대기")
+        case .starting: return status.url == nil ? String(localized: "시작 중…") : String(localized: "영상 조각 만드는 중…")
+        case .streaming: return String(localized: "방송 중")
+        case .stopped: return String(localized: "중지됨")
+        case .failed: return String(localized: "실패")
         }
     }
 }

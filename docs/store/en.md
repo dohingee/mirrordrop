@@ -2,7 +2,7 @@
 
 영어 스토어 글을 이 파일에 모은다. 공통 규칙(숫자, 쓰지 않는 말, 웹 주소, 글자 수 제한)과 **심사 메모**는 `docs/store/ko.md`에 한 번만 적었다(심사 메모는 언어별 칸이 아니라 앱 버전마다 하나다). 누가 언제 넣는지는 `docs/RELEASE.md`.
 
-- 이 글은 영어 화면(다른 에이전트가 만드는 영어 현지화)이 들어간 빌드에 맞춘 것이다. 영어 화면의 버튼 글자가 정해지면 아래 따옴표 안 글자("Start Broadcast"는 iOS 글자라 그대로)를 실제 글자와 맞춘다.
+- 이 글은 영어 화면이 들어간 빌드(`docs/RELEASE.md` 2-4)에 맞춘 것이다. 앱의 영어 버튼 글자: "Start sending to TV", "Stop sending", "Choose TV", "Show on TV again", "Report a problem", "Report an ad", "Ad privacy settings"; iOS 글자 "Start Broadcast"는 그대로. 아래 글은 버튼 이름을 따옴표로 직접 부르지 않으므로("the big start button") 지금 글자와 어긋나는 곳이 없다. 앱 글자를 바꾸면 여기와 `web/hosting/en/`도 함께 본다.
 - 웹 주소(영어 페이지):
   - Privacy Policy URL: `https://mirrordrop-app.web.app/en/privacy.html`
   - Support URL: `https://mirrordrop-app.web.app/en/support.html`

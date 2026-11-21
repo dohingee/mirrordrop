@@ -29,6 +29,23 @@ struct DiagnosticsView: View {
             } footer: {
                 Text("확장 쪽 시간은 첫 화면 프레임부터, TV 상태와 재생 위치는 TV에 재생을 요청한 때부터 잽니다. 방송을 시작하고 30초 뒤에 이 부분을 캡처해 주세요.")
             }
+            if let resend = cast.resendPlayback {
+                Section {
+                    ForEach(Array(StartupReport.resendSummary(trace: s.startup, playback: resend).enumerated()),
+                            id: \.offset) { _, line in
+                        Text(line).font(.caption)
+                    }
+                    DisclosureGroup("자세한 기록 (TV 상태)") {
+                        ForEach(Array(StartupReport.playbackDetails(resend).enumerated()), id: \.offset) { _, line in
+                            Text(line).font(.caption2.monospaced())
+                        }
+                    }
+                } header: {
+                    Text("다시 보내기 기록 (마지막 다시 보내기 뒤 30초)")
+                } footer: {
+                    Text("같은 방송을 TV에 다시 보낸 때(다시 연결, 주소 바뀜, 직접 누름)의 기록입니다. 시작 기록은 그대로 둡니다.")
+                }
+            }
             Section("확장 메모리 (한도 약 \(Int(memoryLimitMB))MB)") {
                 LabeledContent("지금", value: String(format: "%.1f MB", s.memoryMB))
                 LabeledContent("최고", value: String(format: "%.1f MB", s.peakMemoryMB))
@@ -38,10 +55,10 @@ struct DiagnosticsView: View {
             Section("영상 만들기") {
                 LabeledContent("상태", value: monitor.stateText)
                 LabeledContent("받은 화면 프레임", value: "\(s.framesIn)")
-                LabeledContent("인코딩한 프레임", value: "\(s.framesEncoded) (반복 \(s.framesRepeated))")
+                LabeledContent("인코딩한 프레임", value: String(localized: "\(s.framesEncoded) (반복 \(s.framesRepeated))"))
                 LabeledContent("건너뜀 / 버림", value: "\(s.framesSkipped) / \(s.framesDropped)")
                 LabeledContent("만든 조각 / 보관 중", value: "\(s.segmentsProduced) / \(s.segmentsInWindow)")
-                LabeledContent("마지막 조각", value: String(format: "%.2f초, %ld KB", s.lastSegmentDuration, s.lastSegmentBytes / 1024))
+                LabeledContent("마지막 조각", value: String(localized: "\(StartupReport.f2(s.lastSegmentDuration))초, \(s.lastSegmentBytes / 1024) KB"))
                 LabeledContent("코덱", value: s.codecs ?? "-")
                 LabeledContent("화면 방향 값", value: "\(s.orientation)")
                 LabeledContent("조각 설정 (확장이 쓴 값)", value: Self.presetText(s.latencyPreset))
@@ -63,10 +80,10 @@ struct DiagnosticsView: View {
             Section("서버 요청 (TV가 iPhone에서 가져갔는지)") {
                 LabeledContent("총 요청 수", value: "\(s.requestCount)")
                 ForEach(s.clients.keys.sorted(), id: \.self) { client in
-                    LabeledContent(client, value: "\(s.clients[client] ?? 0)회")
+                    LabeledContent(client, value: String(localized: "\(s.clients[client] ?? 0)회"))
                 }
                 ForEach(s.recentRequests.reversed()) { entry in
-                    Text("\(Self.time(entry.time)) \(entry.client) \(entry.method) \(entry.path) → \(entry.status) (\(entry.bytes)B)")
+                    Text(verbatim: "\(Self.time(entry.time)) \(entry.client) \(entry.method) \(entry.path) → \(entry.status) (\(entry.bytes)B)")
                         .font(.caption2.monospaced())
                 }
                 Button("iPhone 안에서 서버 점검") { runSelfTest() }
@@ -94,9 +111,11 @@ struct DiagnosticsView: View {
             }
             Section {
                 ProblemReportLink(selfTest: selfTest)
-                Button(copied ? "복사했어요" : "로그 전체 복사") {
+                Button {
                     UIPasteboard.general.string = report()
                     copied = true
+                } label: {
+                    copied ? Text("복사했어요") : Text("로그 전체 복사")
                 }
             } footer: {
                 Text("\"문제 보내기\"를 누르면 메일·메시지 등 보낼 곳을 직접 고를 수 있습니다. 앱이 저절로 어디로 보내지는 않습니다. 접속 주소의 비밀 부분은 가려져 있습니다. 문의 메일: \(DiagnosticsReport.supportEmail)")
@@ -107,13 +126,13 @@ struct DiagnosticsView: View {
 
     private func runSelfTest() {
         guard let text = monitor.status.url, let url = URL(string: text) else { return }
-        selfTest = "확인 중…"
+        selfTest = String(localized: "확인 중…")
         let started = Date()
         URLSession.shared.dataTask(with: url) { data, response, error in
             let ms = Int(Date().timeIntervalSince(started) * 1000)
             let result: String
             if let error {
-                result = "실패: \(error.localizedDescription)"
+                result = String(localized: "실패: \(error.localizedDescription)")
             } else {
                 let code = (response as? HTTPURLResponse)?.statusCode ?? 0
                 result = "HTTP \(code), \(data?.count ?? 0)B, \(ms)ms"
@@ -141,7 +160,8 @@ struct DiagnosticsView: View {
 
     /// 48 kHz frames as seconds.
     private static func seconds(_ frames: Int) -> String {
-        String(format: "%.1f초", Double(frames) / Double(AudioTrackFormat.sampleRate))
+        let value = StartupReport.f1(Double(frames) / Double(AudioTrackFormat.sampleRate))
+        return String(localized: "\(value)초")
     }
 
     private static func presetText(_ code: String?) -> String {
@@ -177,33 +197,44 @@ enum DiagnosticsReport {
     static func make(cast: CastManager, monitor: BroadcastMonitor, selfTest: String) -> String {
         let s = monitor.status
         var lines: [String] = []
-        lines.append("MirrorDrop 진단 \(Date())")
+        // In the language of the app's screens (the user may read it before sending); the developer
+        // reads both. Logs (extension log, Cast events, SDK log) are English in every language.
         let info = Bundle.main.infoDictionary
-        lines.append("앱 \(info?["CFBundleShortVersionString"] ?? "?") (\(info?["CFBundleVersion"] ?? "?")), iOS \(UIDevice.current.systemVersion)")
-        lines.append("Cast: \(cast.stateText), 기기: \(cast.deviceName ?? "-"), TV 상태: \(cast.mediaText)")
-        lines.append("TV 재생 위치: \(cast.liveLagText)")
-        lines.append("Cast 오류: \(cast.lastError ?? "-")")
-        lines.append("확장 상태: \(monitor.stateText), 소리 출력: \(s.audioOutput ?? "-"), 조각 설정: \(s.latencyPreset ?? "-")")
-        lines.append(String(format: "소리: 묶음 %ld, 형식 %@, 크기 최근 %.3f 최고 %.3f, 보냄 %ld, 무음 %ld, 버림 %ld (48kHz 프레임)",
-                            s.audioSamplesIn, s.audioSourceFormat ?? "-", s.audioPeakRecent, s.audioPeakMax,
-                            s.audioRealFrames, s.audioSilentFrames, s.audioDroppedFrames))
-        lines.append(String(format: "메모리: 지금 %.1fMB, 최고 %.1fMB", s.memoryMB, s.peakMemoryMB))
-        lines.append("프레임: 입력 \(s.framesIn), 인코딩 \(s.framesEncoded), 반복 \(s.framesRepeated), 건너뜀 \(s.framesSkipped), 버림 \(s.framesDropped)")
-        lines.append("조각: \(s.segmentsProduced), 보관 \(s.segmentsInWindow), 마지막 \(s.lastSegmentDuration)s/\(s.lastSegmentBytes)B, 코덱 \(s.codecs ?? "-"), 방향 \(s.orientation)")
-        lines.append("요청: \(s.requestCount), 클라이언트: \(s.clients)")
-        lines.append("서버 점검: \(selfTest)")
-        lines.append("--- 시작 기록 (처음 30초)")
+        let version = "\(info?["CFBundleShortVersionString"] ?? "?") (\(info?["CFBundleVersion"] ?? "?"))"
+        let none = "-"
+        lines.append(String(localized: "MirrorDrop 진단 \(Date().description)"))
+        lines.append(String(localized: "앱 \(version), iOS \(UIDevice.current.systemVersion), 언어 \(Bundle.main.preferredLocalizations.first ?? none)"))
+        lines.append(String(localized: "Cast: \(cast.stateText), 기기: \(cast.deviceName ?? none), TV 상태: \(cast.mediaText)"))
+        lines.append(String(localized: "TV 재생 위치: \(cast.liveLagText)"))
+        lines.append(String(localized: "Cast 오류: \(cast.lastError ?? none)"))
+        lines.append(String(localized: "확장 상태: \(monitor.stateText), 소리 출력: \(s.audioOutput ?? none), 조각 설정: \(s.latencyPreset ?? none)"))
+        let peaks = String(format: "%.3f / %.3f", s.audioPeakRecent, s.audioPeakMax)
+        lines.append(String(localized: "소리: 묶음 \(s.audioSamplesIn), 형식 \(s.audioSourceFormat ?? none), 크기 최근/최고 \(peaks), 보냄 \(s.audioRealFrames), 무음 \(s.audioSilentFrames), 버림 \(s.audioDroppedFrames) (48kHz 프레임)"))
+        let memory = String(format: "%.1fMB / %.1fMB", s.memoryMB, s.peakMemoryMB)
+        lines.append(String(localized: "메모리 지금/최고: \(memory)"))
+        lines.append(String(localized: "프레임: 입력 \(s.framesIn), 인코딩 \(s.framesEncoded), 반복 \(s.framesRepeated), 건너뜀 \(s.framesSkipped), 버림 \(s.framesDropped)"))
+        let last = "\(s.lastSegmentDuration)s/\(s.lastSegmentBytes)B"
+        lines.append(String(localized: "조각: \(s.segmentsProduced), 보관 \(s.segmentsInWindow), 마지막 \(last), 코덱 \(s.codecs ?? none), 방향 \(Int(s.orientation))"))
+        let clients = "\(s.clients)"
+        lines.append(String(localized: "요청: \(s.requestCount), 클라이언트: \(clients)"))
+        lines.append(String(localized: "서버 점검: \(selfTest)"))
+        lines.append(String(localized: "--- 시작 기록 (처음 30초)"))
         lines += StartupReport.summary(trace: s.startup, playback: cast.startupPlayback)
         lines += StartupReport.details(trace: s.startup, playback: cast.startupPlayback)
-        lines.append("--- 요청 기록")
+        if let resend = cast.resendPlayback {
+            lines.append(String(localized: "--- 다시 보내기 기록 (마지막 다시 보내기 뒤 30초)"))
+            lines += StartupReport.resendSummary(trace: s.startup, playback: resend)
+            lines += StartupReport.playbackDetails(resend)
+        }
+        lines.append(String(localized: "--- 요청 기록"))
         lines += s.recentRequests.map { "\(DiagnosticsView.time($0.time)) \($0.client) \($0.method) \($0.path) \($0.status) \($0.bytes)B" }
-        lines.append("--- 확장 오류")
+        lines.append(String(localized: "--- 확장 오류"))
         lines += s.errors
-        lines.append("--- 확장 로그")
+        lines.append(String(localized: "--- 확장 로그"))
         lines += s.log
-        lines.append("--- Cast 기록")
+        lines.append(String(localized: "--- Cast 기록"))
         lines += cast.events
-        lines.append("--- Cast SDK 로그 (최근 80줄)")
+        lines.append(String(localized: "--- Cast SDK 로그 (최근 80줄)"))
         lines += cast.sdkLog.suffix(80)
 
         var tokens = cast.mirrorTokens

@@ -4,8 +4,10 @@ import UIKit
 /// "사용 방법": step-by-step guide a middle-school student can follow. Button and label names are
 /// copied from the real screens (ContentView, the notification in Shared/StopAlert.swift); keep them
 /// in sync when those change. Texts of iOS's own screens (broadcast sheet, permission prompts,
-/// Settings paths, the red indicator) are written from Apple's Korean UI as far as known and are
-/// NOT yet checked on a device (docs/POC_TEST.md "사용 방법").
+/// Settings paths, the red indicator) are written from Apple's Korean UI, and in the English strings
+/// (Resources/Localizable.xcstrings: "Start Broadcast", "Stop", "Settings > MirrorDrop > Local Network")
+/// from Apple's English UI, as far as known; NOT yet checked on a device (docs/POC_TEST.md "사용 방법",
+/// "영어 화면"). The texts are LocalizedStringKey (markdown works in both languages).
 struct UsageGuideView: View {
     /// UserDefaults.standard flag: the guide was opened once (hides the main screen's "처음이세요?" row).
     static let seenKey = "usageGuideSeen"
@@ -132,7 +134,7 @@ struct UsageGuideView: View {
         .buttonStyle(.bordered)
     }
 
-    private func card<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func card<Content: View>(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title).font(.headline)
             content()
@@ -146,7 +148,7 @@ struct UsageGuideView: View {
     private func step(_ number: Int?, _ symbol: String, _ text: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 10) {
             if let number {
-                Text("\(number)")
+                Text(verbatim: "\(number)")
                     .font(.caption.bold())
                     .foregroundStyle(.white)
                     .frame(width: 22, height: 22)

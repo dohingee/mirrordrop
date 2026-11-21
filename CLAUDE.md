@@ -5,7 +5,8 @@ iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 
 기획서와 App Store 심사 위험 점검: `docs/SPEC.md`.
 
 ## 구조 (`ios/`, XcodeGen `ios/project.yml` → `.xcodeproj`는 생성물, 커밋 안 함)
-- `MirrorDrop/` 앱 (SwiftUI, 한국어 UI)
+- `MirrorDrop/` 앱 (SwiftUI, 한국어·영어 UI)
+  - 언어: Xcode 문자열 카탈로그. 원문(개발 언어)은 한국어, 영어를 더함. 앱 `Resources/Localizable.xcstrings`·`InfoPlist.xcstrings`, 확장 `MirrorDropBroadcast/Localizable.xcstrings`·`InfoPlist.xcstrings`. 손으로 쓴 JSON이라 **화면 글자를 바꾸거나 더하면 카탈로그에도 같은 열쇠(한국어 글자, `\(…)`는 `%@`·`%lld`)로 넣는다.** `Text`에 `String` 변수를 주면 번역되지 않으므로 그런 글은 `String(localized:)`로 만든다. 로그(확장 로그, Cast 기록)는 영어. 한국어도 영어도 아닌 사람에게는 영어(`CFBundleDevelopmentRegion` en). 웹 링크도 화면 언어를 따른다(`AppLinks`).
   - `App/CastManager.swift`: Google Cast SDK(SPM `GoogleCastDynamic` 4.8.6). 기본 미디어 수신기 `CC1AD845`, 재생 요청·상태·SDK 로그, TV 볼륨·음소거.
   - `App/PhoneVolumeMonitor.swift`: 앱이 앞에 있을 때 휴대폰 볼륨을 읽기만 함(0이면 "휴대폰 소리 꺼짐 ✓"). 다른 앱 소리를 끊지 않게 `.ambient`일 때만 오디오 세션을 켠다.
   - `App/BroadcastMonitor.swift`: App Group에서 확장 상태를 읽음(Darwin 알림 + 1초 폴링). 하나만 만들어(`shared`) 화면과 `MirrorCastCoordinator`가 같이 쓴다.
@@ -14,7 +15,8 @@ iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 
   - 첫 화면 맨 아래: 문제 보내기·사용 방법·고급·진단, "개인정보 처리방침" 링크(심사 5.1.1), Google Cast 상표 문장.
   - `App/AdsManager.swift`: AdMob(SPM Google Mobile Ads 13.12.0 + UMP 3.1.0, **앱 대상에만**). 첫 화면 아래 배너(보내는 중·TV 못 찾음 안내 때는 뷰에서 뺌), 시작 전 전면 광고(하루 1번, 누르기 전에 정함: 받아져 있으면 시작 카드가 광고 버튼 → 닫으면 iOS 시작 버튼 + "이제 눌러서 시작하세요"), 동의(UMP) → ATT는 첫 보내기가 끝난 뒤, 고급·진단의 "광고 개인정보 설정"·"광고 신고". 판단은 `Shared/AdPolicy.swift`. 광고 ID는 `ios/project.yml`(`ADMOB_*`) 한 곳, 진짜 광고는 App Store판에서만(`App/AdStoreEnvironment.swift`, TestFlight·심사·Debug·시뮬레이터는 시험 광고). 규칙: `docs/MONETIZATION.md`.
   - `App/DemoMode.swift`: 스토어 스크린샷용 데모 상태(`-MDDemo connected|sending`). `MD_DEMO` 조건으로만 컴파일되는 코드(`CastManager`·`BroadcastMonitor`·`MirrorDropApp`의 `#if MD_DEMO`)라 시뮬레이터 검사 빌드에만 들어가고 TestFlight·App Store 빌드에는 없다. 광고·권한 창도 데모에서는 띄우지 않는다.
-  - 연결이 끊겼다 돌아오거나 스트림 주소·`urlRevision`이 바뀌면 `MirrorCastCoordinator`가 `CastManager`로 TV에 다시 재생 요청한다(판단은 `Shared/BackgroundCastHold.swift`의 `AutoCastTrigger`).
+  - 연결이 끊겼다 돌아오거나 스트림 주소·`urlRevision`이 바뀌면 `MirrorCastCoordinator`가 `CastManager`로 TV에 다시 재생 요청한다(판단은 `Shared/BackgroundCastHold.swift`의 `AutoCastTrigger`). 모든 재생 요청은 까닭(`CastReason`: 자동 첫 보내기·다시 연결·새 주소·새 revision·직접 누름)과 그때 TV 상태를 Cast 기록에 남긴다.
+  - 시작 기록의 TV 쪽(`PlaybackRecords`, `Shared/StartupTrace.swift`): 방송의 **첫** 재생 요청 뒤 30초(시작 기록)와 같은 방송의 **마지막 다시 보내기** 뒤 30초(다시 보내기 기록)를 따로 둔다. 라이브 끝에서 뒤 값은 앱이 깨어 있을 때만 잴 수 있어서(뒤로 가 잠들면 못 잼), 못 잰 까닭과 빈 구간을 요약에 적는다.
 - `MirrorDropBroadcast/` Broadcast Upload Extension (`RPBroadcastSampleHandler`)
   - `MirrorPipeline`: ReplayKit 프레임 → `FrameScaler`(VideoToolbox, 1280x720 레터박스, 가로 화면 회전) → `HLSSegmenter`(AVAssetWriter `.mpeg4AppleHLS`, fMP4 조각, 길이는 `LatencyPreset`에 따름(기본 L3, 0.5초), 메모리에서만) → `StreamStore` → `HTTPServer`(Network.framework `NWListener`).
   - 정지 화면에서는 ReplayKit이 프레임을 안 주므로 마지막 프레임을 반복해 조각이 계속 나오게 한다.
@@ -22,7 +24,7 @@ iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 
   - Wi-Fi·IP가 바뀌면 새 주소로 `status.url`을 갱신(`urlRevision` 증가, Wi-Fi 없으면 `networkIssue`), 리스너가 실패하면 다시 연다. EXT-X-TARGETDURATION은 방송마다 고정, 오르기만 한다(`TargetDuration`). 인코더가 실패하면 새 인코더로 바꾸고 EXT-X-DISCONTINUITY·새 init 조각으로 잇는다.
   - `StatusPublisher`: 상태·메모리·요청 기록을 App Group UserDefaults에 쓰고 Darwin 알림을 보낸다.
   - `StopAlertArmer`: 멈춤 알림. 보내는 동안 "6초 뒤 알림"을 2초마다 다시 넣어 미루고(확장이 꺼지면 뜸, iPhone 잠금 대비), 정상으로 멈추면 지운다. 판단 로직은 `Shared/StopAlert.swift`, 앱 쪽(권한·누르면 ② 시작 버튼으로·앱이 앞이면 숨김)은 `App/StopAlertCenter.swift`.
-- `Shared/` 앱·확장·테스트가 함께 컴파일: App Group 상수와 상태 모델, 설정(`LatencyPreset`, `AudioOutput`), 소리 무음 채우기·형식 변환 로직, 시작 기록(`StartupTrace`, 방송 시작 뒤 30초의 시간표), 백그라운드 재생 요청 판단(`BackgroundCastHold`), 광고 규칙(`AdPolicy`, 앱만 씀), HLS 재생목록, HTTP 파서·라우터, 조각 링버퍼, IP·메모리 측정.
+- `Shared/` 앱·확장·테스트가 함께 컴파일: App Group 상수와 상태 모델, 설정(`LatencyPreset`, `AudioOutput`), 소리 무음 채우기·형식 변환 로직, 시작 기록(`StartupTrace`, 방송 시작 뒤 30초의 시간표, TV 쪽 `PlaybackRecords`), 백그라운드 재생 요청 판단(`BackgroundCastHold`), 광고 규칙(`AdPolicy`, 앱만 씀), HLS 재생목록, HTTP 파서·라우터, 조각 링버퍼, IP·메모리 측정.
 - `MirrorDropTests/` 순수 로직 단위 테스트(호스트 앱 없음, `Shared/`를 직접 컴파일).
 - `web/` 공개 웹 페이지(Firebase Hosting, 프로젝트 `mirrordrop-app`): `hosting/`에 한국어 `index.html`·`privacy.html`·`support.html`, 영어는 `hosting/en/`, `app-ads.txt`. 손으로 쓴 정적 파일이고, 앱 동작(수집하는 것, 버튼 이름)이 바뀌면 함께 고친다. 올리기·시연 영상(`hosting/review/`, git 제외)은 `docs/RELEASE.md` 4·5번.
 - `docs/store/` 스토어 글: `ko.md`(한국어 + 심사 메모), `en.md`(영어).

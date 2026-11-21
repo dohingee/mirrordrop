@@ -106,51 +106,63 @@ struct ContentView: View {
         var offersRecast = false
     }
 
+    /// Texts are localized here (String(localized:)): a plain `String` given to `Text` is shown as is.
     private var status: Status {
         if cast.connection == .connecting {
-            return Status(text: "TV에 연결하는 중…", tone: .progress)
+            return Status(text: String(localized: "TV에 연결하는 중…"), tone: .progress)
         }
         if monitor.stoppedUnexpectedly {
-            return Status(text: "TV 보내기가 멈췄어요",
-                          detail: "아래 ② 버튼으로 다시 시작하세요. (iPhone이 잠기면 TV 보내기가 끝나요.)",
+            return Status(text: String(localized: "TV 보내기가 멈췄어요"),
+                          detail: String(localized: "아래 ② 버튼으로 다시 시작하세요. (iPhone이 잠기면 TV 보내기가 끝나요.)"),
                           tone: .problem)
         }
         if monitor.failedRecently && !monitor.isLive {
-            return Status(text: "화면 보내기를 시작하지 못했어요",
-                          detail: "② 버튼을 눌러 다시 시작해 주세요.", tone: .problem)
+            return Status(text: String(localized: "화면 보내기를 시작하지 못했어요"),
+                          detail: String(localized: "② 버튼을 눌러 다시 시작해 주세요."), tone: .problem)
         }
         guard cast.isConnected else {
-            let ready = monitor.isLive ? " 화면은 준비됐어요." : ""
             if showsNoTVHelp {
-                return Status(text: "TV를 찾지 못했어요", detail: "아래 확인할 것을 봐 주세요.", tone: .problem)
+                return Status(text: String(localized: "TV를 찾지 못했어요"),
+                              detail: String(localized: "아래 확인할 것을 봐 주세요."), tone: .problem)
             }
             if cast.connection == .noDevices {
-                return Status(text: "TV를 찾는 중…", detail: "같은 Wi-Fi에 있는 TV를 찾고 있어요.", tone: .progress)
+                return Status(text: String(localized: "TV를 찾는 중…"),
+                              detail: String(localized: "같은 Wi-Fi에 있는 TV를 찾고 있어요."), tone: .progress)
             }
-            return Status(text: "① TV를 골라 주세요", detail: "TV 버튼을 눌러 화면을 보낼 TV를 고르세요." + ready, tone: .action)
+            let detail = monitor.isLive
+                ? String(localized: "TV 버튼을 눌러 화면을 보낼 TV를 고르세요. 화면은 준비됐어요.")
+                : String(localized: "TV 버튼을 눌러 화면을 보낼 TV를 고르세요.")
+            return Status(text: String(localized: "① TV를 골라 주세요"), detail: detail, tone: .action)
         }
         guard monitor.isLive else {
-            return Status(text: "② 보내기를 시작하세요", detail: "아래 큰 버튼을 누른 다음 \"방송 시작\"을 누르세요.", tone: .action)
+            return Status(text: String(localized: "② 보내기를 시작하세요"),
+                          detail: String(localized: "아래 큰 버튼을 누른 다음 \"방송 시작\"을 누르세요."), tone: .action)
         }
         guard let ready = monitor.readyURL else {
-            return Status(text: "화면을 준비하는 중…", detail: "몇 초 뒤 TV에 나와요. 다른 앱으로 가도 돼요.", tone: .progress)
+            return Status(text: String(localized: "화면을 준비하는 중…"),
+                          detail: String(localized: "몇 초 뒤 TV에 나와요. 다른 앱으로 가도 돼요."), tone: .progress)
         }
         guard cast.loadedMirrorURL == ready else {
             // Not sent to this TV (another video was played, or the request could not be sent).
-            return Status(text: "TV에 내 화면이 나오지 않고 있어요", detail: "\"다시 TV에 띄우기\"를 눌러 주세요.",
+            return Status(text: String(localized: "TV에 내 화면이 나오지 않고 있어요"),
+                          detail: String(localized: "\"다시 TV에 띄우기\"를 눌러 주세요."),
                           tone: .problem, offersRecast: true)
         }
         switch cast.tvPlayback {
         case .playing:
-            return Status(text: "TV에 보내는 중", detail: "이제 다른 앱으로 가도 됩니다. 멈출 때는 ② 버튼을 누르세요.", tone: .ok)
+            return Status(text: String(localized: "TV에 보내는 중"),
+                          detail: String(localized: "이제 다른 앱으로 가도 됩니다. 멈출 때는 ② 버튼을 누르세요."), tone: .ok)
         case .failed:
-            return Status(text: "TV가 화면을 틀지 못했어요", detail: "\"다시 TV에 띄우기\"를 눌러 보세요.",
+            return Status(text: String(localized: "TV가 화면을 틀지 못했어요"),
+                          detail: String(localized: "\"다시 TV에 띄우기\"를 눌러 보세요."),
                           tone: .problem, offersRecast: true)
         case .ended, .paused:
-            return Status(text: "TV 재생이 멈췄어요", detail: "\"다시 TV에 띄우기\"를 누르면 다시 나옵니다.",
+            return Status(text: String(localized: "TV 재생이 멈췄어요"),
+                          detail: String(localized: "\"다시 TV에 띄우기\"를 누르면 다시 나옵니다."),
                           tone: .problem, offersRecast: true)
         case .none, .loading:
-            return Status(text: "TV에 띄우는 중…", detail: "몇 초 걸려요. 다른 앱으로 가도 돼요.", tone: .progress)
+            return Status(text: String(localized: "TV에 띄우는 중…"),
+                          detail: String(localized: "몇 초 걸려요. 다른 앱으로 가도 돼요."), tone: .progress)
         }
     }
 
@@ -174,7 +186,7 @@ struct ContentView: View {
             }
             if status.offersRecast, let url = monitor.readyURL {
                 Button {
-                    cast.castMirror(url, revision: monitor.status.urlRevision, force: true)
+                    cast.castMirror(url, revision: monitor.status.urlRevision, force: true, reason: .manualMain)
                 } label: {
                     Label("다시 TV에 띄우기", systemImage: "arrow.clockwise")
                         .frame(maxWidth: .infinity)
@@ -230,15 +242,17 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(cast.isConnected ? (cast.deviceName ?? "TV") : tvStateText).font(.body.weight(.semibold))
                     // The Cast button hides itself while no TV is found, so do not point at it then.
-                    Text(cast.isConnected ? "연결됨"
-                         : cast.connection == .noDevices ? "TV를 찾으면 여기에 버튼이 나타나요"
-                         : "왼쪽 버튼을 눌러 TV를 고르세요")
+                    tvHint
                         .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
-                Button(cast.isConnected ? "바꾸기" : "TV 고르기") { cast.presentDeviceChooser() }
-                    .buttonStyle(.bordered)
-                    .disabled(cast.connection == .noDevices)
+                Button {
+                    cast.presentDeviceChooser()
+                } label: {
+                    cast.isConnected ? Text("바꾸기") : Text("TV 고르기")
+                }
+                .buttonStyle(.bordered)
+                .disabled(cast.connection == .noDevices)
             }
         }
         .padding(16)
@@ -248,11 +262,18 @@ struct ContentView: View {
 
     private var tvStateText: String {
         switch cast.connection {
-        case .noDevices: return "TV를 찾지 못함"
-        case .notConnected: return "TV를 고르지 않음"
-        case .connecting: return "연결하는 중…"
-        case .connected: return "연결됨"
+        case .noDevices: return String(localized: "TV를 찾지 못함")
+        case .notConnected: return String(localized: "TV를 고르지 않음")
+        case .connecting: return String(localized: "연결하는 중…")
+        case .connected: return String(localized: "연결됨")
         }
+    }
+
+    /// Each branch a literal Text, so every one is a localization key.
+    private var tvHint: Text {
+        if cast.isConnected { return Text("연결됨") }
+        if cast.connection == .noDevices { return Text("TV를 찾으면 여기에 버튼이 나타나요") }
+        return Text("왼쪽 버튼을 눌러 TV를 고르세요")
     }
 
     // MARK: - Sound
@@ -319,7 +340,7 @@ struct ContentView: View {
                     Image(systemName: cast.tvMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                         .frame(width: 28)
                 }
-                .accessibilityLabel(cast.tvMuted ? "TV 소리 켜기" : "TV 소리 끄기")
+                .accessibilityLabel(cast.tvMuted ? Text("TV 소리 켜기") : Text("TV 소리 끄기"))
                 Slider(value: Binding(get: { Double(tvVolumeDraft ?? volume) },
                                       set: { value in
                                           tvVolumeDraft = Float(value)
@@ -331,7 +352,7 @@ struct ContentView: View {
                        })
                 .accessibilityLabel("TV 볼륨")
             }
-            Text(cast.tvMuted ? "TV 소리 꺼짐" : "TV 볼륨")
+            (cast.tvMuted ? Text("TV 소리 꺼짐") : Text("TV 볼륨"))
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -359,7 +380,7 @@ struct ContentView: View {
         .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
     }
 
-    private func helpRow(_ symbol: String, _ text: String) -> some View {
+    private func helpRow(_ symbol: String, _ text: LocalizedStringKey) -> some View {
         Label {
             Text(text).font(.subheadline)
         } icon: {
@@ -377,8 +398,8 @@ struct ContentView: View {
                     .fill(monitor.isLive ? Color.red : Color.accentColor)
                 VStack(spacing: 4) {
                     Spacer()
-                    Text(monitor.isLive ? "보내기 멈추기" : showsStartPrompt ? "이제 눌러서 시작하세요" : "TV로 보내기 시작").font(.title3.bold())
-                    Text(monitor.isLive ? "누른 다음 \"방송 중단\"을 누르세요" : "누른 다음 \"방송 시작\"을 누르세요")
+                    startCardTitle.font(.title3.bold())
+                    (monitor.isLive ? Text("누른 다음 \"방송 중단\"을 누르세요") : Text("누른 다음 \"방송 시작\"을 누르세요"))
                         .font(.footnote)
                 }
                 .foregroundStyle(.white)
@@ -398,7 +419,7 @@ struct ContentView: View {
                 } else {
                     // On top so the system picker itself receives the tap (its button fills the card).
                     BroadcastPickerView(glyphColor: .white)
-                        .accessibilityLabel(monitor.isLive ? "보내기 멈추기" : "TV로 보내기 시작")
+                        .accessibilityLabel(monitor.isLive ? Text("보내기 멈추기") : Text("TV로 보내기 시작"))
                 }
             }
             .frame(height: 160)
@@ -414,6 +435,12 @@ struct ContentView: View {
                 .opacity(highlightStartCard || showsStartPrompt ? 1 : 0)
                 .allowsHitTesting(false)
         }
+    }
+
+    private var startCardTitle: Text {
+        if monitor.isLive { return Text("보내기 멈추기") }
+        if showsStartPrompt { return Text("이제 눌러서 시작하세요") }
+        return Text("TV로 보내기 시작")
     }
 
     private var showsInterstitialButton: Bool { ads.interstitialArmed && !monitor.isLive }

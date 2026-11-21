@@ -11,6 +11,8 @@
 #  - App Store screenshots (iphone-store-*.png): the iPhone is a 6.9-inch Pro Max model when the
 #    runtime has one (1320x2868 for iPhone 16/17 Pro Max), and `-MDDemo connected|sending` shows a
 #    connected TV / the screen being sent without a Cast device (MirrorDrop/App/DemoMode.swift);
+#  - the same in English (`-AppleLanguages "(en)"`): iphone-en-main/-guide.png and
+#    iphone-store-en-sending/-connected.png (String Catalogs, MirrorDrop/Resources/Localizable.xcstrings);
 #  - copies the Google Cast SDK's privacy files (NutritionLabel.txt, PrivacyInfo.xcprivacy) for the
 #    App Privacy answers (docs/RELEASE.md).
 # The demo needs the MD_DEMO compilation condition, so this build adds it. That only compiles in the
@@ -91,14 +93,16 @@ print(rt["identifier"], pick("iPhone", "Pro Max"), pick("iPad Air"))')"
 echo "runtime $runtime"
 
 ko=(-AppleLanguages "(ko)" -AppleLocale ko_KR)
+en=(-AppleLanguages "(en)" -AppleLocale en_US)
 
 # Every simulator command runs under a time limit and is logged with the time, so a hang fails in
 # minutes and names its step. (Run #2 booted both simulators at once and hung silently for 21 min
 # until the job was cancelled; one at a time is what works for Bottlepost.) macOS has no `timeout`:
 # perl's alarm survives exec, so SIGALRM ends the command (exit 142).
 # Worst case (one boot retry, one launch retry, every launch at its 180 s limit): boots and installs
-# about 20 min, five launches with screenshots about 18 min, so a hang can still reach the workflow
-# step's 35 min limit; a typical run is about 15 min. Whatever fires, summary.txt names the last step
+# about 20 min, nine launches with screenshots about 30 min, so a hang can still reach the workflow
+# step's 40 min limit; a typical run is about 18 min (the four English captures add about 3).
+# Whatever fires, summary.txt names the last step
 # reached (the timestamps in the log show where the time went).
 limit() {  # seconds command...  (exit code of the command, 142 on timeout)
   local secs=$1; shift
@@ -184,6 +188,12 @@ for kind in iphone ipad; do
     seen=(-volumeTipSeen '<true/>' -usageGuideSeen '<true/>')
     check "$udid" iphone store-sending 15 "${ko[@]}" "${seen[@]}" -MDDemo sending
     check "$udid" iphone store-connected 15 "${ko[@]}" "${seen[@]}" -MDDemo connected
+    # English UI (worldwide release): the same store screenshots, plus the main screen (with the volume
+    # tip, not seen in its argument domain) and the guide, to check the translated layout.
+    check "$udid" iphone store-en-sending 15 "${en[@]}" "${seen[@]}" -MDDemo sending
+    check "$udid" iphone store-en-connected 15 "${en[@]}" "${seen[@]}" -MDDemo connected
+    check "$udid" iphone en-main 15 "${en[@]}"
+    check "$udid" iphone en-guide 15 "${en[@]}" -MDScreen guide
     size=$(sips -g pixelWidth -g pixelHeight "$out/iphone-store-sending.png" 2>/dev/null | awk '/pixel/ {printf "%s ", $2}' || true)
     summary "Store screenshots: iPhone $iphone, ${size:-size unknown }(6.9-inch needs 1320 2868, 1290 2796 or 1260 2736)"
   fi

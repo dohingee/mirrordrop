@@ -8,8 +8,10 @@ import Foundation
 enum StopAlert {
     /// Fixed identifier: adding a request with the same identifier replaces the pending one.
     static let identifier = "mirrordrop.broadcast-stopped"
-    static let title = "TV 보내기가 멈췄어요"
-    static let body = "iPhone이 잠기면 TV 보내기가 끝나요. 눌러서 다시 시작하세요."
+    /// Localized from the bundle of the process that schedules it: the broadcast extension, whose
+    /// own String Catalog (MirrorDropBroadcast/Localizable.xcstrings) has the English text.
+    static var title: String { String(localized: "TV 보내기가 멈췄어요") }
+    static var body: String { String(localized: "iPhone이 잠기면 TV 보내기가 끝나요. 눌러서 다시 시작하세요.") }
     /// The notification fires this long after the extension last re-armed it.
     static let fireDelay: TimeInterval = 6
     /// How often the extension re-arms it (the pipeline ticks every 0.1 s; re-adding that often is waste).

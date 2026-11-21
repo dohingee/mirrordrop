@@ -30,7 +30,7 @@ final class MirrorPipeline: HLSSegmenterDelegate {
     /// Host-clock times of recent encoder replacements, to give up if the writer keeps failing.
     private var recoveryTimes: [Double] = []
     private static let maxRecoveriesPerMinute = 3
-    private static let noWiFiMessage = "Wi-Fi 연결이 끊겼어요. Wi-Fi가 다시 연결되면 새 주소로 이어서 보냅니다."
+    private static var noWiFiMessage: String { String(localized: "Wi-Fi 연결이 끊겼어요. Wi-Fi가 다시 연결되면 새 주소로 이어서 보냅니다.") }
 
     private var lastFrame: CVPixelBuffer?
     private var lastFrameTime = CMTime.invalid
@@ -61,10 +61,11 @@ final class MirrorPipeline: HLSSegmenterDelegate {
 
     func start() throws {
         guard let ip = NetworkInfo.wifiIPv4() else {
-            throw startFailure("Wi-Fi에 연결되어 있지 않아요. Wi-Fi를 켜고 다시 시작하세요.")
+            // Shown by iOS in its broadcast-ended alert: localized (MirrorDropBroadcast/Localizable.xcstrings).
+            throw startFailure(String(localized: "Wi-Fi에 연결되어 있지 않아요. Wi-Fi를 켜고 다시 시작하세요."))
         }
         guard let scaler = FrameScaler(width: config.width, height: config.height) else {
-            throw startFailure("화면 변환기를 만들 수 없어요.")
+            throw startFailure(String(localized: "화면 변환기를 만들 수 없어요."))
         }
         let output = AudioOutput.load()
         queue.sync {

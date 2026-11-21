@@ -162,6 +162,82 @@ final class StartupTraceTests: XCTestCase {
         XCTAssertTrue(details.contains("1.50초 PLAYING (세션 2)"), details.joined(separator: "\n"))
     }
 
+    /// Build 16: a reload 2 minutes in replaced the startup record. The first load of a broadcast
+    /// stays; later loads of the same broadcast go to the resend record; a new broadcast starts over.
+    func testFirstLoadKeptLaterLoadsAreResends() throws {
+        var records = PlaybackRecords()
+        records.loadSent(token: "a", origin: origin, reason: .autoStreamReady)
+        records.loadSent(token: "a", origin: origin + 130, reason: .autoConnected)
+        XCTAssertEqual(records.startup?.origin, origin)
+        XCTAssertEqual(records.startup?.reason, .autoStreamReady)
+        XCTAssertEqual(records.resend?.origin, origin + 130)
+        XCTAssertEqual(records.resend?.reason, .autoConnected)
+
+        // Each record only inside its own window.
+        records.recordState(.buffering, idleReason: nil, session: 3, now: origin + 131)
+        XCTAssertTrue(try XCTUnwrap(records.startup).changes.isEmpty)
+        XCTAssertEqual(records.resend?.changes.map(\.phase), [.buffering])
+        records.recordLag(2.5, gap: nil, now: origin + 132)
+        XCTAssertTrue(try XCTUnwrap(records.startup).lags.isEmpty)
+        XCTAssertEqual(records.resend?.lags.first?.lag, 2.5)
+
+        records.loadSent(token: "a", origin: origin + 200, reason: .manualMain)
+        XCTAssertEqual(records.startup?.origin, origin)
+        XCTAssertEqual(records.resend?.reason, .manualMain)
+
+        records.loadSent(token: "b", origin: origin + 900, reason: .autoStreamReady)
+        XCTAssertEqual(records.startup?.origin, origin + 900)
+        XCTAssertNil(records.resend)
+    }
+
+    /// The marks pick the nearest sample WITH a value: build 16 showed "2초 - / 5초 - …".
+    func testLagMarksPreferMeasuredSamples() {
+        var playback = PlaybackTrace(origin: origin)
+        playback.recordLag(2.4, now: origin + 4.2)
+        playback.recordLag(nil, gap: .notPlaying, now: origin + 5.0)
+        XCTAssertEqual(playback.lag(near: 5), 2.4)
+        XCTAssertNil(playback.lag(near: 2))
+    }
+
+    func testLagSamplesSpacedButValueReplacesGap() {
+        var playback = PlaybackTrace(origin: origin)
+        playback.recordLag(nil, gap: .notPlaying, now: origin + 1.0)
+        playback.recordLag(nil, gap: .notPlaying, now: origin + 1.2)   // too close: dropped
+        playback.recordLag(2.0, now: origin + 1.3)                      // first value: kept
+        playback.recordLag(2.1, now: origin + 1.4)                      // too close: dropped
+        XCTAssertEqual(playback.lags.map(\.lag), [nil, 2.0])
+        XCTAssertEqual(playback.lags.first?.gap, .notPlaying)
+        XCTAssertNil(playback.lags.last?.gap)
+    }
+
+    /// Why the lag is missing: reasons counted, and the longest stretch without samples (app suspended).
+    func testLagCoverageExplainsHoles() throws {
+        var playback = PlaybackTrace(origin: origin)
+        XCTAssertEqual(StartupReport.lagCoverage(playback), "재생 위치 기록 없음 (그동안 앱이 멈춰 있었을 수 있어요)")
+        playback.recordLag(nil, gap: .notPlaying, now: origin + 0.5)
+        playback.recordLag(nil, gap: .noLiveRange, now: origin + 1.5)
+        playback.recordLag(nil, gap: .notPlaying, now: origin + 2.5)
+        playback.recordLag(2.2, now: origin + 14.5)
+        let text = try XCTUnwrap(StartupReport.lagCoverage(playback))
+        XCTAssertEqual(text, "재생 위치: 잰 것 1번, 못 잰 것 3번 (재생 중 아님 2, TV가 라이브 범위를 안 알려 줌 1)"
+                       + "; 기록 빈 구간 최대 12.0초 (2.5초부터, 앱이 멈춰 있었을 수 있어요)")
+
+        var complete = PlaybackTrace(origin: origin)
+        for second in 0..<10 { complete.recordLag(2.0, now: origin + Double(second)) }
+        XCTAssertNil(StartupReport.lagCoverage(complete))
+    }
+
+    func testResendSummaryNamesReason() {
+        var trace = StartupTrace()
+        trace.recordFrame(.input, now: origin)
+        var resend = PlaybackTrace(origin: origin + 131.9, reason: .autoConnected)
+        resend.recordState(.playing, idleReason: nil, session: 7, now: resend.origin + 1.2)
+        let lines = StartupReport.resendSummary(trace: trace, playback: resend)
+        XCTAssertEqual(lines.first, "다시 보낸 때: 첫 화면 뒤 131.9초")
+        XCTAssertTrue(lines.contains("보낸 까닭: 자동: TV 연결(다시 연결)됨"), lines.joined(separator: "\n"))
+        XCTAssertTrue(lines.contains("첫 재생까지 1.2초 (재생 요청부터)"), lines.joined(separator: "\n"))
+    }
+
     func testSummaryWithoutData() {
         let lines = StartupReport.summary(trace: StartupTrace(), playback: nil)
         XCTAssertEqual(lines.count, 2)

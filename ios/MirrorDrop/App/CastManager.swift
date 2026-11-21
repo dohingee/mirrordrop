@@ -15,7 +15,7 @@ final class CastManager: NSObject, ObservableObject {
     /// What the TV is doing with the last media we sent, simplified for the main screen.
     enum TVPlayback { case none, loading, playing, paused, ended, failed }
 
-    @Published private(set) var stateText = "준비 중"
+    @Published private(set) var stateText = String(localized: "준비 중")
     @Published private(set) var connection = Connection.notConnected
     @Published private(set) var isConnected = false
     /// When discovery started reporting "no devices" (nil otherwise). Discovery needs a few seconds
@@ -37,8 +37,11 @@ final class CastManager: NSObject, ObservableObject {
     /// TV (Cast device) volume 0...1 and mute, as last reported by the device; nil when not connected.
     @Published private(set) var tvVolume: Float?
     @Published private(set) var tvMuted = false
-    /// "시작 기록" TV side: player states and live lag for 30 s after the last mirror load request.
-    @Published private(set) var startupPlayback: PlaybackTrace?
+    /// TV side of "시작 기록" (the FIRST mirror load of the current broadcast) and "다시 보내기 기록"
+    /// (the latest re-load of it): player states and live lag for 30 s after each. Shared/StartupTrace.swift.
+    @Published private(set) var playbackRecords = PlaybackRecords()
+    var startupPlayback: PlaybackTrace? { playbackRecords.startup }
+    var resendPlayback: PlaybackTrace? { playbackRecords.resend }
     private(set) var sdkLog: [String] = []
     /// Per-broadcast secret path parts of every mirror URL sent, so diagnostics can hide them.
     private(set) var mirrorTokens: Set<String> = []
@@ -59,7 +62,7 @@ final class CastManager: NSObject, ObservableObject {
     /// Shows a connected TV, and for `.sending` the mirror playing on it, without a Cast device.
     func applyDemo(_ demo: DemoMode) {
         isDemo = true
-        stateText = "연결됨"
+        stateText = String(localized: "연결됨")
         connection = .connected
         isConnected = true
         noDevicesSince = nil
@@ -70,7 +73,7 @@ final class CastManager: NSObject, ObservableObject {
             loadedMirrorURL = DemoMode.streamURL
             loadedMirrorRevision = 1
             tvPlayback = .playing
-            mediaText = "재생 중"
+            mediaText = String(localized: "재생 중")
         }
     }
     #endif
@@ -96,9 +99,13 @@ final class CastManager: NSObject, ObservableObject {
         NotificationCenter.default.addObserver(self, selector: #selector(castStateDidChange),
                                                name: NSNotification.Name.gckCastStateDidChange, object: context)
         refreshState()
-        lagTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+        // Common run-loop modes: a timer in the default mode does not fire while the user scrolls
+        // (e.g. the diagnostics list), which left holes in the live-lag record.
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
             self?.refreshLiveLag()
         }
+        RunLoop.main.add(timer, forMode: .common)
+        lagTimer = timer
     }
 
     private var currentSession: GCKCastSession? {
@@ -132,7 +139,7 @@ final class CastManager: NSObject, ObservableObject {
     @discardableResult
     func load(url: URL, title: String, live: Bool, format: SegmentFormat) -> Bool {
         guard let client = remoteClient else {
-            lastError = "먼저 TV(Cast 기기)에 연결하세요."
+            lastError = String(localized: "먼저 TV(Cast 기기)에 연결하세요.")
             return false
         }
         let metadata = GCKMediaMetadata(metadataType: .movie)
@@ -160,23 +167,31 @@ final class CastManager: NSObject, ObservableObject {
         loadedMirrorURL = nil
         tvPlayback = .loading
         lastError = nil
-        addEvent("재생 요청: \(title)")
+        addEvent("load request: \(title)")
         return true
     }
 
     /// Sends the iPhone screen stream to the TV. Without `force`, does nothing when this URL and
     /// revision were already sent in the current session (a new URL or revision, e.g. after a
-    /// Wi-Fi change or outage, is always sent).
+    /// Wi-Fi change or outage, is always sent). `reason` goes to the Cast events and the records.
     @discardableResult
-    func castMirror(_ url: URL, revision: Int, force: Bool) -> Bool {
+    func castMirror(_ url: URL, revision: Int, force: Bool, reason: CastReason) -> Bool {
         guard isConnected else { return false }
         if !force, loadedMirrorURL == url, loadedMirrorRevision == revision { return false }
+        // What the TV was doing just before: a re-load while it already played our stream restarts
+        // the receiver's buffering. No URL or token in the log.
+        let status = remoteClient?.mediaStatus
+        let before = status.map(describeForLog) ?? "no media status"
+        let sameStream = status?.mediaInformation?.contentURL == url
+        addEvent("cast mirror (\(reason.rawValue), rev \(revision)\(force ? ", forced" : "")); "
+                 + "TV before: \(before)\(sameStream ? ", same stream" : "")")
         let sentAt = HostClock.now()
-        guard load(url: url, title: "내 iPhone 화면", live: true, format: .fmp4) else { return false }
-        startupPlayback = PlaybackTrace(origin: sentAt)
+        guard load(url: url, title: String(localized: "내 iPhone 화면"), live: true, format: .fmp4) else { return false }
+        let token = Self.token(of: url)
+        playbackRecords.loadSent(token: token, origin: sentAt, reason: reason)
         loadedMirrorURL = url
         loadedMirrorRevision = revision
-        if let token = Self.token(of: url) { mirrorTokens.insert(token) }
+        if let token { mirrorTokens.insert(token) }
         return true
     }
 
@@ -189,7 +204,7 @@ final class CastManager: NSObject, ObservableObject {
 
     func stopMedia() {
         remoteClient?.stop()
-        addEvent("TV 재생 중지 요청")
+        addEvent("stop request")
     }
 
     /// First path component of a stream URL (`/<token>/live.m3u8`), the per-broadcast secret.
@@ -209,11 +224,11 @@ final class CastManager: NSObject, ObservableObject {
         #endif
         let context = GCKCastContext.sharedInstance()
         switch context.castState {
-        case .noDevicesAvailable: stateText = "기기를 찾지 못함"; connection = .noDevices
-        case .notConnected: stateText = "연결 안 됨"; connection = .notConnected
-        case .connecting: stateText = "연결 중…"; connection = .connecting
-        case .connected: stateText = "연결됨"; connection = .connected
-        @unknown default: stateText = "알 수 없음"; connection = .notConnected
+        case .noDevicesAvailable: stateText = String(localized: "기기를 찾지 못함"); connection = .noDevices
+        case .notConnected: stateText = String(localized: "연결 안 됨"); connection = .notConnected
+        case .connecting: stateText = String(localized: "연결 중…"); connection = .connecting
+        case .connected: stateText = String(localized: "연결됨"); connection = .connected
+        @unknown default: stateText = String(localized: "알 수 없음"); connection = .notConnected
         }
         if connection == .noDevices {
             if noDevicesSince == nil { noDevicesSince = Date() }
@@ -245,26 +260,45 @@ final class CastManager: NSObject, ObservableObject {
 
     /// "라이브 끝에서 X.X초 뒤" for diagnostics, with the raw values it came from.
     var liveLagText: String {
-        guard let liveLag else { return "알 수 없음" }
-        return String(format: "라이브 끝에서 %.1f초 뒤 (끝 %.1f, 위치 %.1f)",
-                      liveLag.end - liveLag.position, liveLag.end, liveLag.position)
+        guard let liveLag else { return String(localized: "알 수 없음") }
+        let behind = StartupReport.f1(liveLag.end - liveLag.position)
+        let end = StartupReport.f1(liveLag.end)
+        let position = StartupReport.f1(liveLag.position)
+        return String(localized: "라이브 끝에서 \(behind)초 뒤 (끝 \(end), 위치 \(position))")
     }
 
     /// End of the receiver's live seekable range and its (extrapolated) playback position.
     /// End minus position is buffering behind the newest segment the receiver knows about;
     /// encoding and playlist-polling time on top of that are not included. Not clamped at zero,
     /// so a negative value (receiver's range end held back) stays visible.
+    ///
+    /// Runs from the 1 s timer and on every receiver status update while PLAYING (a short PLAYING
+    /// stretch between bufferings is caught too; PlaybackTrace keeps samples at least 0.5 s apart).
+    /// Build 16's records had no live-lag value at all. Samples are only taken while the app runs:
+    /// once the play request is answered, a backgrounded app is suspended and takes none; and while
+    /// the TV is not PLAYING (loading, buffering) a sample has no value. Each sample without a value
+    /// now says why (PlaybackTrace.LagGap), and the summary shows the longest stretch with no sample.
     private func refreshLiveLag() {
         var sample: (end: Double, position: Double)?
-        if isConnected, let client = remoteClient, client.mediaStatus?.playerState == .playing {
-            // Both return 0 with no media; the range end is invalid (not finite) when the stream is not live.
+        var gap: PlaybackTrace.LagGap?
+        if !isConnected {
+            gap = .notConnected
+        } else if let client = remoteClient, client.mediaStatus?.playerState == .playing {
+            // Both return 0 with no media; the range end is kGCKInvalidTimeInterval (not finite) when
+            // the stream is not live or the receiver reported no seekable range.
             let end = client.approximateLiveSeekableRangeEnd()
             let position = client.approximateStreamPosition()
-            if end.isFinite, end > 0, position.isFinite, position > 0 {
+            if !(end.isFinite && end > 0) {
+                gap = .noLiveRange
+            } else if !(position.isFinite && position > 0) {
+                gap = .noPosition
+            } else {
                 sample = (end, position)
             }
+        } else {
+            gap = .notPlaying
         }
-        recordStartupLag(sample.map { $0.end - $0.position })
+        recordStartupLag(sample.map { $0.end - $0.position }, gap: gap)
         // Publish only visible changes (one decimal) to avoid needless view updates.
         switch (sample, liveLag) {
         case (nil, nil):
@@ -276,19 +310,19 @@ final class CastManager: NSObject, ObservableObject {
         }
     }
 
-    /// Once a second (lag timer) for the first 30 s after a mirror load; nil while not playing.
-    private func recordStartupLag(_ lag: Double?) {
-        guard var trace = startupPlayback else { return }
+    /// About once a second for the first 30 s after a mirror load (startup and resend records).
+    private func recordStartupLag(_ lag: Double?, gap: PlaybackTrace.LagGap?) {
         let now = HostClock.now()
-        guard trace.isRecording(at: now) else { return }
-        trace.recordLag(lag, now: now)
-        startupPlayback = trace
+        guard playbackRecords.isRecording(at: now) else { return }
+        var records = playbackRecords
+        records.recordLag(lag, gap: gap, now: now)
+        // Publish only real changes (closely spaced samples are dropped).
+        if records != playbackRecords { playbackRecords = records }
     }
 
     private func recordStartupState(_ status: GCKMediaStatus) {
-        guard var trace = startupPlayback else { return }
         let now = HostClock.now()
-        guard trace.isRecording(at: now) else { return }
+        guard playbackRecords.isRecording(at: now) else { return }
         let phase: PlaybackTrace.Phase
         switch status.playerState {
         case .idle: phase = .idle
@@ -308,11 +342,13 @@ final class CastManager: NSObject, ObservableObject {
             default: reason = nil
             }
         }
-        trace.recordState(phase, idleReason: reason, session: status.mediaSessionID, now: now)
-        if trace != startupPlayback { startupPlayback = trace }
+        var records = playbackRecords
+        records.recordState(phase, idleReason: reason, session: status.mediaSessionID, now: now)
+        if records != playbackRecords { playbackRecords = records }
     }
 
     /// For other app parts (MirrorCastCoordinator) to note things in the "Cast 기록" list. No tokens.
+    /// Like the extension's log, these lines are English in every language.
     func logEvent(_ text: String) {
         addEvent(text)
     }
@@ -322,26 +358,51 @@ final class CastManager: NSObject, ObservableObject {
         if events.count > 50 { events.removeFirst(events.count - 50) }
     }
 
+    /// Receiver state for the screen (고급·진단 "상태"), localized.
     private func describe(_ status: GCKMediaStatus) -> String {
         let state: String
         switch status.playerState {
-        case .idle: state = "대기(idle)"
-        case .playing: state = "재생 중"
-        case .paused: state = "일시정지"
-        case .buffering: state = "버퍼링"
-        case .loading: state = "불러오는 중"
-        default: state = "알 수 없음"
+        case .idle: state = String(localized: "대기(idle)")
+        case .playing: state = String(localized: "재생 중")
+        case .paused: state = String(localized: "일시정지")
+        case .buffering: state = String(localized: "버퍼링")
+        case .loading: state = String(localized: "불러오는 중")
+        default: state = String(localized: "알 수 없음")
         }
         guard status.playerState == .idle else { return state }
         let reason: String
         switch status.idleReason {
-        case .finished: reason = "끝남"
-        case .cancelled: reason = "취소됨"
-        case .interrupted: reason = "중단됨"
-        case .error: reason = "오류"
-        default: reason = "없음"
+        case .finished: reason = String(localized: "끝남")
+        case .cancelled: reason = String(localized: "취소됨")
+        case .interrupted: reason = String(localized: "중단됨")
+        case .error: reason = String(localized: "오류")
+        default: reason = String(localized: "없음")
         }
-        return "\(state), 이유: \(reason)"
+        return String(localized: "\(state), 이유: \(reason)")
+    }
+
+    /// Receiver state for the Cast events (English, like the other log lines), e.g. "IDLE/ERROR #3"
+    /// (# = receiver media session).
+    private func describeForLog(_ status: GCKMediaStatus) -> String {
+        var text: String
+        switch status.playerState {
+        case .idle: text = "IDLE"
+        case .playing: text = "PLAYING"
+        case .paused: text = "PAUSED"
+        case .buffering: text = "BUFFERING"
+        case .loading: text = "LOADING"
+        default: text = "UNKNOWN"
+        }
+        if status.playerState == .idle {
+            switch status.idleReason {
+            case .finished: text += "/FINISHED"
+            case .cancelled: text += "/CANCELLED"
+            case .interrupted: text += "/INTERRUPTED"
+            case .error: text += "/ERROR"
+            default: break
+            }
+        }
+        return text + " #\(status.mediaSessionID)"
     }
 
     private func playback(of status: GCKMediaStatus) -> TVPlayback {
@@ -369,12 +430,12 @@ final class CastManager: NSObject, ObservableObject {
 
 extension CastManager: GCKSessionManagerListener {
     func sessionManager(_ sessionManager: GCKSessionManager, didStart session: GCKSession) {
-        addEvent("연결됨: \(session.device.friendlyName ?? "?")")
+        addEvent("session started: \(session.device.friendlyName ?? "?")")
         refreshState()
     }
 
     func sessionManager(_ sessionManager: GCKSessionManager, didEnd session: GCKSession, withError error: Error?) {
-        addEvent("연결 끊김" + (error.map { ": \($0.localizedDescription)" } ?? ""))
+        addEvent("session ended" + (error.map { ": \($0.localizedDescription)" } ?? ""))
         refreshState()
     }
 
@@ -386,8 +447,8 @@ extension CastManager: GCKSessionManagerListener {
     }
 
     func sessionManager(_ sessionManager: GCKSessionManager, didFailToStart session: GCKSession, withError error: Error) {
-        lastError = "연결 실패: \(error.localizedDescription)"
-        addEvent(lastError ?? "")
+        lastError = String(localized: "연결 실패: \(error.localizedDescription)")
+        addEvent("session failed to start: \(error.localizedDescription)")
         refreshState()
     }
 }
@@ -397,19 +458,21 @@ extension CastManager: GCKRemoteMediaClientListener {
         guard let mediaStatus else { mediaText = "-"; tvPlayback = .none; return }
         recordStartupState(mediaStatus)
         let text = describe(mediaStatus)
-        if text != mediaText { addEvent("TV 상태: \(text)") }
+        if text != mediaText { addEvent("TV state: \(describeForLog(mediaStatus))") }
         mediaText = text
         tvPlayback = playback(of: mediaStatus)
         if mediaStatus.playerState == .idle, mediaStatus.idleReason == .error {
-            lastError = "TV가 재생에 실패했어요 (idleReason=error). 진단 화면의 요청 기록을 확인하세요."
+            lastError = String(localized: "TV가 재생에 실패했어요 (idleReason=error). 진단 화면의 요청 기록을 확인하세요.")
         }
+        // A PLAYING stretch between bufferings can be shorter than the 1 s timer.
+        if mediaStatus.playerState == .playing { refreshLiveLag() }
     }
 }
 
 extension CastManager: GCKRequestDelegate {
     func requestDidComplete(_ request: GCKRequest) {
         if request === loadRequest { loadRequest = nil }
-        addEvent("요청 완료 (#\(request.requestID))")
+        addEvent("request done (#\(request.requestID))")
     }
 
     func request(_ request: GCKRequest, didFailWithError error: GCKError) {
@@ -417,13 +480,13 @@ extension CastManager: GCKRequestDelegate {
             loadRequest = nil
             tvPlayback = .failed
         }
-        lastError = "요청 실패: \(error.localizedDescription) (code \(error.code))"
-        addEvent(lastError ?? "")
+        lastError = String(localized: "요청 실패: \(error.localizedDescription) (code \(error.code))")
+        addEvent("request failed: \(error.localizedDescription) (code \(error.code))")
     }
 
     func request(_ request: GCKRequest, didAbortWith abortReason: GCKRequestAbortReason) {
         if request === loadRequest { loadRequest = nil }
-        addEvent("요청 중단 (reason \(abortReason.rawValue))")
+        addEvent("request aborted (reason \(abortReason.rawValue))")
     }
 }
 

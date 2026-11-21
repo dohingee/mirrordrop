@@ -381,8 +381,8 @@ enum AdReport {
         components.scheme = "mailto"
         components.path = DiagnosticsReport.supportEmail
         components.queryItems = [
-            URLQueryItem(name: "subject", value: "MirrorDrop 광고 신고"),
-            URLQueryItem(name: "body", value: "어떤 광고였나요? (광고 내용, 본 시각, 가능하면 화면 캡처)\n\n앱 버전: \(AppLinks.versionText)"),
+            URLQueryItem(name: "subject", value: String(localized: "MirrorDrop 광고 신고")),
+            URLQueryItem(name: "body", value: String(localized: "어떤 광고였나요? (광고 내용, 본 시각, 가능하면 화면 캡처)\n\n앱 버전: \(AppLinks.versionText)")),
         ]
         return components.url ?? URL(string: "mailto:\(DiagnosticsReport.supportEmail)")!
     }

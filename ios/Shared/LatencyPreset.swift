@@ -21,10 +21,10 @@ enum LatencyPreset: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .l0: return "L0 (1초 조각, 목록 4개)"
-        case .l1: return "L1 (1초 조각, 목록 3개)"
-        case .l2: return "L2 (L1 + 시작 위치 끝에서 2초)"
-        case .l3: return "L3 기본 (0.5초 조각, 목록 6개)"
+        case .l0: return String(localized: "L0 (1초 조각, 목록 4개)")
+        case .l1: return String(localized: "L1 (1초 조각, 목록 3개)")
+        case .l2: return String(localized: "L2 (L1 + 시작 위치 끝에서 2초)")
+        case .l3: return String(localized: "L3 기본 (0.5초 조각, 목록 6개)")
         }
     }
 

@@ -68,4 +68,21 @@ final class BackgroundCastHoldTests: XCTestCase {
         XCTAssertFalse(trigger.shouldCast(url: "a", revision: 0, connected: false))
         XCTAssertTrue(trigger.shouldCast(url: "a", revision: 0, connected: true))
     }
+
+    /// The reason of every automatic send goes to the Cast events and the startup / resend records.
+    func testCastReasons() {
+        var trigger = AutoCastTrigger()
+        XCTAssertNil(trigger.castReason(url: nil, revision: 0, connected: true))
+        XCTAssertEqual(trigger.castReason(url: "a", revision: 0, connected: true), .autoStreamReady)
+        XCTAssertNil(trigger.castReason(url: "a", revision: 0, connected: true))
+        XCTAssertNil(trigger.castReason(url: "a", revision: 0, connected: false))
+        XCTAssertEqual(trigger.castReason(url: "a", revision: 0, connected: true), .autoConnected)
+        XCTAssertEqual(trigger.castReason(url: "b", revision: 1, connected: true), .autoNewAddress)
+        XCTAssertEqual(trigger.castReason(url: "b", revision: 2, connected: true), .autoNewRevision)
+
+        // Broadcast started before a TV was chosen: the stream was ready first, then the TV connected.
+        var late = AutoCastTrigger()
+        XCTAssertNil(late.castReason(url: "a", revision: 0, connected: false))
+        XCTAssertEqual(late.castReason(url: "a", revision: 0, connected: true), .autoConnected)
+    }
 }

@@ -17,11 +17,11 @@ enum AudioOutput: String, CaseIterable, Identifiable {
     /// Short code for logs and the status.
     var code: String { rawValue }
 
-    /// Picker label on the main screen.
+    /// Picker label on the main screen (localized; "TV" is the same in both languages).
     var label: String {
         switch self {
         case .tv: return "TV"
-        case .phone: return "휴대폰"
+        case .phone: return String(localized: "휴대폰")
         }
     }
 

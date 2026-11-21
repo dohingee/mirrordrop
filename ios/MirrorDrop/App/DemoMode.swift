@@ -19,7 +19,7 @@ enum DemoMode: String {
     }()
 
     #if MD_DEMO
-    static let tvName = "거실 TV"
+    static let tvName = String(localized: "거실 TV")
     /// Looks like a real stream address; the token part is a fixed placeholder, nothing listens on it.
     static let streamURL = URL(string: "http://192.168.0.10:8765/demo/live.m3u8")!
 

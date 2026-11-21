@@ -4,6 +4,9 @@
 name: MirrorDrop
 options:
   bundleIdPrefix: com.mirrordrop
+  # Korean is the development language: the source of the String Catalogs (Localizable.xcstrings,
+  # InfoPlist.xcstrings in each target) is Korean, English is the added language. XcodeGen (2.39+)
+  # adds the catalogs to Resources and takes the project's known regions (ko, en) from them.
   developmentLanguage: ko
   deploymentTarget:
     iOS: "17.0"
@@ -61,14 +64,19 @@ targets:
         CFBundleDisplayName: MirrorDrop
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        CFBundleDevelopmentRegion: ko
+        # Languages: Korean and English (String Catalogs). The development REGION here is only iOS's
+        # fallback for people whose languages include neither (e.g. Japanese only): they get English,
+        # the worldwide store language, not Korean. Korean users still get Korean (ko is listed).
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [ko, en]
         LSRequiresIPhoneOS: true
         ITSAppUsesNonExemptEncryption: false
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
-        # Google Cast discovery (iOS 14+ local network privacy).
+        # Google Cast discovery (iOS 14+ local network privacy). Purpose strings below are the Korean
+        # source; English is in MirrorDrop/Resources/InfoPlist.xcstrings (same keys).
         NSLocalNetworkUsageDescription: 같은 Wi-Fi에 있는 TV(Google Cast 기기)를 찾고, iPhone 화면을 그 TV로 보내기 위해 로컬 네트워크를 사용합니다.
         NSBonjourServices:
           - _googlecast._tcp
@@ -83,7 +91,7 @@ targets:
         MDAdMobBanner: $(ADMOB_BANNER)
         MDAdMobInterstitial: $(ADMOB_INTERSTITIAL)
         # Apple's tracking prompt, asked after Google's consent form and after the first broadcast ended.
-        # Korean only for now; the English text comes with the English localization (InfoPlist strings).
+        # English: MirrorDrop/Resources/InfoPlist.xcstrings.
         NSUserTrackingUsageDescription: 맞춤 광고를 보여 주는 데만 씁니다. 허용하지 않아도 모든 기능을 그대로 쓸 수 있어요.
         # Google's SKAdNetwork list, in the order of https://developers.google.com/admob/ios/quick-start
         # (checked 2026-11-22: 50 IDs, Google's own cstr6suwn9 first).
@@ -174,7 +182,10 @@ targets:
         CFBundleDisplayName: MirrorDrop
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        CFBundleDevelopmentRegion: ko
+        # Same language setup as the app (fallback English). English texts of the stop notification,
+        # start errors and this purpose string: MirrorDropBroadcast/Localizable.xcstrings, InfoPlist.xcstrings.
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [ko, en]
         NSLocalNetworkUsageDescription: 같은 Wi-Fi에 있는 TV가 iPhone 화면 영상을 가져갈 수 있도록 로컬 네트워크를 사용합니다.
         NSExtension:
           NSExtensionPointIdentifier: com.apple.broadcast-services-upload

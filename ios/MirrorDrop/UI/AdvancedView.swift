@@ -32,13 +32,13 @@ struct AdvancedView: View {
     private var mirrorSection: some View {
         Section {
             LabeledContent("공유 상태", value: monitor.stateText)
-            LabeledContent("만든 조각", value: "\(monitor.status.segmentsProduced)개")
+            LabeledContent("만든 조각", value: String(localized: "\(monitor.status.segmentsProduced)개"))
             if let url = monitor.status.url, monitor.isLive {
                 // Token masked: people share screenshots of this screen.
                 Text(DiagnosticsReport.redact(url: url)).font(.caption2.monospaced())
             }
             Button("지금 TV에 띄우기") {
-                if let url = monitor.readyURL { cast.castMirror(url, revision: monitor.status.urlRevision, force: true) }
+                if let url = monitor.readyURL { cast.castMirror(url, revision: monitor.status.urlRevision, force: true, reason: .manualAdvanced) }
             }
             .disabled(!cast.isConnected || monitor.readyURL == nil)
         } header: {
@@ -80,10 +80,18 @@ struct AdvancedView: View {
 
 /// Public web pages (Firebase Hosting, web/hosting/) and the version line. The host must match the
 /// deployed Firebase project (docs/RELEASE.md "웹 페이지"): change it here and in docs/store/ko.md together.
+/// Korean pages are at the top of the site, English ones under /en/; the app opens the pages in the
+/// language its screens are shown in (the bundle's chosen localization, so Korean UI = Korean page).
 enum AppLinks {
-    static let site = URL(string: "https://mirrordrop-app.web.app/")!
-    static let privacyPolicy = URL(string: "https://mirrordrop-app.web.app/privacy.html")!
-    static let support = URL(string: "https://mirrordrop-app.web.app/support.html")!
+    static let site = page("")
+    static let privacyPolicy = page("privacy.html")
+    static let support = page("support.html")
+
+    private static var usesKorean: Bool { Bundle.main.preferredLocalizations.first == "ko" }
+
+    private static func page(_ name: String) -> URL {
+        URL(string: "https://mirrordrop-app.web.app/" + (usesKorean ? "" : "en/") + name)!
+    }
 
     static var versionText: String {
         let info = Bundle.main.infoDictionary

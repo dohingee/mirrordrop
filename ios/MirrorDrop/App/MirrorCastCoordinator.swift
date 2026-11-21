@@ -85,8 +85,10 @@ final class MirrorCastCoordinator: NSObject {
         let url = monitor.readyURL
         let revision = monitor.status.urlRevision
         let connected = cast.isConnected
-        if trigger.shouldCast(url: url?.absoluteString, revision: revision, connected: connected), let url {
-            cast.castMirror(url, revision: revision, force: false)
+        // The reason (first send, reconnect, new address or revision) goes to the Cast events and the
+        // startup / resend records, so a report tells why a reload happened.
+        if let reason = trigger.castReason(url: url?.absoluteString, revision: revision, connected: connected), let url {
+            cast.castMirror(url, revision: revision, force: false, reason: reason)
         }
 
         let key = AutoCastTrigger.Key(url: url?.absoluteString, revision: revision, connected: connected)

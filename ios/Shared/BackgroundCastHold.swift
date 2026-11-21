@@ -59,14 +59,54 @@ struct AutoCastTrigger: Equatable {
 
     /// True when the app should ask the TV to play `url` now.
     mutating func shouldCast(url: String?, revision: Int, connected: Bool) -> Bool {
+        castReason(url: url, revision: revision, connected: connected) != nil
+    }
+
+    /// Why the app should ask the TV to play `url` now, or nil when it should not (the same rule as
+    /// `shouldCast`). The reason goes to the Cast events and the startup / resend records, so a
+    /// report tells why a reload happened.
+    mutating func castReason(url: String?, revision: Int, connected: Bool) -> CastReason? {
         let key = Key(url: url, revision: revision, connected: connected)
-        guard key != lastKey else { return false }
+        guard key != lastKey else { return nil }
+        let previous = lastKey
         lastKey = key
-        return url != nil && connected
+        guard url != nil, connected else { return nil }
+        guard let previous, previous.url != nil else { return .autoStreamReady }
+        if !previous.connected { return .autoConnected }
+        if previous.url != url { return .autoNewAddress }
+        return .autoNewRevision
     }
 
     /// The current ready stream was already handled for this connection.
     func isDone(url: String?, revision: Int, connected: Bool) -> Bool {
         url != nil && connected && lastKey == Key(url: url, revision: revision, connected: connected)
+    }
+}
+
+/// Why a play request for the mirror was sent (CastManager.castMirror). Raw values are English
+/// for the Cast events (logs stay English); `label` is the localized text of the diagnostics records.
+enum CastReason: String, Equatable {
+    /// The stream became ready while a TV was connected (normally the first send of a broadcast).
+    case autoStreamReady = "auto: stream ready"
+    /// A TV connected, or the session came back (new, resumed or reconnected) with the stream ready.
+    case autoConnected = "auto: TV connected or reconnected"
+    /// The stream URL changed (new Wi-Fi address or port).
+    case autoNewAddress = "auto: new stream address"
+    /// Same URL with a new `urlRevision` (it came back after a Wi-Fi outage).
+    case autoNewRevision = "auto: new urlRevision"
+    /// "다시 TV에 띄우기" on the main screen.
+    case manualMain = "manual: main screen"
+    /// "지금 TV에 띄우기" in 고급·진단.
+    case manualAdvanced = "manual: advanced screen"
+
+    var label: String {
+        switch self {
+        case .autoStreamReady: return String(localized: "자동: 화면이 준비됨")
+        case .autoConnected: return String(localized: "자동: TV 연결(다시 연결)됨")
+        case .autoNewAddress: return String(localized: "자동: 스트림 주소가 바뀜")
+        case .autoNewRevision: return String(localized: "자동: 같은 주소로 다시 열림(urlRevision)")
+        case .manualMain: return String(localized: "직접: 첫 화면 \"다시 TV에 띄우기\"")
+        case .manualAdvanced: return String(localized: "직접: 고급·진단 \"지금 TV에 띄우기\"")
+        }
     }
 }
