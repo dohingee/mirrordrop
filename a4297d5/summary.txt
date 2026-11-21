@@ -1,0 +1,5 @@
+Unit tests: passed (Debug, iPhone simulator)
+Bundle: extension embedded, CFBundleVersion 1 in both
+Bundle: iPhone-only (UIDeviceFamily [1])
+Store screenshots: iPhone com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro-Max, 1320x2868 (6.9-inch slot)
+Launch check: passed on iPhone and iPad simulators (com.apple.CoreSimulator.SimRuntime.iOS-26-5)

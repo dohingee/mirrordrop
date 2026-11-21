@@ -1,0 +1,6 @@
+Bundle: extension embedded, CFBundleVersion 1 in both
+Bundle: iPhone-only (UIDeviceFamily [1])
+Boot: iphone needed a fresh simulator
+Status bar: override failed on iphone (screenshots keep the real clock)
+Store screenshots: iPhone com.apple.CoreSimulator.SimDeviceType.iPhone-17-Pro-Max, 1320x2868 (6.9-inch slot)
+Launch check: passed on the iPhone simulator (store scope) (com.apple.CoreSimulator.SimRuntime.iOS-26-5)

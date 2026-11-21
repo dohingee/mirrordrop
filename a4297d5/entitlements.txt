@@ -1,0 +1,6 @@
+== Release-iphonesimulator/MirrorDrop.app
+Executable=/Users/runner/work/mirrordrop/mirrordrop/ios/build/launch/Build/Products/Release-iphonesimulator/MirrorDrop.app/MirrorDrop
+[Dict]
+== Release-iphonesimulator/MirrorDrop.app/PlugIns/MirrorDropBroadcast.appex
+Executable=/Users/runner/work/mirrordrop/mirrordrop/ios/build/launch/Build/Products/Release-iphonesimulator/MirrorDrop.app/PlugIns/MirrorDropBroadcast.appex/MirrorDropBroadcast
+[Dict]
