@@ -5,29 +5,38 @@ import UIKit
 struct ContentView: View {
     @EnvironmentObject private var cast: CastManager
     @EnvironmentObject private var monitor: BroadcastMonitor
+    @EnvironmentObject private var stopAlert: StopAlertCenter
     @State private var path = LaunchScreen.fromArguments?.navigationPath ?? []
     @StateObject private var phoneVolume = PhoneVolumeMonitor()
     @Environment(\.scenePhase) private var scenePhase
     @State private var audioOutput = AudioOutput.load()
     /// Slider position while dragging; the TV's reported volume otherwise.
     @State private var tvVolumeDraft: Float?
+    /// Briefly outlines the start card after the "TV 보내기가 멈췄어요" notification was tapped.
+    @State private var highlightStartCard = false
+    private static let startCardID = "startCard"
 
     /// Discovery needs a few seconds after launch before "no devices" means anything.
     private let noDevicesGrace: TimeInterval = 5
 
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    statusCard
-                    if showsNoTVHelp { noTVHelpCard }
-                    tvCard
-                    soundCard
-                    broadcastCard
-                    noticeCard
-                    footer
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        statusCard
+                        if showsNoTVHelp { noTVHelpCard }
+                        tvCard
+                        soundCard
+                        broadcastCard.id(Self.startCardID)
+                        noticeCard
+                        footer
+                    }
+                    .padding(16)
                 }
-                .padding(16)
+                // The user tapped the notification (also when it launched the app).
+                .onAppear { showStartCardIfAsked(proxy) }
+                .onChange(of: stopAlert.wantsStartCard) { _, _ in showStartCardIfAsked(proxy) }
             }
             .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("MirrorDrop")
@@ -49,6 +58,8 @@ struct ContentView: View {
         .onChange(of: scenePhase) { _, phase in
             // Only while the app is in front (KVO needs an active audio session).
             if phase == .active { phoneVolume.start() } else { phoneVolume.stop() }
+            // The user is here now; the main screen says the same thing.
+            if phase == .active { stopAlert.clearDelivered() }
         }
         .onChange(of: monitor.readyURL) { _, _ in castIfReady() }
         .onChange(of: monitor.status.urlRevision) { _, _ in castIfReady() }
@@ -56,6 +67,26 @@ struct ContentView: View {
         .onChange(of: monitor.isLive) { _, live in
             // Broadcast ended or the extension died: clear the TV instead of leaving it spinning.
             if !live { cast.stopMirror() }
+            if live {
+                // Asked here, not at launch: now the user knows what the notification is for.
+                stopAlert.requestPermissionIfNeeded()
+                stopAlert.clearDelivered()
+            }
+        }
+    }
+
+    /// Back to the main screen, scroll to the start card and outline it for a moment.
+    private func showStartCardIfAsked(_ proxy: ScrollViewProxy) {
+        guard stopAlert.wantsStartCard else { return }
+        stopAlert.wantsStartCard = false
+        path = []
+        // After a pop from another screen has settled.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+            withAnimation { proxy.scrollTo(Self.startCardID, anchor: .center) }
+            withAnimation { highlightStartCard = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                withAnimation { highlightStartCard = false }
+            }
         }
     }
 
@@ -80,8 +111,9 @@ struct ContentView: View {
             return Status(text: "TV에 연결하는 중…", tone: .progress)
         }
         if monitor.stoppedUnexpectedly {
-            return Status(text: "화면 보내기가 갑자기 멈췄어요",
-                          detail: "② 버튼을 눌러 다시 시작해 주세요.", tone: .problem)
+            return Status(text: "TV 보내기가 멈췄어요",
+                          detail: "아래 ② 버튼으로 다시 시작하세요. (iPhone이 잠기면 TV 보내기가 끝나요.)",
+                          tone: .problem)
         }
         if monitor.failedRecently && !monitor.isLive {
             return Status(text: "화면 보내기를 시작하지 못했어요",
@@ -330,6 +362,12 @@ struct ContentView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+        .overlay {
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.orange, lineWidth: 3)
+                .opacity(highlightStartCard ? 1 : 0)
+                .allowsHitTesting(false)
+        }
     }
 
     private var noticeCard: some View {
@@ -338,7 +376,7 @@ struct ContentView: View {
                   systemImage: "eye")
             Label("저작권 보호 영상(넷플릭스 등)은 TV에 검게 나옵니다.", systemImage: "film")
             Label("화면은 집 Wi-Fi 안에서만 TV로 갑니다. 인터넷으로 나가지 않아요.", systemImage: "house")
-            Label("iPhone이 잠기면 TV 화면도 멈출 수 있어요. 오래 볼 때는 설정 → 디스플레이 및 밝기 → 자동 잠금을 '안 함'으로 바꾸세요. (저전력 모드가 켜져 있으면 바꿀 수 없어요.)",
+            Label("iPhone이 잠기면 TV 보내기가 끝나요. 오래 볼 때는 설정 → 디스플레이 및 밝기 → 자동 잠금을 '안 함'으로 바꾸세요. (저전력 모드가 켜져 있으면 바꿀 수 없어요.)",
                   systemImage: "lock")
             Label("유튜브처럼 앱 안에 TV 전송(Cast) 버튼이 있으면 그 버튼을 쓰세요. 폰을 잠그거나 다른 앱으로 가도 TV에서 계속 나와요.",
                   systemImage: "play.tv")

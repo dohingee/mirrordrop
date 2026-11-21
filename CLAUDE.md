@@ -17,6 +17,7 @@ iOS 앱. iPhone 화면을 Google Cast 수신기(TV·스틱)로 미러링한다. 
   - 소리(`AudioTrack`): 소리 트랙은 항상 만든다. 앱 소리(`.audioApp`)를 48kHz 스테레오로 바꿔 영상과 같은 시계로 잇고, 소리가 없을 때와 출력이 "휴대폰"일 때는 무음을 넣는다. 출력 설정(`AudioOutput`)은 방송 중에도 Darwin 알림 + 0.5초 폴링으로 바로 반영. 판단 로직은 `Shared/AudioFill.swift`.
   - Wi-Fi·IP가 바뀌면 새 주소로 `status.url`을 갱신(`urlRevision` 증가, Wi-Fi 없으면 `networkIssue`), 리스너가 실패하면 다시 연다. EXT-X-TARGETDURATION은 방송마다 고정, 오르기만 한다(`TargetDuration`). 인코더가 실패하면 새 인코더로 바꾸고 EXT-X-DISCONTINUITY·새 init 조각으로 잇는다.
   - `StatusPublisher`: 상태·메모리·요청 기록을 App Group UserDefaults에 쓰고 Darwin 알림을 보낸다.
+  - `StopAlertArmer`: 멈춤 알림. 보내는 동안 "6초 뒤 알림"을 2초마다 다시 넣어 미루고(확장이 꺼지면 뜸, iPhone 잠금 대비), 정상으로 멈추면 지운다. 판단 로직은 `Shared/StopAlert.swift`, 앱 쪽(권한·누르면 ② 시작 버튼으로·앱이 앞이면 숨김)은 `App/StopAlertCenter.swift`.
 - `Shared/` 앱·확장·테스트가 함께 컴파일: App Group 상수와 상태 모델, 설정(`LatencyPreset`, `AudioOutput`), 소리 무음 채우기·형식 변환 로직, HLS 재생목록, HTTP 파서·라우터, 조각 링버퍼, IP·메모리 측정.
 - `MirrorDropTests/` 순수 로직 단위 테스트(호스트 앱 없음, `Shared/`를 직접 컴파일).
 

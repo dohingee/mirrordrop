@@ -33,6 +33,10 @@
 - **새로 알게 된 점**: Apple 문서에 따르면 iOS 27부터 `RPBroadcastSampleHandler`가 "곧 지원 중단(deprecated)"으로 표시되고, iOS용 **ScreenCaptureKit**이 생겼다. 앱 본체가 `SCContentSharingPicker`로 전체 화면을 잡고, 백그라운드 모드 `screen-capture`로 계속 돌 수 있다고 한다. 확장이 필요 없으니 50MB 제한과 앱↔확장 통신이 사라질 수 있다.
   - PoC는 ReplayKit로 만든다. iOS 27에서도 아직 동작하고, iOS 17~26 기기도 지원하기 때문이다.
   - 인코딩·HLS·서버 코드(`FrameScaler`, `HLSSegmenter`, `StreamStore`, `HTTPServer`)는 ReplayKit에 묶이지 않게 만들어서, 2단계에서 ScreenCaptureKit 경로를 추가할 때 그대로 쓸 수 있다.
+  - **화면 잠금 (2026-11-21, 빌드 15 기기 시험):** iPhone이 잠기면 iOS가 방송을 끝내고, 잠금을 풀어도 이어지지 않는다. 다시 시작은 사용자가 시작 버튼(시스템 방송 선택기)을 눌러야 하고 앱이 대신 할 수 없다. 확장은 이때 끝났다는 신호(`broadcastFinished`)를 못 받을 수 있다(개발자 보고, 우리 기기에서는 미확인).
+    - 대응: **멈춤 알림(데드맨 방식).** 보내는 동안 확장이 "6초 뒤 알림" 하나를 예약해 두고 2초마다 같은 식별자로 다시 넣어 뒤로 민다(같은 식별자면 예약된 것을 바꿔 넣는다, Apple 문서). 확장이 꺼지거나 멈추면 더 못 밀어서 알림이 뜬다. 사용자가 직접 멈추면 예약과 표시된 알림을 지운다. 알림을 누르면 앱 첫 화면의 ② 시작 버튼으로 간다. 권한은 처음 보내기를 시작할 때 한 번 묻고(알림만, 소리·배지 없음), 앱이 앞에 있을 때는 띄우지 않는다(상태 카드가 같은 말을 함). 코드: `Shared/StopAlert.swift`(언제 다시 넣을지, 단위 테스트), `MirrorDropBroadcast/StopAlertArmer.swift`, `MirrorDrop/App/StopAlertCenter.swift`.
+    - 한계: 잠금 뒤에도 확장이 살아서 계속 돈다면 알림은 뜨지 않는다. 기기 시험으로 확인한다(`docs/POC_TEST.md` "멈춤 알림").
+    - 첫 화면 안내도 "iPhone이 잠기면 TV 보내기가 끝나요"로 고쳤다. 오래 볼 때는 자동 잠금을 '안 함'으로 바꾸도록 안내한다.
   - **결정 (2026-10-25): 둘 다 지원한다.** iOS 17~26은 ReplayKit 방송 확장, iOS 27 이상은 ScreenCaptureKit. 무료·광고 앱이라 지원 기기 수가 중요하고, ReplayKit은 deprecated일 뿐 아직 동작하기 때문이다. ScreenCaptureKit 경로는 2단계에서 추가하고, iOS 17~26 기기가 충분히 줄면 ReplayKit 경로를 걷어낸다.
   - **문서 확인 (2026-11-21, developer.apple.com 원문과 개발자 포럼):**
     - `RPBroadcastSampleHandler`·`RPSystemBroadcastPickerView`는 iOS 27.0까지로 표시(지원 중단 예정). ScreenCaptureKit 문서: "ScreenCaptureKit replaces ReplayKit for screen streaming and mirroring."
@@ -70,7 +74,7 @@
   - **TV:** 휴대폰의 앱 소리(`.audioApp`)를 TV로 보낸다.
   - **휴대폰:** TV로는 무음을 보낸다. 소리는 휴대폰에서만 난다.
 - **휴대폰 소리는 앱이 끌 수 없다.** 다른 앱의 소리를 끄는 공개 기능이 없다. 시스템 볼륨을 몰래 바꾸는 방법(MPVolumeView 슬라이더 조작)이나 무음 재생·`audio` 백그라운드 모드는 쓰지 않는다(심사 위험, SPEC 2.5.4). 그래서 "TV에서만"은 "TV로 소리를 보내고, 사용자가 휴대폰 볼륨을 끝까지 내리도록 안내"하는 뜻이다. 앱이 앞에 있을 때는 휴대폰 볼륨(`AVAudioSession.outputVolume`)을 읽기만 해서 0이면 "휴대폰 소리 꺼짐 ✓"을 보여 준다. 이때 다른 앱 소리를 끊지 않도록 섞어 재생하는 종류(`.ambient`)일 때만 오디오 세션을 켠다.
-  - ReplayKit의 앱 소리는 휴대폰 볼륨을 적용하기 전에 잡히는 것으로 보인다. 그러면 휴대폰 볼륨이 0이어도 TV에는 소리가 간다. **아직 기기에서 확인하지 않았다**(`docs/POC_TEST.md` "소리"). 진단 화면의 "소리 크기"로 확인할 수 있다.
+  - ReplayKit의 앱 소리는 휴대폰 볼륨을 적용하기 전에 잡히는 것으로 보인다. 그러면 휴대폰 볼륨이 0이어도 TV에는 소리가 간다. 2026-11-21 빌드 15에서 기기로 확인했다: 휴대폰 볼륨 0에도 TV 소리 남, 보내는 중 TV/휴대폰 바꾸기, 무음 화면 20초 넘게 안 멈춤, TV 볼륨·음소거, 10분 최고 메모리 15.5MB 모두 통과(`docs/POC_TEST.md` "소리"). 진단 화면의 "소리 크기"로 확인할 수 있다.
 - **TV 볼륨:** TV에 연결되면 첫 화면에 TV 볼륨 막대와 음소거 버튼이 나온다(Google Cast의 기기 볼륨 기능 `GCKSession.setDeviceVolume`·`setDeviceMuted`). 앱이 앞에 있으면 휴대폰 볼륨 버튼도 TV 볼륨을 바꾼다(`GCKCastOptions.physicalVolumeButtonsWillControlDeviceVolume`). AirPlay와 같은 방식이다.
 - **소리 트랙은 항상 만든다.** 그래야 방송 중에 TV/휴대폰을 바로 바꿀 수 있다. "휴대폰"이면 진짜 소리 대신 같은 길이의 무음을 쓴다. 확장은 설정을 앱이 보내는 Darwin 알림으로 바로 읽고, 알림을 놓쳐도 0.5초마다 다시 읽는다. 바뀌면 확장 로그에 `audio output tv -> phone`처럼 남긴다.
 - **무음 채우기와 형식 맞추기 (`MirrorDropBroadcast/AudioTrack.swift`, 판단 로직은 `Shared/AudioFill.swift`에 두고 단위 테스트):**

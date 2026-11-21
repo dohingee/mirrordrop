@@ -22,6 +22,8 @@ final class MirrorPipeline: HLSSegmenterDelegate {
     private var audio: AudioTrack?
     private var observingAudioOutput = false
     private var timer: DispatchSourceTimer?
+    /// "TV 보내기가 멈췄어요" notification that fires if the extension dies without a callback (screen lock).
+    private lazy var stopAlert = StopAlertArmer(queue: queue, log: { [status] in status.log($0) })
     private var pathMonitor: NWPathMonitor?
     private var address: StreamAddress
     private var running = false
@@ -114,6 +116,7 @@ final class MirrorPipeline: HLSSegmenterDelegate {
         queue.sync {
             self.timer = timer
             pathMonitor = monitor
+            stopAlert.start()
         }
         timer.resume()
         monitor.start(queue: queue)
@@ -131,6 +134,8 @@ final class MirrorPipeline: HLSSegmenterDelegate {
         stopObservingAudioOutput()
         queue.sync {
             running = false
+            // First, so nothing fires even if the process ends soon after this call.
+            stopAlert.stop()
             timer?.cancel()
             timer = nil
             pathMonitor?.cancel()
@@ -213,7 +218,7 @@ final class MirrorPipeline: HLSSegmenterDelegate {
 
     /// Every 100 ms: repeat the last frame while the screen is static (ReplayKit sends no frames then),
     /// so segments keep coming. Every 500 ms: publish status. Every second: sample memory.
-    /// Every 2 s: check the Wi-Fi address.
+    /// Every 2 s: check the Wi-Fi address and push the stop alert out again (StopAlertArmer).
     /// The last frame is repeated while paused too: a gap in the video would come out as one long
     /// segment, which would push EXT-X-TARGETDURATION up for the rest of the broadcast (see
     /// TargetDuration) and leave the TV without new segments. The TV keeps showing the frozen frame.
@@ -244,6 +249,7 @@ final class MirrorPipeline: HLSSegmenterDelegate {
             if mb > 40, ticks % 50 == 0 { status.error(String(format: "memory high: %.1f MB", mb)) }
         }
         if ticks % 20 == 0 { refreshAddress() }
+        stopAlert.tick()
         if ticks % 5 == 0 { status.flush() }
     }
 

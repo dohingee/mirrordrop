@@ -66,6 +66,20 @@ final class LatencyPresetTests: XCTestCase {
         defaults.set("bogus", forKey: AppGroup.latencyPresetKey)
         XCTAssertEqual(LatencyPreset.load(from: defaults), .l3)
     }
+
+    /// A choice saved by an older build (before L3 became the default) is cleared once;
+    /// a choice saved afterwards is kept.
+    func testOldChoiceIsResetToL3Once() throws {
+        let suite = "LatencyPresetResetTests"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        defaults.set("L0", forKey: AppGroup.latencyPresetKey) // as an older build saved it
+        XCTAssertEqual(LatencyPreset.load(from: defaults), .l3)
+        XCTAssertNil(defaults.string(forKey: AppGroup.latencyPresetKey))
+        LatencyPreset.l1.save(to: defaults)
+        XCTAssertEqual(LatencyPreset.load(from: defaults), .l1)
+        XCTAssertEqual(LatencyPreset.load(from: defaults), .l1)
+    }
 }
 
 final class PlaylistStartTests: XCTestCase {
