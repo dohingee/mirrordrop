@@ -11,7 +11,7 @@
 |---|---|---|
 | 0. 준비 | 심사 위험 점검(`docs/SPEC.md`), GitHub 저장소, Apple 번들 ID·App Group, App Store Connect 앱, GitHub 비밀값, 손 실행·태그 실행 빌드 (`docs/SETUP.md`) | 심사 위험 점검 결론이 "진행"이고, `testflight-` 태그로 TestFlight에 첫 빌드가 올라감 |
 | 1. PoC (끝남, 2026-11-21) | 시험 화면: Cast 연결, 테스트 A(인터넷 샘플 영상), 테스트 B(내 화면 → TV), 진단 화면 | `docs/POC_TEST.md`의 핵심 항목(A, B, 메모리)이 통과하거나, 막히는 이유가 분명해짐 |
-| **2. MVP (지금)** | iOS 27+ ScreenCaptureKit 캡처 경로 추가(17~26은 ReplayKit 유지), 쓰기 쉬운 한 화면 UI, 연결 끊김·Wi-Fi 변경 처리, 화질/지연 설정(PoC 실측 약 6~6.5초. TARGETDURATION 반올림 수정은 효과 없었고, 재생기가 재생목록 맨 앞부터 재생하는 것으로 보여 빌드 13의 "지연 실험" L0~L3로 잼. 지연은 L0 4.0초·L3 4.3초로 비슷하고 그중 약 2.4초는 기본 수신기가 끝에서 뒤에 서는 몫. 시작 직후부터 바로 부드러운 L3를 기본값으로 함(`docs/POC_TEST.md`). 2026-11-21 사용자 결정: 약 4초로 진행, 커스텀 수신기는 나중에 필요할 때), 소리 정리, 필요하면 커스텀 수신기 | 처음 쓰는 사람이 설명 없이 TV에 화면을 띄움 |
+| **2. MVP (지금)** | iOS 27+ ScreenCaptureKit 캡처 경로 추가(17~26은 ReplayKit 유지), 쓰기 쉬운 한 화면 UI, 연결 끊김·Wi-Fi 변경 처리, 화질/지연 설정(PoC 실측 약 6~6.5초. TARGETDURATION 반올림 수정은 효과 없었고, 재생기가 재생목록 맨 앞부터 재생하는 것으로 보여 빌드 13의 "지연 실험" L0~L3로 잼. 지연은 L0 4.0초·L3 4.3초로 비슷하고 그중 약 2.4초는 기본 수신기가 끝에서 뒤에 서는 몫. 시작 직후부터 바로 부드러운 L3를 기본값으로 함(`docs/POC_TEST.md`). 2026-11-21 사용자 결정: 약 4초로 진행, 커스텀 수신기는 나중에 필요할 때. 시작 직후 몇 초 부드럽지 않은 문제(L3 약 5초, L0·L1 10~20초)는 진단 맨 위 "시작 기록 (처음 30초)"로 원인을 가린다(`docs/POC_TEST.md` "시작 직후 끊김")), 소리 정리, 필요하면 커스텀 수신기 | 처음 쓰는 사람이 설명 없이 TV에 화면을 띄움 |
 | 3. 광고 + 정책 | AdMob(UMP 동의 포함), 개인정보처리방침, App Privacy 답안, 심사 메모 | 광고 켠 빌드가 정책 점검 통과 |
 | 4. 안정화 + 출시 | 여러 TV·스틱 기종 시험, 오래 켜 두기(발열·메모리), 스토어 자료, 심사 제출 | App Store 출시 |
 
@@ -75,7 +75,7 @@
   - **휴대폰:** TV로는 무음을 보낸다. 소리는 휴대폰에서만 난다.
 - **휴대폰 소리는 앱이 끌 수 없다.** 다른 앱의 소리를 끄는 공개 기능이 없다. 시스템 볼륨을 몰래 바꾸는 방법(MPVolumeView 슬라이더 조작)이나 무음 재생·`audio` 백그라운드 모드는 쓰지 않는다(심사 위험, SPEC 2.5.4). 그래서 "TV에서만"은 "TV로 소리를 보내고, 사용자가 휴대폰 볼륨을 끝까지 내리도록 안내"하는 뜻이다. 앱이 앞에 있을 때는 휴대폰 볼륨(`AVAudioSession.outputVolume`)을 읽기만 해서 0이면 "휴대폰 소리 꺼짐 ✓"을 보여 준다. 이때 다른 앱 소리를 끊지 않도록 섞어 재생하는 종류(`.ambient`)일 때만 오디오 세션을 켠다.
   - ReplayKit의 앱 소리는 휴대폰 볼륨을 적용하기 전에 잡히는 것으로 보인다. 그러면 휴대폰 볼륨이 0이어도 TV에는 소리가 간다. 2026-11-21 빌드 15에서 기기로 확인했다: 휴대폰 볼륨 0에도 TV 소리 남, 보내는 중 TV/휴대폰 바꾸기, 무음 화면 20초 넘게 안 멈춤, TV 볼륨·음소거, 10분 최고 메모리 15.5MB 모두 통과(`docs/POC_TEST.md` "소리"). 진단 화면의 "소리 크기"로 확인할 수 있다.
-- **TV 볼륨:** TV에 연결되면 첫 화면에 TV 볼륨 막대와 음소거 버튼이 나온다(Google Cast의 기기 볼륨 기능 `GCKSession.setDeviceVolume`·`setDeviceMuted`). 앱이 앞에 있으면 휴대폰 볼륨 버튼도 TV 볼륨을 바꾼다(`GCKCastOptions.physicalVolumeButtonsWillControlDeviceVolume`). AirPlay와 같은 방식이다.
+- **TV 볼륨:** TV에 연결되면 첫 화면에 TV 볼륨 막대와 음소거 버튼이 나온다(Google Cast의 기기 볼륨 기능 `GCKSession.setDeviceVolume`·`setDeviceMuted`). 휴대폰 옆 볼륨 버튼은 언제나 휴대폰 소리만 바꾼다(`GCKCastOptions.physicalVolumeButtonsWillControlDeviceVolume = false`, 빌드 16부터). 다른 앱에 있을 때는 버튼을 TV로 돌릴 방법이 iOS에 없어서, 앱 안에서도 같게 해 헷갈리지 않게 했다. "TV"를 고르면 첫 화면에 "볼륨 버튼 = 휴대폰 소리, TV 소리 = 리모컨·막대" 안내를 "알겠어요"를 누를 때까지 한 번 보여 준다.
 - **소리 트랙은 항상 만든다.** 그래야 방송 중에 TV/휴대폰을 바로 바꿀 수 있다. "휴대폰"이면 진짜 소리 대신 같은 길이의 무음을 쓴다. 확장은 설정을 앱이 보내는 Darwin 알림으로 바로 읽고, 알림을 놓쳐도 0.5초마다 다시 읽는다. 바뀌면 확장 로그에 `audio output tv -> phone`처럼 남긴다.
 - **무음 채우기와 형식 맞추기 (`MirrorDropBroadcast/AudioTrack.swift`, 판단 로직은 `Shared/AudioFill.swift`에 두고 단위 테스트):**
   - 문제: `AVAssetWriter`는 영상과 소리 트랙을 시간순으로 맞춰 쓰는데, 아무 소리도 안 나는 동안 ReplayKit은 소리 샘플을 보내지 않는다. 그대로 두면 조각이 늦게 나오거나 멈춘다. 또 받은 소리의 형식(44.1/48kHz, 모노/스테레오, 16비트 big-endian 정수 또는 32비트 실수)이 상황마다 다르다.
@@ -95,3 +95,6 @@
 - 화면 데이터는 Wi-Fi 안에서 iPhone → TV로만 간다. 서버는 사설 IP에서 온 요청만 받고, 방송마다 새 랜덤 주소(토큰)를 쓴다.
 - DRM(넷플릭스 등 FairPlay)이 걸린 화면은 iOS가 검게 보낸다. 우회하지 않는다.
 - 앱 이름에 "Chromecast"·"Google"을 넣지 않는다.
+
+### 8. 앱을 떠나도 TV에 띄우기 (2026-11-21, 시험하는 사람 보고)
+- TV 재생 요청은 앱이 보내므로, 보내기 시작 직후 다른 앱으로 가도 요청을 보낼 때까지만 앱이 짧은 백그라운드 작업(`beginBackgroundTask`)으로 깨어 있고(`App/MirrorCastCoordinator.swift`, 판단은 `Shared/BackgroundCastHold.swift`), Cast 세션도 뒤에서 멈추지 않게 했다(`suspendSessionsWhenBackgrounded = false`). 백그라운드 모드는 쓰지 않는다(SPEC 2.5.4). 앱이 이미 잠든 뒤의 Wi-Fi 변경은 앱을 열어야 TV에 다시 보낸다.

@@ -29,7 +29,7 @@ final class CastManager: NSObject, ObservableObject {
     @Published private(set) var loadedMirrorURL: URL?
     /// `BroadcastStatus.urlRevision` of the mirror last sent. The same URL text can come back after
     /// a Wi-Fi outage with a new revision; the TV has to be asked again then.
-    private var loadedMirrorRevision: Int?
+    private(set) var loadedMirrorRevision: Int?
     @Published private(set) var lastError: String?
     @Published private(set) var events: [String] = []
     /// Receiver's live seekable range end and playback position (seconds), or nil when unknown.
@@ -37,19 +37,34 @@ final class CastManager: NSObject, ObservableObject {
     /// TV (Cast device) volume 0...1 and mute, as last reported by the device; nil when not connected.
     @Published private(set) var tvVolume: Float?
     @Published private(set) var tvMuted = false
+    /// "시작 기록" TV side: player states and live lag for 30 s after the last mirror load request.
+    @Published private(set) var startupPlayback: PlaybackTrace?
     private(set) var sdkLog: [String] = []
     /// Per-broadcast secret path parts of every mirror URL sent, so diagnostics can hide them.
     private(set) var mirrorTokens: Set<String> = []
     private var isSetUp = false
     private weak var observedClient: GCKRemoteMediaClient?
-    private var loadRequest: GCKRequest?
+    private var loadRequest: GCKRequest? {
+        didSet { isLoadPending = loadRequest != nil }
+    }
+    /// A play request was sent and the TV has not answered yet (MirrorCastCoordinator keeps the app
+    /// awake in the background until it has).
+    @Published private(set) var isLoadPending = false
     private var lagTimer: Timer?
 
     func setUp() {
         guard !isSetUp else { return }
         isSetUp = true
         let options = GCKCastOptions(discoveryCriteria: GCKDiscoveryCriteria(applicationID: Self.receiverAppID))
-        options.physicalVolumeButtonsWillControlDeviceVolume = true
+        // Off: outside this app the side buttons can only change the phone volume (iOS gives no way
+        // to route them to the TV), so they do the same inside the app too. TV volume: the slider
+        // on the main screen or the TV remote. (2026-11-21, users mostly press the side buttons.)
+        options.physicalVolumeButtonsWillControlDeviceVolume = false
+        // Default YES: the SDK suspends the session as soon as the app goes to the background, so a
+        // play request sent from a background task (MirrorCastCoordinator, user left the app right
+        // after starting) would find no session. Once the app is really suspended the connection
+        // drops anyway and the SDK resumes or reconnects when the app comes back.
+        options.suspendSessionsWhenBackgrounded = false
         GCKCastContext.setSharedInstanceWith(options)
         GCKLogger.sharedInstance().delegate = self
 
@@ -133,7 +148,9 @@ final class CastManager: NSObject, ObservableObject {
     func castMirror(_ url: URL, revision: Int, force: Bool) -> Bool {
         guard isConnected else { return false }
         if !force, loadedMirrorURL == url, loadedMirrorRevision == revision { return false }
+        let sentAt = HostClock.now()
         guard load(url: url, title: "내 iPhone 화면", live: true, format: .fmp4) else { return false }
+        startupPlayback = PlaybackTrace(origin: sentAt)
         loadedMirrorURL = url
         loadedMirrorRevision = revision
         if let token = Self.token(of: url) { mirrorTokens.insert(token) }
@@ -220,6 +237,7 @@ final class CastManager: NSObject, ObservableObject {
                 sample = (end, position)
             }
         }
+        recordStartupLag(sample.map { $0.end - $0.position })
         // Publish only visible changes (one decimal) to avoid needless view updates.
         switch (sample, liveLag) {
         case (nil, nil):
@@ -229,6 +247,47 @@ final class CastManager: NSObject, ObservableObject {
         default:
             liveLag = sample
         }
+    }
+
+    /// Once a second (lag timer) for the first 30 s after a mirror load; nil while not playing.
+    private func recordStartupLag(_ lag: Double?) {
+        guard var trace = startupPlayback else { return }
+        let now = HostClock.now()
+        guard trace.isRecording(at: now) else { return }
+        trace.recordLag(lag, now: now)
+        startupPlayback = trace
+    }
+
+    private func recordStartupState(_ status: GCKMediaStatus) {
+        guard var trace = startupPlayback else { return }
+        let now = HostClock.now()
+        guard trace.isRecording(at: now) else { return }
+        let phase: PlaybackTrace.Phase
+        switch status.playerState {
+        case .idle: phase = .idle
+        case .loading: phase = .loading
+        case .buffering: phase = .buffering
+        case .playing: phase = .playing
+        case .paused: phase = .paused
+        default: phase = .unknown
+        }
+        var reason: String?
+        if status.playerState == .idle {
+            switch status.idleReason {
+            case .finished: reason = "FINISHED"
+            case .cancelled: reason = "CANCELLED"
+            case .interrupted: reason = "INTERRUPTED"
+            case .error: reason = "ERROR"
+            default: reason = nil
+            }
+        }
+        trace.recordState(phase, idleReason: reason, session: status.mediaSessionID, now: now)
+        if trace != startupPlayback { startupPlayback = trace }
+    }
+
+    /// For other app parts (MirrorCastCoordinator) to note things in the "Cast 기록" list. No tokens.
+    func logEvent(_ text: String) {
+        addEvent(text)
     }
 
     private func addEvent(_ text: String) {
@@ -309,6 +368,7 @@ extension CastManager: GCKSessionManagerListener {
 extension CastManager: GCKRemoteMediaClientListener {
     func remoteMediaClient(_ client: GCKRemoteMediaClient, didUpdate mediaStatus: GCKMediaStatus?) {
         guard let mediaStatus else { mediaText = "-"; tvPlayback = .none; return }
+        recordStartupState(mediaStatus)
         let text = describe(mediaStatus)
         if text != mediaText { addEvent("TV 상태: \(text)") }
         mediaText = text

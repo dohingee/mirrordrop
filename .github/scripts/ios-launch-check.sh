@@ -5,7 +5,7 @@
 #    rejects a mismatch; both come from CURRENT_PROJECT_VERSION);
 #  - installs it fresh on an iPhone and an iPad simulator (the iPhone-only app runs there in
 #    compatibility mode, as App Review tests it) and fails if it does not stay up;
-#  - screenshots the main, diagnostics and clock screens on the iPhone (Korean, status bar 9:41,
+#  - screenshots the main, diagnostics, clock and usage guide screens on the iPhone (Korean, status bar 9:41,
 #    full battery) through the app's `-MDScreen` launch argument (UI/ContentView.swift
 #    LaunchScreen), and the launch screen on the iPad.
 # Unit tests cannot see a launch crash: they run unsigned, without the app. The broadcast itself
@@ -86,7 +86,7 @@ ko=(-AppleLanguages "(ko)" -AppleLocale ko_KR)
 # until the job was cancelled; one at a time is what works for Bottlepost.) macOS has no `timeout`:
 # perl's alarm survives exec, so SIGALRM ends the command (exit 142).
 # Worst case (one boot retry, one launch retry, every launch at its 180 s limit): boots and installs
-# about 20 min, four launches with screenshots about 15 min, so a hang can still reach the workflow
+# about 20 min, five launches with screenshots about 18 min, so a hang can still reach the workflow
 # step's 35 min limit; a typical run is about 15 min. Whatever fires, summary.txt names the last step
 # reached (the timestamps in the log show where the time went).
 limit() {  # seconds command...  (exit code of the command, 142 on timeout)
@@ -168,6 +168,7 @@ for kind in iphone ipad; do
   if [ "$kind" = iphone ]; then
     check "$udid" iphone diagnostics 15 "${ko[@]}" -MDScreen diagnostics
     check "$udid" iphone clock 15 "${ko[@]}" -MDScreen clock
+    check "$udid" iphone guide 15 "${ko[@]}" -MDScreen guide
   fi
   limit 60 xcrun simctl shutdown "$udid" || true
 done

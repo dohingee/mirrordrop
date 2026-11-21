@@ -10,10 +10,13 @@ struct ContentView: View {
     @StateObject private var phoneVolume = PhoneVolumeMonitor()
     @Environment(\.scenePhase) private var scenePhase
     @State private var audioOutput = AudioOutput.load()
+    @AppStorage("volumeTipSeen") private var volumeTipSeen = false
     /// Slider position while dragging; the TV's reported volume otherwise.
     @State private var tvVolumeDraft: Float?
     /// Briefly outlines the start card after the "TV 보내기가 멈췄어요" notification was tapped.
     @State private var highlightStartCard = false
+    /// Hides the "처음이세요?" row once the guide was opened (the footer link stays).
+    @AppStorage(UsageGuideView.seenKey) private var usageGuideSeen = false
     private static let startCardID = "startCard"
 
     /// Discovery needs a few seconds after launch before "no devices" means anything.
@@ -25,6 +28,7 @@ struct ContentView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         statusCard
+                        if !usageGuideSeen { guideRow }
                         if showsNoTVHelp { noTVHelpCard }
                         tvCard
                         soundCard
@@ -43,30 +47,22 @@ struct ContentView: View {
             .navigationDestination(for: LaunchScreen.self) { screen in
                 switch screen {
                 case .advanced: AdvancedView()
+                case .guide: UsageGuideView()
                 case .diagnostics: DiagnosticsView()
                 case .clock: ClockView()
                 }
             }
         }
-        // Always cast automatically once the stream is ready and a TV is connected. CastManager
-        // forgets the sent URL on disconnect, so a reconnect sends it again, and a new URL
-        // (new broadcast, or a new address after a Wi-Fi change) is always sent.
-        .onAppear {
-            castIfReady()
-            phoneVolume.start()
-        }
+        // Casting when the stream is ready (and clearing the TV when it ends) is done by
+        // MirrorCastCoordinator, which also runs while the app is in the background.
+        .onAppear { phoneVolume.start() }
         .onChange(of: scenePhase) { _, phase in
             // Only while the app is in front (KVO needs an active audio session).
             if phase == .active { phoneVolume.start() } else { phoneVolume.stop() }
             // The user is here now; the main screen says the same thing.
             if phase == .active { stopAlert.clearDelivered() }
         }
-        .onChange(of: monitor.readyURL) { _, _ in castIfReady() }
-        .onChange(of: monitor.status.urlRevision) { _, _ in castIfReady() }
-        .onChange(of: cast.isConnected) { _, _ in castIfReady() }
         .onChange(of: monitor.isLive) { _, live in
-            // Broadcast ended or the extension died: clear the TV instead of leaving it spinning.
-            if !live { cast.stopMirror() }
             if live {
                 // Asked here, not at launch: now the user knows what the notification is for.
                 stopAlert.requestPermissionIfNeeded()
@@ -88,11 +84,6 @@ struct ContentView: View {
                 withAnimation { highlightStartCard = false }
             }
         }
-    }
-
-    private func castIfReady() {
-        guard let url = monitor.readyURL else { return }
-        cast.castMirror(url, revision: monitor.status.urlRevision, force: false)
     }
 
     // MARK: - Status
@@ -133,7 +124,7 @@ struct ContentView: View {
             return Status(text: "② 보내기를 시작하세요", detail: "아래 큰 버튼을 누른 다음 \"방송 시작\"을 누르세요.", tone: .action)
         }
         guard let ready = monitor.readyURL else {
-            return Status(text: "화면을 준비하는 중…", detail: "TV에 화면이 뜰 때까지 이 앱에 머물러 주세요.", tone: .progress)
+            return Status(text: "화면을 준비하는 중…", detail: "몇 초 뒤 TV에 나와요. 다른 앱으로 가도 돼요.", tone: .progress)
         }
         guard cast.loadedMirrorURL == ready else {
             // Not sent to this TV (another video was played, or the request could not be sent).
@@ -150,7 +141,7 @@ struct ContentView: View {
             return Status(text: "TV 재생이 멈췄어요", detail: "\"다시 TV에 띄우기\"를 누르면 다시 나옵니다.",
                           tone: .problem, offersRecast: true)
         case .none, .loading:
-            return Status(text: "TV에 띄우는 중…", detail: "몇 초 걸려요. TV에 화면이 뜰 때까지 이 앱에 머물러 주세요.", tone: .progress)
+            return Status(text: "TV에 띄우는 중…", detail: "몇 초 걸려요. 다른 앱으로 가도 돼요.", tone: .progress)
         }
     }
 
@@ -201,6 +192,22 @@ struct ContentView: View {
         case .problem:
             Image(systemName: "exclamationmark.triangle.fill").font(.title2).foregroundStyle(.orange)
         }
+    }
+
+    /// First-time users: a way into the guide, until it was opened once.
+    private var guideRow: some View {
+        NavigationLink(value: LaunchScreen.guide) {
+            HStack(spacing: 12) {
+                Image(systemName: "book.fill").font(.title3).foregroundStyle(.tint)
+                Text("처음이세요? 사용 방법 보기").font(.body.weight(.semibold))
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - ① TV
@@ -255,11 +262,13 @@ struct ContentView: View {
             }
             switch audioOutput {
             case .tv:
-                if phoneVolume.isSilent {
+                if !volumeTipSeen {
+                    volumeTip
+                } else if phoneVolume.isSilent {
                     Label("휴대폰 소리 꺼짐 ✓", systemImage: "speaker.slash.fill")
                         .font(.subheadline).foregroundStyle(.green)
                 } else {
-                    Text("보고 있는 앱이나 제어 센터에서 휴대폰 볼륨을 끝까지 내리면 TV에서만 소리가 나요.")
+                    Text("iPhone 옆 볼륨 버튼으로 휴대폰 볼륨을 끝까지 내리면 TV에서만 소리가 나요.")
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
                 if cast.isConnected, let volume = cast.tvVolume {
@@ -273,6 +282,22 @@ struct ContentView: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    /// Shown once (until "알겠어요"): most people press the side volume buttons, which always change
+    /// the phone's own volume (CastManager keeps them off the TV volume so they act the same everywhere).
+    private var volumeTip: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Label("볼륨 버튼 = 휴대폰 소리. 끝까지 내려 두면 TV에서만 소리가 나요.",
+                  systemImage: "speaker.wave.1")
+            Label("TV 소리 = TV 리모컨이나 아래 TV 볼륨 막대로 바꿔요.", systemImage: "tv")
+            Button("알겠어요") { volumeTipSeen = true }
+                .buttonStyle(.bordered)
+        }
+        .font(.subheadline)
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.accentColor.opacity(0.12), in: RoundedRectangle(cornerRadius: 12))
     }
 
     /// TV volume slider and mute button (the TV's own volume, through Google Cast).
@@ -392,6 +417,8 @@ struct ContentView: View {
             HStack {
                 ProblemReportLink()
                 Spacer()
+                NavigationLink("사용 방법", value: LaunchScreen.guide)
+                Text("·").foregroundStyle(.secondary)
                 NavigationLink("고급·진단", value: LaunchScreen.advanced)
             }
             .font(.subheadline)
@@ -401,19 +428,23 @@ struct ContentView: View {
     }
 }
 
-/// Screens reachable from the main screen. `-MDScreen diagnostics|clock|advanced` opens one at
+/// Screens reachable from the main screen. `-MDScreen diagnostics|clock|advanced|guide` opens one at
 /// launch for CI screenshots (.github/scripts/ios-launch-check.sh); any other value, e.g. `main`,
 /// keeps the main screen. Launch arguments land in UserDefaults' volatile argument domain, so a
 /// normal launch has no value here and the path starts empty.
 enum LaunchScreen: String, Hashable {
-    case advanced, diagnostics, clock
+    case advanced, diagnostics, clock, guide
 
     static var fromArguments: LaunchScreen? {
         UserDefaults.standard.string(forKey: "MDScreen").flatMap(LaunchScreen.init(rawValue:))
     }
 
-    /// Diagnostics and the clock live under the advanced screen, so Back leads there.
+    /// Diagnostics and the clock live under the advanced screen, so Back leads there; the guide
+    /// opens straight from the main screen.
     var navigationPath: [LaunchScreen] {
-        self == .advanced ? [.advanced] : [.advanced, self]
+        switch self {
+        case .advanced, .guide: return [self]
+        case .diagnostics, .clock: return [.advanced, self]
+        }
     }
 }

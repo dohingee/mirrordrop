@@ -6,6 +6,8 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // The Cast context must exist before any Cast UI is created.
         CastManager.shared.setUp()
+        // Sends the mirror when ready, also while the app is in the background.
+        MirrorCastCoordinator.shared.start()
         AudioOutput.removeLegacySettings()
         // Notification delegate before launch finishes, so a tap that launched the app is handled.
         StopAlertCenter.shared.setUp()
@@ -17,7 +19,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 struct MirrorDropApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var cast = CastManager.shared
-    @StateObject private var monitor = BroadcastMonitor()
+    @StateObject private var monitor = BroadcastMonitor.shared
     @StateObject private var stopAlert = StopAlertCenter.shared
 
     var body: some Scene {

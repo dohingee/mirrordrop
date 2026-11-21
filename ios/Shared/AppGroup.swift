@@ -84,6 +84,8 @@ struct BroadcastStatus: Codable, Equatable {
     var recentRequests: [RequestLogEntry] = []
     var errors: [String] = []
     var log: [String] = []
+    /// "시작 기록": the first 30 s from the first video frame (fixed-size, no tokens).
+    var startup = StartupTrace()
 }
 
 extension BroadcastStatus {
@@ -127,6 +129,7 @@ extension BroadcastStatus {
         recentRequests = value(.recentRequests, recentRequests)
         errors = value(.errors, errors)
         log = value(.log, log)
+        startup = value(.startup, startup)
     }
 }
 

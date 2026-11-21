@@ -12,7 +12,23 @@ struct DiagnosticsView: View {
 
     var body: some View {
         let s = monitor.status
+        let startup = StartupReport.summary(trace: s.startup, playback: cast.startupPlayback)
         List {
+            Section {
+                ForEach(Array(startup.enumerated()), id: \.offset) { _, line in
+                    Text(line).font(.caption)
+                }
+                DisclosureGroup("자세한 기록 (초별·조각·요청·TV 상태)") {
+                    ForEach(Array(StartupReport.details(trace: s.startup, playback: cast.startupPlayback).enumerated()),
+                            id: \.offset) { _, line in
+                        Text(line).font(.caption2.monospaced())
+                    }
+                }
+            } header: {
+                Text("시작 기록 (처음 30초)")
+            } footer: {
+                Text("확장 쪽 시간은 첫 화면 프레임부터, TV 상태와 재생 위치는 TV에 재생을 요청한 때부터 잽니다. 방송을 시작하고 30초 뒤에 이 부분을 캡처해 주세요.")
+            }
             Section("확장 메모리 (한도 약 \(Int(memoryLimitMB))MB)") {
                 LabeledContent("지금", value: String(format: "%.1f MB", s.memoryMB))
                 LabeledContent("최고", value: String(format: "%.1f MB", s.peakMemoryMB))
@@ -176,6 +192,9 @@ enum DiagnosticsReport {
         lines.append("조각: \(s.segmentsProduced), 보관 \(s.segmentsInWindow), 마지막 \(s.lastSegmentDuration)s/\(s.lastSegmentBytes)B, 코덱 \(s.codecs ?? "-"), 방향 \(s.orientation)")
         lines.append("요청: \(s.requestCount), 클라이언트: \(s.clients)")
         lines.append("서버 점검: \(selfTest)")
+        lines.append("--- 시작 기록 (처음 30초)")
+        lines += StartupReport.summary(trace: s.startup, playback: cast.startupPlayback)
+        lines += StartupReport.details(trace: s.startup, playback: cast.startupPlayback)
         lines.append("--- 요청 기록")
         lines += s.recentRequests.map { "\(DiagnosticsView.time($0.time)) \($0.client) \($0.method) \($0.path) \($0.status) \($0.bytes)B" }
         lines.append("--- 확장 오류")

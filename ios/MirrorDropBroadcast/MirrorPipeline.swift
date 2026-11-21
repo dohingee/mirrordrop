@@ -100,8 +100,14 @@ final class MirrorPipeline: HLSSegmenterDelegate {
         }
         server.onError = { [weak self] message in self?.status.error(message) }
         server.onRequest = { [weak self] request, client, response in
+            let now = Self.hostSeconds()
             self?.status.recordRequest(method: request.method, path: Self.redact(request.path), client: client,
                                        status: response.status, bytes: response.body.count)
+            // The path is only classified there (kind and number), never stored.
+            self?.status.update {
+                $0.startup.recordRequest(method: request.method, path: request.path, status: response.status,
+                                         body: response.body, now: now)
+            }
         }
         self.server = server
         server.start(preferredPort: Self.preferredPort)
@@ -159,10 +165,12 @@ final class MirrorPipeline: HLSSegmenterDelegate {
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         let time = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
         let orientation = Self.orientation(of: sampleBuffer)
+        let now = Self.hostSeconds()
         queue.sync {
             status.update {
                 $0.framesIn += 1
                 $0.orientation = orientation.rawValue
+                $0.startup.recordFrame(.input, now: now)
             }
             guard !paused, let scaler, time.isValid else { return }
             // Cap at the target frame rate; the encoder does not need more.
@@ -172,7 +180,10 @@ final class MirrorPipeline: HLSSegmenterDelegate {
             }
             if hostOffset == nil { hostOffset = Self.hostSeconds() - time.seconds }
             guard let scaled = scaler.scale(pixelBuffer, orientation: orientation) else {
-                status.update { $0.framesDropped += 1 }
+                status.update {
+                    $0.framesDropped += 1
+                    $0.startup.recordFrame(.dropped, now: now)
+                }
                 return
             }
             lastFrame = scaled
@@ -206,13 +217,19 @@ final class MirrorPipeline: HLSSegmenterDelegate {
         guard let segmenter else { return }
         if segmenter.appendVideo(buffer, at: time) {
             lastFrameTime = time
-            lastAppendHostSeconds = Self.hostSeconds()
+            let now = Self.hostSeconds()
+            lastAppendHostSeconds = now
             status.update {
                 $0.framesEncoded += 1
                 if repeated { $0.framesRepeated += 1 }
+                $0.startup.recordFrame(.encoded(repeated: repeated), now: now)
             }
         } else {
-            status.update { $0.framesDropped += 1 }
+            let now = Self.hostSeconds()
+            status.update {
+                $0.framesDropped += 1
+                $0.startup.recordFrame(.dropped, now: now)
+            }
         }
     }
 
@@ -342,7 +359,9 @@ final class MirrorPipeline: HLSSegmenterDelegate {
 
     func segmenter(_ segmenter: HLSSegmenter, didOutputSegment data: Data, duration: Double) {
         let targetBefore = store.targetDuration
-        store.addSegment(duration: duration, data: data)
+        // Before the store, so no TV request for this segment can be timed earlier than it.
+        let madeAt = Self.hostSeconds()
+        let segment = store.addSegment(duration: duration, data: data)
         let target = store.targetDuration
         if target > targetBefore {
             status.error(String(format: "segment %.3f s raised the target duration %d -> %d s",
@@ -356,6 +375,7 @@ final class MirrorPipeline: HLSSegmenterDelegate {
             $0.segmentsInWindow = count
             $0.lastSegmentDuration = duration
             $0.lastSegmentBytes = data.count
+            $0.startup.recordSegment(sequence: segment.sequence, duration: duration, bytes: data.count, now: madeAt)
             if $0.segmentsProduced >= ready, $0.state == .starting { $0.state = .streaming }
         }
         if count == ready { status.flush(force: true) }
@@ -416,7 +436,7 @@ final class MirrorPipeline: HLSSegmenterDelegate {
     }
 
     private static func hostSeconds() -> Double {
-        CMClockGetTime(CMClockGetHostTimeClock()).seconds
+        HostClock.now()
     }
 
     private static func randomToken() -> String {

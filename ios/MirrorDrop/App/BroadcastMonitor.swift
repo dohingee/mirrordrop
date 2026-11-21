@@ -1,12 +1,15 @@
 import Foundation
 
 /// Reads the broadcast extension's status from the App Group (Darwin notification + 1 s polling).
+/// One shared instance: the views and MirrorCastCoordinator (which also runs in the background) read it.
 final class BroadcastMonitor: ObservableObject {
+    static let shared = BroadcastMonitor()
+
     @Published private(set) var status = BroadcastStatus()
     @Published private(set) var now = Date()
     private var timer: Timer?
 
-    init() {
+    private init() {
         let observer = Unmanaged.passUnretained(self).toOpaque()
         CFNotificationCenterAddObserver(
             CFNotificationCenterGetDarwinNotifyCenter(), observer,
