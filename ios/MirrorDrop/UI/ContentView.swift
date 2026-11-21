@@ -290,7 +290,7 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 8) {
             Label("볼륨 버튼 = 휴대폰 소리. 끝까지 내려 두면 TV에서만 소리가 나요.",
                   systemImage: "speaker.wave.1")
-            Label("TV 소리 = TV 리모컨이나 아래 TV 볼륨 막대로 바꿔요.", systemImage: "tv")
+            Label("TV 소리 = TV 리모컨으로, 또는 TV에 연결되면 아래에 나오는 TV 볼륨 막대로 바꿔요.", systemImage: "tv")
             Button("알겠어요") { volumeTipSeen = true }
                 .buttonStyle(.bordered)
         }
