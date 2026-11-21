@@ -10,7 +10,7 @@ protocol HLSSegmenterDelegate: AnyObject {
     func segmenter(_ segmenter: HLSSegmenter, didWarn message: String)
 }
 
-/// H.264 (+ optional AAC) encoder that emits fMP4 HLS segments in memory via AVAssetWriterDelegate.
+/// H.264 + AAC encoder that emits fMP4 HLS segments in memory via AVAssetWriterDelegate.
 /// Nothing is written to disk.
 final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
     struct Config {
@@ -19,7 +19,9 @@ final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
         var frameRate = 30
         var bitRate = 2_500_000
         var segmentSeconds = 1.0
-        var includeAudio = false
+        /// The audio track is always there (silence when there is no sound or the output is the
+        /// phone), so the TV setting can change live. See AudioTrack and docs/PLAN.md "5. 소리".
+        var includeAudio = true
     }
 
     let config: Config
@@ -38,6 +40,12 @@ final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
 
     var isRunning: Bool { writer?.status == .writing }
 
+    /// Source time of the first video frame (the session start), or invalid before it.
+    var sessionStartTime: CMTime { sessionStart }
+
+    /// True once the writer runs with an audio track (audio before that is not taken).
+    var acceptsAudio: Bool { writer?.status == .writing && audioInput != nil && sessionStart.isValid }
+
     /// Returns false when the frame was not taken (encoder busy, out-of-order time, or failure).
     func appendVideo(_ pixelBuffer: CVPixelBuffer, at time: CMTime) -> Bool {
         if writer == nil, !failed { start(at: time) }
@@ -55,11 +63,16 @@ final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
         return true
     }
 
-    func appendAudio(_ sampleBuffer: CMSampleBuffer) {
+    /// Returns false when the buffer was not taken (no audio track, encoder busy, too early, failure).
+    func appendAudio(_ sampleBuffer: CMSampleBuffer) -> Bool {
         guard let writer, writer.status == .writing, let audioInput, audioInput.isReadyForMoreMediaData,
               sessionStart.isValid, CMSampleBufferGetPresentationTimeStamp(sampleBuffer) >= sessionStart
-        else { return }
-        if !audioInput.append(sampleBuffer) { reportFailureIfNeeded() }
+        else { return false }
+        guard audioInput.append(sampleBuffer) else {
+            reportFailureIfNeeded()
+            return false
+        }
+        return true
     }
 
     func finish(completion: @escaping () -> Void) {
@@ -102,9 +115,9 @@ final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
         if config.includeAudio {
             let audioSettings: [String: Any] = [
                 AVFormatIDKey: kAudioFormatMPEG4AAC,
-                AVSampleRateKey: 44_100,
-                AVNumberOfChannelsKey: 2,
-                AVEncoderBitRateKey: 128_000,
+                AVSampleRateKey: AudioTrackFormat.sampleRate,
+                AVNumberOfChannelsKey: AudioTrackFormat.channels,
+                AVEncoderBitRateKey: AudioTrackFormat.bitRate,
             ]
             let input = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
             input.expectsMediaDataInRealTime = true

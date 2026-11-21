@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // The Cast context must exist before any Cast UI is created.
         CastManager.shared.setUp()
+        AudioOutput.removeLegacySettings()
         return true
     }
 }

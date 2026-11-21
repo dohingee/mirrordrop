@@ -5,7 +5,8 @@ import Network
 import ReplayKit
 
 /// ReplayKit frames -> 720p -> H.264 fMP4 HLS segments in memory -> local HTTP server.
-/// All mutable state lives on `queue`.
+/// App sound -> AudioTrack (48 kHz stereo, silence when missing or when the output is the phone) -> AAC
+/// in the same segments. All mutable state lives on `queue`.
 final class MirrorPipeline: HLSSegmenterDelegate {
     static let preferredPort: UInt16 = 8765
 
@@ -18,6 +19,8 @@ final class MirrorPipeline: HLSSegmenterDelegate {
     private var server: HTTPServer?
     private var scaler: FrameScaler?
     private var segmenter: HLSSegmenter?
+    private var audio: AudioTrack?
+    private var observingAudioOutput = false
     private var timer: DispatchSourceTimer?
     private var pathMonitor: NWPathMonitor?
     private var address: StreamAddress
@@ -37,14 +40,13 @@ final class MirrorPipeline: HLSSegmenterDelegate {
     private var peakMB: Double = 0
 
     init() {
-        let includeAudio = AppGroup.defaults?.bool(forKey: AppGroup.includeAudioKey) ?? false
         let preset = LatencyPreset.load()
         self.preset = preset
-        let config = HLSSegmenter.Config(segmentSeconds: preset.segmentSeconds, includeAudio: includeAudio)
+        let config = HLSSegmenter.Config(segmentSeconds: preset.segmentSeconds)
         self.config = config
         store = StreamStore(format: .init(width: config.width, height: config.height,
                                           frameRate: Double(config.frameRate),
-                                          bandwidth: config.bitRate + (includeAudio ? 128_000 : 0)),
+                                          bandwidth: config.bitRate + (config.includeAudio ? AudioTrackFormat.bitRate : 0)),
                             playlistWindow: preset.playlistWindow,
                             storedSegments: preset.storedSegments,
                             startOffset: preset.startOffset,
@@ -62,22 +64,31 @@ final class MirrorPipeline: HLSSegmenterDelegate {
         guard let scaler = FrameScaler(width: config.width, height: config.height) else {
             throw startFailure("화면 변환기를 만들 수 없어요.")
         }
+        let output = AudioOutput.load()
         queue.sync {
             running = true
             address.update(ip: ip)
             self.scaler = scaler
             segmenter = makeSegmenter()
+            audio = AudioTrack(output: output) { [status] message in
+                if message.hasPrefix("ERROR ") {
+                    status.error(String(message.dropFirst(6)))
+                } else {
+                    status.log(message)
+                }
+            }
         }
 
         status.update {
             $0 = BroadcastStatus()
             $0.state = .starting
             $0.startedAt = Date()
-            $0.audioEnabled = self.config.includeAudio
+            $0.audioOutput = output.code
             $0.latencyPreset = self.preset.code
         }
+        observeAudioOutput()
         let start = preset.startOffset.map { String($0) } ?? "-"
-        status.log("broadcast started, ip=\(ip), audio=\(config.includeAudio), preset=\(preset.code) "
+        status.log("broadcast started, ip=\(ip), audio=\(output.code), preset=\(preset.code) "
                    + "(segment \(preset.segmentSeconds)s, window \(preset.playlistWindow), "
                    + "stored \(preset.storedSegments), start \(start))")
 
@@ -117,6 +128,7 @@ final class MirrorPipeline: HLSSegmenterDelegate {
     }
 
     func stop() {
+        stopObservingAudioOutput()
         queue.sync {
             running = false
             timer?.cancel()
@@ -164,12 +176,17 @@ final class MirrorPipeline: HLSSegmenterDelegate {
     }
 
     func handleAppAudio(_ sampleBuffer: CMSampleBuffer) {
-        guard config.includeAudio else { return }
         queue.sync {
-            status.update { $0.audioSamplesIn += 1 }
-            guard !paused else { return }
-            segmenter?.appendAudio(sampleBuffer)
+            // Before the first video frame there is no timeline to place sound on yet.
+            guard let audio, let segmenter, let hostOffset else { return }
+            let now = Self.hostSeconds()
+            audio.handleReal(sampleBuffer, videoNow: now - hostOffset, hostNow: now, paused: paused,
+                             segmenter: segmenter)
         }
+    }
+
+    deinit {
+        stopObservingAudioOutput()
     }
 
     // MARK: Internals (on queue)
@@ -207,6 +224,15 @@ final class MirrorPipeline: HLSSegmenterDelegate {
             let time = CMTime(seconds: now - hostOffset, preferredTimescale: 90_000)
             append(lastFrame, at: time, repeated: true)
         }
+        // Silence while no app sound comes, so the writer never waits for the audio track.
+        if let audio, let segmenter, let hostOffset {
+            audio.fill(videoNow: now - hostOffset, hostNow: now, segmenter: segmenter)
+        }
+        if ticks % 5 == 0 {
+            // Fallback for the Darwin notification (both are cheap).
+            refreshAudioOutput()
+            publishAudioStats(resetRecentPeak: ticks % 10 == 0)
+        }
         if ticks % 10 == 0 {
             let mb = MemoryInfo.physFootprintMB()
             peakMB = max(peakMB, mb)
@@ -219,6 +245,54 @@ final class MirrorPipeline: HLSSegmenterDelegate {
         }
         if ticks % 20 == 0 { refreshAddress() }
         if ticks % 5 == 0 { status.flush() }
+    }
+
+    /// Reads the "소리 나오는 곳" setting; a change applies to the next audio buffer, no restart.
+    private func refreshAudioOutput() {
+        guard running, let audio else { return }
+        let output = AudioOutput.load()
+        guard output != audio.output else { return }
+        status.log("audio output \(audio.output.code) -> \(output.code)")
+        audio.output = output
+        status.update { $0.audioOutput = output.code }
+        status.flush(force: true)
+    }
+
+    /// `resetRecentPeak` (once a second) moves the recent peak into the status and starts a new one.
+    private func publishAudioStats(resetRecentPeak: Bool) {
+        guard let audio else { return }
+        let stats = audio.stats
+        let recent = resetRecentPeak ? audio.takeRecentPeak() : nil
+        status.update {
+            $0.audioSamplesIn = stats.samplesIn
+            $0.audioSilentFrames = stats.silentFrames
+            $0.audioRealFrames = stats.realFrames
+            $0.audioDroppedFrames = stats.droppedFrames
+            $0.audioPeakMax = Double(stats.peakMax)
+            $0.audioSourceFormat = stats.sourceFormat
+            if let recent { $0.audioPeakRecent = Double(recent) }
+        }
+    }
+
+    /// The app posts `AppGroup.audioOutputNotification` when the setting changes.
+    private func observeAudioOutput() {
+        let observer = Unmanaged.passUnretained(self).toOpaque()
+        CFNotificationCenterAddObserver(
+            CFNotificationCenterGetDarwinNotifyCenter(), observer,
+            { _, observer, _, _, _ in
+                guard let observer else { return }
+                let pipeline = Unmanaged<MirrorPipeline>.fromOpaque(observer).takeUnretainedValue()
+                pipeline.queue.async { pipeline.refreshAudioOutput() }
+            },
+            AppGroup.audioOutputNotification as CFString, nil, .deliverImmediately)
+        observingAudioOutput = true
+    }
+
+    private func stopObservingAudioOutput() {
+        guard observingAudioOutput else { return }
+        observingAudioOutput = false
+        CFNotificationCenterRemoveEveryObserver(CFNotificationCenterGetDarwinNotifyCenter(),
+                                                Unmanaged.passUnretained(self).toOpaque())
     }
 
     private func serverReady(port: UInt16) {

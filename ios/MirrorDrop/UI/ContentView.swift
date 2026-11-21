@@ -6,6 +6,11 @@ struct ContentView: View {
     @EnvironmentObject private var cast: CastManager
     @EnvironmentObject private var monitor: BroadcastMonitor
     @State private var path = LaunchScreen.fromArguments?.navigationPath ?? []
+    @StateObject private var phoneVolume = PhoneVolumeMonitor()
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var audioOutput = AudioOutput.load()
+    /// Slider position while dragging; the TV's reported volume otherwise.
+    @State private var tvVolumeDraft: Float?
 
     /// Discovery needs a few seconds after launch before "no devices" means anything.
     private let noDevicesGrace: TimeInterval = 5
@@ -17,6 +22,7 @@ struct ContentView: View {
                     statusCard
                     if showsNoTVHelp { noTVHelpCard }
                     tvCard
+                    soundCard
                     broadcastCard
                     noticeCard
                     footer
@@ -36,7 +42,14 @@ struct ContentView: View {
         // Always cast automatically once the stream is ready and a TV is connected. CastManager
         // forgets the sent URL on disconnect, so a reconnect sends it again, and a new URL
         // (new broadcast, or a new address after a Wi-Fi change) is always sent.
-        .onAppear { castIfReady() }
+        .onAppear {
+            castIfReady()
+            phoneVolume.start()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Only while the app is in front (KVO needs an active audio session).
+            if phase == .active { phoneVolume.start() } else { phoneVolume.stop() }
+        }
         .onChange(of: monitor.readyURL) { _, _ in castIfReady() }
         .onChange(of: monitor.status.urlRevision) { _, _ in castIfReady() }
         .onChange(of: cast.isConnected) { _, _ in castIfReady() }
@@ -194,6 +207,69 @@ struct ContentView: View {
         }
     }
 
+    // MARK: - Sound
+
+    /// AirPlay-like: choose where the sound comes out, changeable at any time (also while sending).
+    private var soundCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("소리 나오는 곳").font(.headline)
+            Picker("소리 나오는 곳", selection: $audioOutput) {
+                ForEach(AudioOutput.allCases) { Text($0.label).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            .onChange(of: audioOutput) { _, value in
+                value.save()
+                AudioOutput.postChanged()
+            }
+            switch audioOutput {
+            case .tv:
+                if phoneVolume.isSilent {
+                    Label("휴대폰 소리 꺼짐 ✓", systemImage: "speaker.slash.fill")
+                        .font(.subheadline).foregroundStyle(.green)
+                } else {
+                    Text("보고 있는 앱이나 제어 센터에서 휴대폰 볼륨을 끝까지 내리면 TV에서만 소리가 나요.")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                }
+                if cast.isConnected, let volume = cast.tvVolume {
+                    tvVolumeRow(volume)
+                }
+            case .phone:
+                Text("TV는 화면만 보여 주고 소리는 휴대폰에서 나요.")
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    /// TV volume slider and mute button (the TV's own volume, through Google Cast).
+    private func tvVolumeRow(_ volume: Float) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 12) {
+                Button {
+                    cast.setTVMuted(!cast.tvMuted)
+                } label: {
+                    Image(systemName: cast.tvMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                        .frame(width: 28)
+                }
+                .accessibilityLabel(cast.tvMuted ? "TV 소리 켜기" : "TV 소리 끄기")
+                Slider(value: Binding(get: { Double(tvVolumeDraft ?? volume) },
+                                      set: { value in
+                                          tvVolumeDraft = Float(value)
+                                          cast.setTVVolume(Float(value))
+                                      }),
+                       in: 0...1, step: 0.05,
+                       onEditingChanged: { editing in
+                           if !editing { tvVolumeDraft = nil }
+                       })
+                .accessibilityLabel("TV 볼륨")
+            }
+            Text(cast.tvMuted ? "TV 소리 꺼짐" : "TV 볼륨")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
     private var noTVHelpCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("이것을 확인해 주세요").font(.headline)
@@ -262,6 +338,10 @@ struct ContentView: View {
                   systemImage: "eye")
             Label("저작권 보호 영상(넷플릭스 등)은 TV에 검게 나옵니다.", systemImage: "film")
             Label("화면은 집 Wi-Fi 안에서만 TV로 갑니다. 인터넷으로 나가지 않아요.", systemImage: "house")
+            Label("iPhone이 잠기면 TV 화면도 멈출 수 있어요. 오래 볼 때는 설정 → 디스플레이 및 밝기 → 자동 잠금을 '안 함'으로 바꾸세요.",
+                  systemImage: "lock")
+            Label("유튜브처럼 앱 안에 Cast 버튼이 있으면 그 버튼을 쓰세요. 폰을 잠그거나 다른 앱으로 가도 TV에서 계속 나와요.",
+                  systemImage: "play.tv")
         }
         .font(.footnote)
         .foregroundStyle(.secondary)

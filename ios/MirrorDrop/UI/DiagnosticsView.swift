@@ -28,8 +28,21 @@ struct DiagnosticsView: View {
                 LabeledContent("마지막 조각", value: String(format: "%.2f초, %ld KB", s.lastSegmentDuration, s.lastSegmentBytes / 1024))
                 LabeledContent("코덱", value: s.codecs ?? "-")
                 LabeledContent("화면 방향 값", value: "\(s.orientation)")
-                LabeledContent("앱 소리", value: s.audioEnabled ? "켜짐 (샘플 \(s.audioSamplesIn))" : "꺼짐")
                 LabeledContent("지연 실험 (확장이 쓴 값)", value: Self.presetText(s.latencyPreset))
+            }
+            Section {
+                LabeledContent("소리 나오는 곳 (확장이 쓰는 값)", value: Self.audioOutputText(s.audioOutput))
+                LabeledContent("받은 앱 소리 묶음", value: "\(s.audioSamplesIn)")
+                LabeledContent("받은 소리 형식", value: s.audioSourceFormat ?? "-")
+                LabeledContent("소리 크기 (최근 1초 / 최고)",
+                               value: String(format: "%.3f / %.3f", s.audioPeakRecent, s.audioPeakMax))
+                LabeledContent("TV로 보낸 소리", value: Self.seconds(s.audioRealFrames))
+                LabeledContent("채운 무음", value: Self.seconds(s.audioSilentFrames))
+                LabeledContent("버린 소리", value: Self.seconds(s.audioDroppedFrames))
+            } header: {
+                Text("소리")
+            } footer: {
+                Text("소리 크기는 휴대폰 볼륨과 관계없이 앱에서 받은 소리의 크기입니다(0은 무음, 1은 가장 큼). \"휴대폰\"을 고르면 TV로는 무음을 보냅니다.")
             }
             Section("서버 요청 (TV가 iPhone에서 가져갔는지)") {
                 LabeledContent("총 요청 수", value: "\(s.requestCount)")
@@ -105,6 +118,16 @@ struct DiagnosticsView: View {
 
     static func time(_ date: Date) -> String { formatter.string(from: date) }
 
+    private static func audioOutputText(_ code: String?) -> String {
+        guard let code else { return "-" }
+        return AudioOutput(rawValue: code)?.label ?? code
+    }
+
+    /// 48 kHz frames as seconds.
+    private static func seconds(_ frames: Int) -> String {
+        String(format: "%.1f초", Double(frames) / Double(AudioTrackFormat.sampleRate))
+    }
+
     private static func presetText(_ code: String?) -> String {
         guard let code else { return "-" }
         return LatencyPreset(rawValue: code)?.label ?? code
@@ -144,7 +167,10 @@ enum DiagnosticsReport {
         lines.append("Cast: \(cast.stateText), 기기: \(cast.deviceName ?? "-"), TV 상태: \(cast.mediaText)")
         lines.append("TV 재생 위치: \(cast.liveLagText)")
         lines.append("Cast 오류: \(cast.lastError ?? "-")")
-        lines.append("확장 상태: \(monitor.stateText), 오디오: \(s.audioEnabled), 지연 실험: \(s.latencyPreset ?? "-")")
+        lines.append("확장 상태: \(monitor.stateText), 소리 출력: \(s.audioOutput ?? "-"), 지연 실험: \(s.latencyPreset ?? "-")")
+        lines.append(String(format: "소리: 묶음 %ld, 형식 %@, 크기 최근 %.3f 최고 %.3f, 보냄 %ld, 무음 %ld, 버림 %ld (48kHz 프레임)",
+                            s.audioSamplesIn, s.audioSourceFormat ?? "-", s.audioPeakRecent, s.audioPeakMax,
+                            s.audioRealFrames, s.audioSilentFrames, s.audioDroppedFrames))
         lines.append(String(format: "메모리: 지금 %.1fMB, 최고 %.1fMB", s.memoryMB, s.peakMemoryMB))
         lines.append("프레임: 입력 \(s.framesIn), 인코딩 \(s.framesEncoded), 반복 \(s.framesRepeated), 건너뜀 \(s.framesSkipped), 버림 \(s.framesDropped)")
         lines.append("조각: \(s.segmentsProduced), 보관 \(s.segmentsInWindow), 마지막 \(s.lastSegmentDuration)s/\(s.lastSegmentBytes)B, 코덱 \(s.codecs ?? "-"), 방향 \(s.orientation)")

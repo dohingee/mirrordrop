@@ -1,11 +1,10 @@
 import SwiftUI
 
-/// "고급·진단": the PoC test tools (sample stream, audio and latency experiments, manual cast,
+/// "고급·진단": the PoC test tools (sample stream, latency experiment, manual cast,
 /// TV playback state) plus links to diagnostics and the latency clock.
 struct AdvancedView: View {
     @EnvironmentObject private var cast: CastManager
     @EnvironmentObject private var monitor: BroadcastMonitor
-    @State private var includeAudio = AppGroup.defaults?.bool(forKey: AppGroup.includeAudioKey) ?? false
     @State private var latencyPreset = LatencyPreset.load()
     @State private var sampleURL = SampleStream.fmp4.url
 
@@ -25,11 +24,6 @@ struct AdvancedView: View {
 
     private var mirrorSection: some View {
         Section {
-            Toggle("앱 소리 포함 (실험)", isOn: $includeAudio)
-                .disabled(monitor.isLive)
-                .onChange(of: includeAudio) { _, value in
-                    AppGroup.defaults?.set(value, forKey: AppGroup.includeAudioKey)
-                }
             Picker("지연 실험", selection: $latencyPreset) {
                 ForEach(LatencyPreset.allCases) { Text($0.label).tag($0) }
             }
@@ -48,7 +42,7 @@ struct AdvancedView: View {
         } header: {
             Text("내 화면 보내기 (실험 설정)")
         } footer: {
-            Text("소리·지연 실험 설정은 다음 방송 시작부터 적용됩니다. 화면이 준비되면 TV에 자동으로 띄웁니다.")
+            Text("지연 실험 설정은 다음 방송 시작부터 적용됩니다. 소리 나오는 곳(TV·휴대폰)은 첫 화면에서 보내는 중에도 바꿀 수 있어요. 화면이 준비되면 TV에 자동으로 띄웁니다.")
         }
     }
 

@@ -5,7 +5,13 @@ enum AppGroup {
     static let id = "group.com.mirrordrop.app"
     static let broadcastExtensionID = "com.mirrordrop.app.broadcast"
     static let statusKey = "broadcastStatus"
-    static let includeAudioKey = "includeAppAudio"
+    /// `AudioOutput.rawValue`, read by the extension during a broadcast (can change live).
+    static let audioOutputKey = "audioOutput"
+    /// Darwin notification posted by the app when the audio output changes.
+    static let audioOutputNotification = "com.mirrordrop.app.audio-output-changed"
+    /// Keys of earlier builds that nothing reads any more ("includeAppAudio": the old
+    /// "앱 소리 포함 (실험)" switch, replaced by `audioOutputKey`).
+    static let legacyKeys = ["includeAppAudio"]
     /// `LatencyPreset.rawValue`, read by the extension at broadcast start.
     static let latencyPresetKey = "latencyPreset"
     /// Darwin notification posted by the extension whenever it writes a new status.
@@ -48,10 +54,25 @@ struct BroadcastStatus: Codable, Equatable {
     var framesRepeated = 0
     var framesSkipped = 0
     var framesDropped = 0
-    var audioEnabled = false
     /// `LatencyPreset.code` the extension actually used for this broadcast.
     var latencyPreset: String?
+    /// `AudioOutput.code` in use right now ("tv": real sound to the TV, "phone": silence to the TV).
+    var audioOutput: String?
+    /// Real app-sound buffers received from ReplayKit.
     var audioSamplesIn = 0
+    /// Format of the last real app-sound buffer, e.g. "44100Hz 2ch s16be".
+    var audioSourceFormat: String?
+    /// Silent frames (48 kHz) written to keep the audio track going (no sound, or "phone" output).
+    var audioSilentFrames = 0
+    /// Real frames written to the TV stream (muted ones included).
+    var audioRealFrames = 0
+    /// Real frames left out (arrived too late, encoder busy, or format not readable).
+    var audioDroppedFrames = 0
+    /// Loudest real sample in about the last second, 0...1 (measured before muting, so a device
+    /// test can see whether sound still arrives with the phone volume at 0).
+    var audioPeakRecent: Double = 0
+    /// Loudest real sample since the broadcast started, 0...1.
+    var audioPeakMax: Double = 0
     var segmentsProduced = 0
     var segmentsInWindow = 0
     var lastSegmentDuration: Double = 0
@@ -63,6 +84,50 @@ struct BroadcastStatus: Codable, Equatable {
     var recentRequests: [RequestLogEntry] = []
     var errors: [String] = []
     var log: [String] = []
+}
+
+extension BroadcastStatus {
+    /// Missing keys (a status written by an older build) keep their defaults instead of failing.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        func value<T: Decodable>(_ key: CodingKeys, _ fallback: T) -> T {
+            ((try? container.decodeIfPresent(T.self, forKey: key)) ?? nil) ?? fallback
+        }
+        self.init()
+        state = value(.state, state)
+        url = value(.url, url)
+        urlRevision = value(.urlRevision, urlRevision)
+        networkIssue = value(.networkIssue, networkIssue)
+        startedAt = value(.startedAt, startedAt)
+        updatedAt = value(.updatedAt, updatedAt)
+        memoryMB = value(.memoryMB, memoryMB)
+        peakMemoryMB = value(.peakMemoryMB, peakMemoryMB)
+        framesIn = value(.framesIn, framesIn)
+        framesEncoded = value(.framesEncoded, framesEncoded)
+        framesRepeated = value(.framesRepeated, framesRepeated)
+        framesSkipped = value(.framesSkipped, framesSkipped)
+        framesDropped = value(.framesDropped, framesDropped)
+        latencyPreset = value(.latencyPreset, latencyPreset)
+        audioOutput = value(.audioOutput, audioOutput)
+        audioSamplesIn = value(.audioSamplesIn, audioSamplesIn)
+        audioSourceFormat = value(.audioSourceFormat, audioSourceFormat)
+        audioSilentFrames = value(.audioSilentFrames, audioSilentFrames)
+        audioRealFrames = value(.audioRealFrames, audioRealFrames)
+        audioDroppedFrames = value(.audioDroppedFrames, audioDroppedFrames)
+        audioPeakRecent = value(.audioPeakRecent, audioPeakRecent)
+        audioPeakMax = value(.audioPeakMax, audioPeakMax)
+        segmentsProduced = value(.segmentsProduced, segmentsProduced)
+        segmentsInWindow = value(.segmentsInWindow, segmentsInWindow)
+        lastSegmentDuration = value(.lastSegmentDuration, lastSegmentDuration)
+        lastSegmentBytes = value(.lastSegmentBytes, lastSegmentBytes)
+        codecs = value(.codecs, codecs)
+        orientation = value(.orientation, orientation)
+        requestCount = value(.requestCount, requestCount)
+        clients = value(.clients, clients)
+        recentRequests = value(.recentRequests, recentRequests)
+        errors = value(.errors, errors)
+        log = value(.log, log)
+    }
 }
 
 enum StatusStore {

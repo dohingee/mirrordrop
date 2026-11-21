@@ -34,6 +34,9 @@ final class CastManager: NSObject, ObservableObject {
     @Published private(set) var events: [String] = []
     /// Receiver's live seekable range end and playback position (seconds), or nil when unknown.
     @Published private(set) var liveLag: (end: Double, position: Double)?
+    /// TV (Cast device) volume 0...1 and mute, as last reported by the device; nil when not connected.
+    @Published private(set) var tvVolume: Float?
+    @Published private(set) var tvMuted = false
     private(set) var sdkLog: [String] = []
     /// Per-broadcast secret path parts of every mirror URL sent, so diagnostics can hide them.
     private(set) var mirrorTokens: Set<String> = []
@@ -58,6 +61,24 @@ final class CastManager: NSObject, ObservableObject {
         lagTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             self?.refreshLiveLag()
         }
+    }
+
+    private var currentSession: GCKCastSession? {
+        GCKCastContext.sharedInstance().sessionManager.currentCastSession
+    }
+
+    /// Sets the TV's own volume (0...1), like the AirPlay volume slider.
+    func setTVVolume(_ volume: Float) {
+        guard let session = currentSession else { return }
+        let value = min(max(volume, 0), 1)
+        session.setDeviceVolume(value)
+        tvVolume = value
+    }
+
+    func setTVMuted(_ muted: Bool) {
+        guard let session = currentSession else { return }
+        session.setDeviceMuted(muted)
+        tvMuted = muted
     }
 
     private var remoteClient: GCKRemoteMediaClient? {
@@ -163,6 +184,13 @@ final class CastManager: NSObject, ObservableObject {
         }
         let session = context.sessionManager.currentCastSession
         deviceName = session?.device.friendlyName
+        if isConnected, let session {
+            tvVolume = session.currentDeviceVolume
+            tvMuted = session.currentDeviceMuted
+        } else {
+            tvVolume = nil
+            tvMuted = false
+        }
         // Attach to the session's media client here (cast-state changes cover start and resume).
         if let client = session?.remoteMediaClient, client !== observedClient {
             observedClient?.remove(self)
@@ -262,6 +290,13 @@ extension CastManager: GCKSessionManagerListener {
     func sessionManager(_ sessionManager: GCKSessionManager, didEnd session: GCKSession, withError error: Error?) {
         addEvent("연결 끊김" + (error.map { ": \($0.localizedDescription)" } ?? ""))
         refreshState()
+    }
+
+    /// The TV's volume or mute changed (from this app, the TV remote, or another sender).
+    func sessionManager(_ sessionManager: GCKSessionManager, session: GCKSession,
+                        didReceiveDeviceVolume volume: Float, muted: Bool) {
+        tvVolume = volume
+        tvMuted = muted
     }
 
     func sessionManager(_ sessionManager: GCKSessionManager, didFailToStart session: GCKSession, withError error: Error) {
