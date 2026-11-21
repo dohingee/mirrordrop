@@ -338,9 +338,9 @@ struct ContentView: View {
                   systemImage: "eye")
             Label("저작권 보호 영상(넷플릭스 등)은 TV에 검게 나옵니다.", systemImage: "film")
             Label("화면은 집 Wi-Fi 안에서만 TV로 갑니다. 인터넷으로 나가지 않아요.", systemImage: "house")
-            Label("iPhone이 잠기면 TV 화면도 멈출 수 있어요. 오래 볼 때는 설정 → 디스플레이 및 밝기 → 자동 잠금을 '안 함'으로 바꾸세요.",
+            Label("iPhone이 잠기면 TV 화면도 멈출 수 있어요. 오래 볼 때는 설정 → 디스플레이 및 밝기 → 자동 잠금을 '안 함'으로 바꾸세요. (저전력 모드가 켜져 있으면 바꿀 수 없어요.)",
                   systemImage: "lock")
-            Label("유튜브처럼 앱 안에 Cast 버튼이 있으면 그 버튼을 쓰세요. 폰을 잠그거나 다른 앱으로 가도 TV에서 계속 나와요.",
+            Label("유튜브처럼 앱 안에 TV 전송(Cast) 버튼이 있으면 그 버튼을 쓰세요. 폰을 잠그거나 다른 앱으로 가도 TV에서 계속 나와요.",
                   systemImage: "play.tv")
         }
         .font(.footnote)
