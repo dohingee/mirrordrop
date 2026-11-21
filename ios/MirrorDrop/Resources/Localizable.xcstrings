@@ -305,18 +305,18 @@
         }
       }
     },
-    "**iPhone이 잠기면 TV 보내기가 끝나요.** 알림을 허용했다면 \"TV 보내기가 멈췄어요\" 알림이 와요. 알림을 누르고 ② 버튼으로 다시 시작하세요." : {
+    "**iPhone이 잠기면 TV 보내기가 끝나요.** 알림을 허용했다면 \"TV 보내기가 끝났어요\" 알림이 와요. 알림을 누르고 ② 버튼으로 다시 시작하세요." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**Sending ends when the iPhone locks.** If you allowed notifications, you get a \"Sending to TV stopped\" alert. Tap it and start again with the ② button."
+            "value" : "**Sending ends when the iPhone locks.** If you allowed notifications, you get a \"Sending to TV ended\" alert. Tap it and start again with the ② button."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "**iPhone이 잠기면 TV 보내기가 끝나요.** 알림을 허용했다면 \"TV 보내기가 멈췄어요\" 알림이 와요. 알림을 누르고 ② 버튼으로 다시 시작하세요."
+            "value" : "**iPhone이 잠기면 TV 보내기가 끝나요.** 알림을 허용했다면 \"TV 보내기가 끝났어요\" 알림이 와요. 알림을 누르고 ② 버튼으로 다시 시작하세요."
           }
         }
       }
@@ -765,6 +765,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "TV 버튼을 눌러 화면을 보낼 TV를 고르세요. 화면은 준비됐어요."
+          }
+        }
+      }
+    },
+    "TV 보내기가 끝났어요" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending to TV ended"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TV 보내기가 끝났어요"
           }
         }
       }
@@ -1665,22 +1681,6 @@
         }
       }
     },
-    "iPhone이 잠기면 TV 보내기가 끝나요. 눌러서 다시 시작하세요." : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sending to the TV ends when your iPhone locks. Tap to start again."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "iPhone이 잠기면 TV 보내기가 끝나요. 눌러서 다시 시작하세요."
-          }
-        }
-      }
-    },
     "iPhone이 잠기면 TV 보내기가 끝나요. 오래 볼 때는 설정 → 디스플레이 및 밝기 → 자동 잠금을 '안 함'으로 바꾸세요. (저전력 모드가 켜져 있으면 바꿀 수 없어요.)" : {
       "localizations" : {
         "en" : {
@@ -2189,6 +2189,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "다시 보낸 때: 첫 화면 뒤 %@초"
+          }
+        }
+      }
+    },
+    "다시 보려면 눌러서 시작하세요." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap to start again."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다시 보려면 눌러서 시작하세요."
           }
         }
       }

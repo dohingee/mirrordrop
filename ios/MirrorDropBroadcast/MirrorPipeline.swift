@@ -22,8 +22,8 @@ final class MirrorPipeline: HLSSegmenterDelegate {
     private var audio: AudioTrack?
     private var observingAudioOutput = false
     private var timer: DispatchSourceTimer?
-    /// "TV 보내기가 멈췄어요" notification: fires if the extension dies without a callback, or when the
-    /// broadcast finished because the iPhone locked (StopAlertArmer). Its lines are published at once:
+    /// "TV 보내기가 끝났어요" notification: fires if the extension dies without a callback, or soon after
+    /// the broadcast finished unless the user stopped it from MirrorDrop (StopAlertArmer). Its lines are published at once:
     /// after the broadcast finished no tick flushes the status any more.
     private lazy var stopAlert = StopAlertArmer(queue: queue, log: { [status] in
         status.log($0)
@@ -148,8 +148,8 @@ final class MirrorPipeline: HLSSegmenterDelegate {
         stopObservingAudioOutput()
         queue.sync {
             running = false
-            // First, so the alert is decided even if the process ends soon after this call: removed for a
-            // user stop, scheduled when the iPhone is locked (logs "broadcast finished (locked=…)").
+            // First, so the alert is decided even if the process ends soon after this call (it does within
+            // about a second): removed for a stop from MirrorDrop, otherwise scheduled ("broadcast finished: …").
             stopAlert.finish()
             timer?.cancel()
             timer = nil

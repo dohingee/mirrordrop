@@ -137,6 +137,8 @@ final class AudioTrack {
         let owner = ObjectIdentifier(segmenter)
         if timelineOwner == owner, timeline != nil { return true }
         guard segmenter.acceptsAudio else { return false }
+        // On the 48 kHz grid (SegmentGrid), so the track starts exactly with the video and every
+        // segment boundary falls on a whole sample (and, with the grid length, a whole AAC frame).
         let start = segmenter.sessionStartTime
         timeline = AudioTimeline(start: start.seconds)
         timelineStart = start

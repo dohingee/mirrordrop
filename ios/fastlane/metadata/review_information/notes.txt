@@ -12,7 +12,7 @@ HOW IT WORKS
 
 PERMISSIONS
 - Local Network: to find Google Cast devices (Bonjour _googlecast._tcp) and let the TV fetch the stream. Asked when the user first looks for a TV.
-- Notifications (optional): one local alert, "TV 보내기가 멈췄어요" (Sending stopped), when iOS ends the broadcast (e.g. the iPhone locks). Asked at the first broadcast. No remote push.
+- Notifications (optional): one local alert, "TV 보내기가 끝났어요" (Sending to TV ended), when sending ends other than by MirrorDrop's stop button (e.g. lock). Asked at the first broadcast. No remote push.
 - No background modes. A short finite-length task (beginBackgroundTask) only finishes the play request if the user leaves right after starting.
 
 ADS (Google AdMob)

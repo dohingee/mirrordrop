@@ -28,12 +28,19 @@ enum LatencyPreset: String, CaseIterable, Identifiable {
         }
     }
 
-    var segmentSeconds: Double {
+    /// The length the preset aims at (and its label shows).
+    var nominalSegmentSeconds: Double {
         switch self {
         case .l0, .l1, .l2: return 1.0
         case .l3: return 0.5
         }
     }
+
+    /// Actual segment length: the nominal one moved onto the grid both tracks share
+    /// (`SegmentGrid`), so each segment holds whole video frames and whole AAC frames.
+    /// L3: 16/30 s = 0.5333 s (16 frames, 25 AAC frames); L0-L2: 1.0667 s. Build 17 used exactly
+    /// 0.5 s (23.4375 AAC frames) and the TV sound clicked about every segment (docs/PLAN.md "5. 소리").
+    var segmentSeconds: Double { SegmentGrid.alignedSeconds(near: nominalSegmentSeconds) }
 
     /// Segments listed in the media playlist.
     var playlistWindow: Int {
@@ -47,8 +54,7 @@ enum LatencyPreset: String, CaseIterable, Identifiable {
     /// Segments kept in memory (a few more than the playlist, for slow clients).
     var storedSegments: Int {
         switch self {
-        case .l0: return 7
-        case .l1, .l2: return 6
+        case .l0, .l1, .l2: return 6
         case .l3: return 10
         }
     }
@@ -57,7 +63,7 @@ enum LatencyPreset: String, CaseIterable, Identifiable {
     var startOffset: Double? {
         switch self {
         case .l2: return -2.0
-        // L3: start 3 s (6 segments, the whole first playlist) behind the newest segment. Build 16 startup trace: the TV
+        // L3: start 3 s (inside the 6-segment, 3.2 s first playlist) behind the newest segment. Build 16 startup trace: the TV
         // started only 1.5 s behind (seg2 while seg5 was newest) and fetched every segment about
         // 0.5 s after it appeared, so it had almost no buffer and stalled until it drifted back to
         // its steady ~2.4 s lag. Starting about there should skip that settling. -3.0 rather than
@@ -68,7 +74,8 @@ enum LatencyPreset: String, CaseIterable, Identifiable {
     }
 
     /// Segments to wait for before the app tells the TV to play: enough for 3 s of video, so the
-    /// first playlist the TV sees already meets the 3 x target duration rule (3 at 1 s, 6 at 0.5 s).
+    /// first playlist the TV sees already meets the 3 x target duration rule (3 at 1.0667 s,
+    /// 6 at 0.5333 s = 3.2 s).
     var segmentsBeforeReady: Int {
         min(playlistWindow, Int((3.0 / segmentSeconds).rounded(.up)))
     }

@@ -10,6 +10,9 @@ struct MediaSegment: Equatable {
     var discontinuitySequence = 0
     /// Which init segment (EXT-X-MAP) this segment needs; changes only after a discontinuity.
     var initVersion = 0
+    /// Seconds from the first segment of the stream to this one's start (set by SegmentRing), so
+    /// EXTINF can be rounded without the rounding piling up (`HLSPlaylist.extinfSeconds`).
+    var start: Double? = nil
 }
 
 /// Keeps only the newest `capacity` segments so memory stays bounded.
@@ -18,6 +21,8 @@ struct SegmentRing {
     private(set) var items: [MediaSegment] = []
     private(set) var nextSequence = 0
     private(set) var discontinuityCount = 0
+    /// Sum of all appended durations (the next segment's `start`).
+    private(set) var elapsed: Double = 0
 
     init(capacity: Int) {
         precondition(capacity > 0)
@@ -29,7 +34,8 @@ struct SegmentRing {
         if discontinuity { discontinuityCount += 1 }
         let segment = MediaSegment(sequence: nextSequence, duration: duration, data: data,
                                    discontinuity: discontinuity, discontinuitySequence: discontinuityCount,
-                                   initVersion: initVersion)
+                                   initVersion: initVersion, start: elapsed)
+        if duration.isFinite, duration > 0 { elapsed += duration }
         nextSequence += 1
         items.append(segment)
         if items.count > capacity {
@@ -125,7 +131,19 @@ enum HLSPlaylist {
     /// come out a little longer (1.033 s). Rounding up made the target 2, and players start about
     /// three target durations behind the live edge, so the delay doubled (about 6 s on a real TV).
     static func targetDuration(_ segments: [MediaSegment]) -> Int {
-        TargetDuration.rounded(segments.map(\.duration).max() ?? 1)
+        TargetDuration.rounded(segments.map(extinfSeconds).max() ?? 1)
+    }
+
+    /// The EXTINF value (milliseconds). Grid segments are 16/30 s = 0.53333… s, so rounding each
+    /// duration to 0.533 would make the playlist fall 1 ms behind the media every 3 segments, and a
+    /// player that places segments by summed EXTINF (Shaka in segments mode moves its timestamp
+    /// offset once they disagree by 1 ms) would shift the sound a little again and again. So the
+    /// segment's end and start on the stream timeline are rounded instead: the listed durations add
+    /// up to the real time within 1 ms however long the stream runs. Without `start`, the duration.
+    static func extinfSeconds(_ segment: MediaSegment) -> Double {
+        guard let start = segment.start, start.isFinite, segment.duration.isFinite else { return segment.duration }
+        let milliseconds = ((start + segment.duration) * 1000).rounded() - (start * 1000).rounded()
+        return milliseconds / 1000
     }
 
     /// Live (sliding window) media playlist. No EXT-X-ENDLIST.
@@ -160,7 +178,7 @@ enum HLSPlaylist {
                 mapVersion = segment.initVersion
                 lines.append("#EXT-X-MAP:URI=\"\(initSegmentName(version: mapVersion))\"")
             }
-            lines.append("#EXTINF:" + String(format: "%.3f", segment.duration) + ",")
+            lines.append("#EXTINF:" + String(format: "%.3f", extinfSeconds(segment)) + ",")
             lines.append(segmentName(segment.sequence))
         }
         return lines.joined(separator: "\n") + "\n"

@@ -59,50 +59,37 @@ final class StopAlertTests: XCTestCase {
         XCTAssertEqual(StopAlert.identifier, "mirrordrop.broadcast-stopped")
     }
 
-    // MARK: Lock check at finish (StopAlertFinish, LockProbe)
+    // MARK: When the broadcast finishes (StopAlertFinish)
 
-    func testLockedAtFinishFires() {
-        XCTAssertEqual(StopAlertFinish.action(probe: .locked, secondsSinceFinish: 0), .fire)
+    /// No tap on MirrorDrop's stop card: a lock or a stop from the red indicator in another app.
+    func testFinishWithoutUserStopFires() {
+        XCTAssertEqual(StopAlertFinish.action(userStopRequestedAt: nil, now: 1000), .fire)
     }
 
-    /// Readable at the end: removed like a user stop, but read again (the key outlives the lock ~10 s).
-    func testUnlockedAtFinishKeepsChecking() {
-        XCTAssertEqual(StopAlertFinish.action(probe: .unlocked, secondsSinceFinish: 0), .cancelAndProbeAgain)
-        XCTAssertEqual(StopAlertFinish.action(probe: .unlocked, secondsSinceFinish: 9.5), .cancelAndProbeAgain)
+    func testRecentUserStopSkips() {
+        XCTAssertEqual(StopAlertFinish.action(userStopRequestedAt: 995, now: 1000), .skipUserStop)
+        XCTAssertEqual(StopAlertFinish.action(userStopRequestedAt: 1000, now: 1000), .skipUserStop)
+        XCTAssertEqual(StopAlertFinish.action(userStopRequestedAt: 1000 - StopAlert.userStopWindow, now: 1000),
+                       .skipUserStop)
     }
 
-    /// The lock that ended the broadcast makes the probe fail within the window.
-    func testLockFoundLaterFires() {
-        XCTAssertEqual(StopAlertFinish.action(probe: .locked, secondsSinceFinish: 10.2), .fire)
+    /// A tap long ago (an earlier broadcast, or the sheet was cancelled) does not hide the alert.
+    func testOldUserStopFires() {
+        XCTAssertEqual(StopAlertFinish.action(userStopRequestedAt: 1000 - StopAlert.userStopWindow - 0.1, now: 1000),
+                       .fire)
+        XCTAssertEqual(StopAlertFinish.action(userStopRequestedAt: 0, now: 1000), .fire)
     }
 
-    /// Still readable after the window: the user stopped it.
-    func testStillUnlockedAfterWindowCancels() {
-        XCTAssertEqual(StopAlertFinish.action(probe: .unlocked, secondsSinceFinish: StopAlert.lockProbeWindow), .cancel)
+    /// A time in the future (clock set back after the tap) does not count.
+    func testFutureUserStopFires() {
+        XCTAssertEqual(StopAlertFinish.action(userStopRequestedAt: 1005, now: 1000), .fire)
     }
 
-    func testNoProbeCancels() {
-        XCTAssertEqual(StopAlertFinish.action(probe: .unknown, secondsSinceFinish: 0), .cancel)
-    }
-
-    /// The window covers the ~10 s key grace after a lock just before the finish.
-    func testWindowCoversKeyGrace() {
-        XCTAssertGreaterThan(StopAlert.lockProbeWindow, 10)
-        XCTAssertLessThan(StopAlert.lockProbeInterval, 1)
-        XCTAssertGreaterThan(StopAlert.lockFireDelay, 0)
-    }
-
-    func testClassifyReadErrors() {
-        XCTAssertEqual(LockProbe.classify(nil), .unlocked)
-        let noPermission = NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoPermissionError)
-        XCTAssertEqual(LockProbe.classify(noPermission), .locked)
-        // As a locked read reports it: Cocoa error with an underlying POSIX EPERM.
-        let posix = NSError(domain: NSPOSIXErrorDomain, code: Int(EPERM))
-        let wrapped = NSError(domain: NSCocoaErrorDomain, code: NSFileReadUnknownError,
-                              userInfo: [NSUnderlyingErrorKey: posix])
-        XCTAssertEqual(LockProbe.classify(wrapped), .locked)
-        XCTAssertEqual(LockProbe.classify(NSError(domain: NSPOSIXErrorDomain, code: Int(EACCES))), .locked)
-        let missing = NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoSuchFileError)
-        XCTAssertEqual(LockProbe.classify(missing), .unknown)
+    /// Scheduled at once and short: iOS ends the extension within about a second of the finish, and the
+    /// app in front still has time to take it back; the window covers the system sheet.
+    func testFinishTimings() {
+        XCTAssertGreaterThan(StopAlert.finishFireDelay, 0)
+        XCTAssertLessThanOrEqual(StopAlert.finishFireDelay, 3)
+        XCTAssertGreaterThanOrEqual(StopAlert.userStopWindow, 10)
     }
 }

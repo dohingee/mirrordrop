@@ -81,7 +81,7 @@ struct AdHistory: Codable, Equatable {
     /// time, so one seen again (polling, relaunch) is not counted twice.
     var lastCountedStart: Date?
     var lastInterstitialAt: Date?
-    /// When the "TV 보내기가 멈췄어요" notification was opened.
+    /// When the "TV 보내기가 끝났어요" notification was opened.
     var stopAlertOpenedAt: Date?
 
     /// Counts a broadcast the first time its start time is seen. Also counts one that started while

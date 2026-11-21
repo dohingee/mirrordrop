@@ -14,7 +14,7 @@ struct ContentView: View {
     @AppStorage("volumeTipSeen") private var volumeTipSeen = false
     /// Slider position while dragging; the TV's reported volume otherwise.
     @State private var tvVolumeDraft: Float?
-    /// Briefly outlines the start card after the "TV 보내기가 멈췄어요" notification was tapped.
+    /// Briefly outlines the start card after the "TV 보내기가 끝났어요" notification was tapped.
     @State private var highlightStartCard = false
     /// Hides the "처음이세요?" row once the guide was opened (the footer link stays).
     @AppStorage(UsageGuideView.seenKey) private var usageGuideSeen = false
@@ -418,7 +418,11 @@ struct ContentView: View {
                     .accessibilityLabel("TV로 보내기 시작")
                 } else {
                     // On top so the system picker itself receives the tap (its button fills the card).
-                    BroadcastPickerView(glyphColor: .white)
+                    // While sending, a tap here means "stop from MirrorDrop": the extension then skips
+                    // the "sending ended" notification (Shared/StopAlert.swift StopAlertFinish).
+                    BroadcastPickerView(glyphColor: .white, onTap: {
+                        if monitor.isLive { stopAlert.noteUserStopTap() }
+                    })
                         .accessibilityLabel(monitor.isLive ? Text("보내기 멈추기") : Text("TV로 보내기 시작"))
                 }
             }

@@ -14,6 +14,9 @@ enum AppGroup {
     static let legacyKeys = ["includeAppAudio"]
     /// `LatencyPreset.rawValue`, read by the extension at broadcast start.
     static let latencyPresetKey = "latencyPreset"
+    /// Wall-clock time (`timeIntervalSince1970`) the user tapped MirrorDrop's stop card; the extension
+    /// then skips the "sending ended" alert (Shared/StopAlert.swift StopAlertFinish).
+    static let userStopRequestedKey = "userStopRequestedAt"
     /// Darwin notification posted by the extension whenever it writes a new status.
     static let statusNotification = "com.mirrordrop.app.status-changed"
 

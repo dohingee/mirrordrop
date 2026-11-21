@@ -61,6 +61,14 @@ final class CastManager: NSObject, ObservableObject {
     /// TV's status (MirrorCastCoordinator keeps the app awake in the background until neither is so).
     @Published private(set) var isLoadPending = false
     private var lagTimer: Timer?
+    /// Clearing the TV after a broadcast (Shared/BackgroundCastHold.swift MirrorStopPolicy): set by
+    /// MirrorCastCoordinator. `clearPending`: a broadcast ended and the TV was not seen cleared yet.
+    private var broadcastLive = false
+    private var clearPending = false
+    /// Token of the extension's last stream (App Group), so a relaunched app still knows it as ours.
+    private var extensionToken: String?
+    /// Wall-clock time of the last stop or status request for the clear; nil after the session (re)started.
+    private var lastClearRequestAt: Double?
 
     #if MD_DEMO
     /// App Store screenshots only (App/DemoMode.swift); never compiled into the shipped app.
@@ -276,22 +284,89 @@ final class CastManager: NSObject, ObservableObject {
         }
     }
 
-    /// Stops the TV when it is playing our mirror stream (the broadcast ended), leaving other media alone.
-    func stopMirror() {
-        guard loadedMirrorURL != nil else { return }
-        loadedMirrorURL = nil
-        stopMedia()
+    /// "TV 재생 멈추기" in 고급·진단: stops whatever the TV plays.
+    func stopMedia() {
+        let request = remoteClient?.stop()
+        request?.delegate = self
+        addEvent("stop request")
     }
 
-    func stopMedia() {
-        remoteClient?.stop()
-        addEvent("stop request")
+    // MARK: Clearing the TV after the broadcast (MirrorStopPolicy)
+
+    /// The broadcast ended (MirrorCastCoordinator saw it go from live to not live): clear the TV now if
+    /// the session works, or as soon as it does (resumed, reconnected, app back in front).
+    func requestMirrorClear() {
+        if !clearPending { addEvent("clear TV pending (broadcast ended)") }
+        clearPending = true
+        // The mirror is no longer on the TV once cleared; a new broadcast is sent again.
+        loadedMirrorURL = nil
+        updateMirrorClear(trigger: "broadcast ended")
+    }
+
+    /// Called by MirrorCastCoordinator on every update: whether a broadcast is live and the extension's
+    /// last stream URL (its token counts as ours too).
+    func setBroadcast(live: Bool, lastStreamURL: String?) {
+        broadcastLive = live
+        if let token = MirrorStopPolicy.token(of: lastStreamURL) { extensionToken = token }
+        updateMirrorClear(trigger: nil)
+    }
+
+    /// The app came to the front: the Cast socket may have died while it was suspended, so ask the TV
+    /// for its status (a dead socket makes the SDK reconnect) and stop our stream if it still runs.
+    func appBecameActive() {
+        lastClearRequestAt = nil
+        if !broadcastLive, isConnected, let client = remoteClient {
+            _ = client.requestStatus()
+        }
+        updateMirrorClear(trigger: "app active")
+    }
+
+    /// Decides and acts (MirrorStopPolicy). `trigger` only labels the Cast event.
+    private func updateMirrorClear(trigger: String?) {
+        let client = remoteClient
+        let status = client?.mediaStatus
+        let tv = mirrorTVStatus(status)
+        let now = Date().timeIntervalSince1970
+        let decision = MirrorStopPolicy.decide(
+            broadcastLive: broadcastLive, pending: clearPending, connected: isConnected && client != nil, tv: tv,
+            secondsSinceLastRequest: lastClearRequestAt.map { now - $0 })
+        switch decision {
+        case .none:
+            return
+        case .cancel:
+            clearPending = false
+            addEvent("clear TV dropped (broadcast live again)")
+        case .cleared:
+            clearPending = false
+            addEvent("TV cleared (\(status.map(describeForLog) ?? "no media"))")
+        case .askStatus:
+            lastClearRequestAt = now
+            _ = client?.requestStatus()
+            addEvent("clear TV: asking for TV status" + (trigger.map { " (\($0))" } ?? ""))
+        case .stop:
+            lastClearRequestAt = now
+            loadedMirrorURL = nil
+            let request = client?.stop()
+            request?.delegate = self
+            addEvent("stop request (clear TV" + (trigger.map { ", \($0)" } ?? "")
+                     + "; TV: \(status.map(describeForLog) ?? "-"))")
+        }
+    }
+
+    /// Receiver media in MirrorStopPolicy terms: ours only when its token is one we sent in this app run
+    /// or the extension's last one, so other media is never stopped.
+    private func mirrorTVStatus(_ status: GCKMediaStatus?) -> MirrorStopPolicy.TVStatus {
+        guard let status else { return .unknown }
+        guard let info = status.mediaInformation else { return .notOurs }
+        var tokens = mirrorTokens
+        if let extensionToken { tokens.insert(extensionToken) }
+        let content = info.contentURL?.absoluteString ?? info.contentID
+        return MirrorStopPolicy.isMirror(content, tokens: tokens) ? .ours(Self.phase(of: status)) : .notOurs
     }
 
     /// First path component of a stream URL (`/<token>/live.m3u8`), the per-broadcast secret.
     static func token(of url: URL) -> String? {
-        let parts = url.pathComponents.filter { $0 != "/" }
-        return parts.count >= 2 ? parts[0] : nil
+        MirrorStopPolicy.token(of: url.absoluteString)
     }
 
     @objc private func castStateDidChange(_ notification: Notification) {
@@ -316,7 +391,12 @@ final class CastManager: NSObject, ObservableObject {
         } else {
             noDevicesSince = nil
         }
+        let wasConnected = isConnected
         isConnected = connection == .connected
+        if isConnected, !wasConnected {
+            // New, resumed or reconnected session: a stop sent into the old (dead) socket may be lost.
+            lastClearRequestAt = nil
+        }
         if !isConnected {
             // The next connection (new, resumed or reconnected session) gets the mirror again, unless
             // the TV still plays it then (castMirror checks the receiver's status first).
@@ -339,6 +419,7 @@ final class CastManager: NSObject, ObservableObject {
             client.add(self)
             observedClient = client
         }
+        if isConnected, !wasConnected { updateMirrorClear(trigger: "session connected") }
     }
 
     /// "라이브 끝에서 X.X초 뒤" for diagnostics, with the raw values it came from.
@@ -509,6 +590,15 @@ extension CastManager: GCKSessionManagerListener {
         refreshState()
     }
 
+    /// The SDK resumed a suspended session (or reconnected after a socket error): the receiver may still
+    /// buffer a stream that ended meanwhile.
+    func sessionManager(_ sessionManager: GCKSessionManager, didResumeSession session: GCKSession) {
+        addEvent("session resumed: \(session.device.friendlyName ?? "?")")
+        lastClearRequestAt = nil
+        refreshState()
+        updateMirrorClear(trigger: "session resumed")
+    }
+
     func sessionManager(_ sessionManager: GCKSessionManager, didEnd session: GCKSession, withError error: Error?) {
         addEvent("session ended" + (error.map { ": \($0.localizedDescription)" } ?? ""))
         refreshState()
@@ -544,6 +634,8 @@ extension CastManager: GCKRemoteMediaClientListener {
         }
         // A PLAYING stretch between bufferings can be shorter than the 1 s timer.
         if mediaStatus.playerState == .playing { refreshLiveLag() }
+        // The TV still runs our stream after the broadcast ended (e.g. the first status after a resume).
+        updateMirrorClear(trigger: "TV status")
     }
 }
 

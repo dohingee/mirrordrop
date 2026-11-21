@@ -152,3 +152,75 @@ enum MirrorReloadPolicy {
         }
     }
 }
+
+/// Clearing the TV after the broadcast ended. Build 17 sent one stop request when the app noticed the
+/// end; the app had been suspended, the Cast socket had died meanwhile (GCKNSSLSocket -9805/-9806), so
+/// the request went nowhere and the TV kept buffering the dead stream for a minute. Now the end leaves
+/// a "clear the TV" intent, and the app (re)sends the stop whenever the receiver's media status shows
+/// one of OUR mirror streams while no broadcast is live: right away when the session is fine, after it
+/// resumed or reconnected otherwise, and when the app comes back to the front. Other media is never
+/// stopped. App side: CastManager.updateMirrorClear. Pure logic, tested in BackgroundCastHoldTests.
+enum MirrorStopPolicy {
+    /// The receiver's media in the terms that matter here.
+    enum TVStatus: Equatable {
+        /// No media status (yet): a new or resumed session, or none received since launch.
+        case unknown
+        /// Our mirror stream (its token is one we sent or the extension's last one) in this state.
+        case ours(PlaybackTrace.Phase)
+        /// No media, or media that is not ours.
+        case notOurs
+    }
+
+    enum Decision: Equatable {
+        case none
+        /// Send a stop request to the receiver.
+        case stop
+        /// The status is unknown while a clear is pending: ask the receiver for its status.
+        case askStatus
+        /// The TV no longer shows our stream: the pending clear is done.
+        case cleared
+        /// A broadcast is live again (it gets the new stream): drop the pending clear.
+        case cancel
+    }
+
+    /// At least this long between two requests (stop or status) for the same stream, unless the session
+    /// came back in between (then the throttle is reset): status updates while the TV still buffers
+    /// would send a stop each.
+    static let resendInterval: Double = 5
+
+    /// `pending`: a broadcast ended and the TV has not been seen cleared yet. `connected`: the Cast
+    /// session is connected (the socket may still turn out dead; the throttle and the next status
+    /// cover that). `secondsSinceLastRequest`: since the last stop or status request, nil when none
+    /// was sent since the session (re)started.
+    static func decide(broadcastLive: Bool, pending: Bool, connected: Bool, tv: TVStatus,
+                       secondsSinceLastRequest: Double?) -> Decision {
+        if broadcastLive { return pending ? .cancel : .none }
+        let throttled = secondsSinceLastRequest.map { $0 >= 0 && $0 < resendInterval } ?? false
+        switch tv {
+        case let .ours(phase):
+            // IDLE: the receiver stopped (by our request, the TV remote, or an error); nothing spins.
+            if phase == .idle { return pending ? .cleared : .none }
+            guard connected, !throttled else { return .none }
+            return .stop
+        case .notOurs:
+            return pending ? .cleared : .none
+        case .unknown:
+            guard pending, connected, !throttled else { return .none }
+            return .askStatus
+        }
+    }
+
+    /// Whether the receiver's content (its content URL, or the content ID it was loaded under) is one of
+    /// our mirror streams: `http://<ip>:<port>/<token>/live.m3u8` with a known token.
+    static func isMirror(_ content: String?, tokens: Set<String>) -> Bool {
+        guard let token = token(of: content) else { return false }
+        return tokens.contains(token)
+    }
+
+    /// First path component of a stream URL (`/<token>/live.m3u8`), the per-broadcast secret.
+    static func token(of content: String?) -> String? {
+        guard let content, let url = URL(string: content) else { return nil }
+        let parts = url.pathComponents.filter { $0 != "/" }
+        return parts.count >= 2 ? parts[0] : nil
+    }
+}

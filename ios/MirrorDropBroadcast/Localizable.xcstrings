@@ -1,18 +1,18 @@
 {
   "sourceLanguage" : "ko",
   "strings" : {
-    "TV 보내기가 멈췄어요" : {
+    "TV 보내기가 끝났어요" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sending to TV stopped"
+            "value" : "Sending to TV ended"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "TV 보내기가 멈췄어요"
+            "value" : "TV 보내기가 끝났어요"
           }
         }
       }
@@ -49,18 +49,18 @@
         }
       }
     },
-    "iPhone이 잠기면 TV 보내기가 끝나요. 눌러서 다시 시작하세요." : {
+    "다시 보려면 눌러서 시작하세요." : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sending to the TV ends when your iPhone locks. Tap to start again."
+            "value" : "Tap to start again."
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPhone이 잠기면 TV 보내기가 끝나요. 눌러서 다시 시작하세요."
+            "value" : "다시 보려면 눌러서 시작하세요."
           }
         }
       }

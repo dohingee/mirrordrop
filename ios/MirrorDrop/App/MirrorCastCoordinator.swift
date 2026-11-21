@@ -12,6 +12,11 @@ import UIKit
 /// about 30 s, iOS decides) and ends it as soon as the TV answered, the broadcast ended or iOS
 /// asks. No background mode (docs/SPEC.md 8). Decisions: Shared/BackgroundCastHold.swift.
 ///
+/// Clearing the TV: the end of the broadcast leaves a "clear the TV" intent in CastManager, which
+/// sends the stop when the Cast session works and again after it resumed or reconnected (build 17:
+/// a single stop sent into a socket that died while the app was suspended left the TV buffering).
+/// Decisions: MirrorStopPolicy in Shared/BackgroundCastHold.swift.
+///
 /// Limit: a suspended app runs no code. A new address after a Wi-Fi change (`urlRevision`) while
 /// the app is already suspended is only sent when the user returns to the app; this helps only
 /// when the app is still awake (it left the front moments ago, or still holds its task).
@@ -49,6 +54,8 @@ final class MirrorCastCoordinator: NSObject {
                            name: UIApplication.didEnterBackgroundNotification, object: nil)
         center.addObserver(self, selector: #selector(willEnterForeground),
                            name: UIApplication.willEnterForegroundNotification, object: nil)
+        center.addObserver(self, selector: #selector(didBecomeActive),
+                           name: UIApplication.didBecomeActiveNotification, object: nil)
         update()
     }
 
@@ -65,6 +72,13 @@ final class MirrorCastCoordinator: NSObject {
         update()
     }
 
+    @objc private func didBecomeActive() {
+        // Fresh status first, then let CastManager check whether the TV still runs an ended stream.
+        monitor.reload()
+        update()
+        cast.appBecameActive()
+    }
+
     private func scheduleUpdate() {
         guard !updateScheduled else { return }
         updateScheduled = true
@@ -76,8 +90,18 @@ final class MirrorCastCoordinator: NSObject {
 
     private func update() {
         let live = monitor.isLive
-        // Broadcast ended or the extension died: clear the TV instead of leaving it spinning.
-        if wasLive, !live { cast.stopMirror() }
+        cast.setBroadcast(live: live, lastStreamURL: monitor.status.url)
+        if wasLive, !live {
+            // Broadcast ended or the extension died: clear the TV instead of leaving it spinning (sent
+            // now, or once the Cast session works again).
+            cast.requestMirrorClear()
+            // Seen while MirrorDrop is in front: the user is here (stopped from the card, Control Center
+            // or the sheet), so take back the "sending ended" alert the extension just scheduled (it fires
+            // about 2 s after the end). Not after a lock: the app is no longer active then.
+            if UIApplication.shared.applicationState == .active {
+                StopAlertCenter.shared.clearAll()
+            }
+        }
         wasLive = live
 
         // Automatic cast: a new ready stream, revision (Wi-Fi change) or connection. CastManager

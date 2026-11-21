@@ -15,7 +15,7 @@ YOUR CHOICE OF SOUND
 - Change the TV volume or mute it from the app once connected.
 
 TELLS YOU WHEN IT STOPS
-- iOS ends screen sharing when the iPhone locks. Allow notifications and MirrorDrop tells you when sending stopped; tap the alert to start again.
+- iOS ends screen sharing when the iPhone locks. Allow notifications and MirrorDrop tells you when sending ended; tap the alert to start again.
 
 GOOD TO KNOW
 - Works with TVs and streaming sticks that support Google Cast. The iPhone and the TV must be on the same Wi-Fi (TVs cannot be found on guest Wi-Fi or with AP/client isolation).

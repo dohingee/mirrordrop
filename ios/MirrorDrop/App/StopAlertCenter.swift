@@ -1,7 +1,7 @@
 import Foundation
 import UserNotifications
 
-/// App side of the "TV 보내기가 멈췄어요" notification (the extension schedules it, see
+/// App side of the "TV 보내기가 끝났어요" notification (the extension schedules it, see
 /// MirrorDropBroadcast/StopAlertArmer.swift): asks for permission, hides it while the app is in front
 /// (the main screen shows the same thing), and on a tap brings the user to the start card.
 final class StopAlertCenter: NSObject, ObservableObject, UNUserNotificationCenterDelegate {
@@ -26,10 +26,24 @@ final class StopAlertCenter: NSObject, ObservableObject, UNUserNotificationCente
         }
     }
 
-    /// Removes a shown "stopped" notification. Never removes the pending one: during a broadcast that
+    /// Removes a shown "ended" notification. Never removes the pending one: during a broadcast that
     /// is the extension's dead-man alert.
     func clearDelivered() {
         UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [StopAlert.identifier])
+    }
+
+    /// The broadcast ended while the app is in front: removes the pending alert the extension scheduled at
+    /// the end, and a shown one. Only when no broadcast is live (MirrorCastCoordinator).
+    func clearAll() {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [StopAlert.identifier])
+        center.removeDeliveredNotifications(withIdentifiers: [StopAlert.identifier])
+    }
+
+    /// The user tapped the main screen's stop card while sending (it opens the system sheet whose "Stop
+    /// Broadcast" ends it): the extension then skips the alert (Shared/StopAlert.swift StopAlertFinish).
+    func noteUserStopTap() {
+        UserStopMark.record()
     }
 
     // MARK: UNUserNotificationCenterDelegate

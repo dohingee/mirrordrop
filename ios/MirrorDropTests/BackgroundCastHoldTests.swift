@@ -121,3 +121,77 @@ final class MirrorReloadPolicyTests: XCTestCase {
     }
 }
 
+
+final class MirrorStopPolicyTests: XCTestCase {
+    private func decide(live: Bool = false, pending: Bool = true, connected: Bool = true,
+                        tv: MirrorStopPolicy.TVStatus, since: Double? = nil) -> MirrorStopPolicy.Decision {
+        MirrorStopPolicy.decide(broadcastLive: live, pending: pending, connected: connected, tv: tv,
+                                secondsSinceLastRequest: since)
+    }
+
+    /// The broadcast ended and the TV still plays or buffers our stream: stop it.
+    func testStopsOurStreamAfterTheEnd() {
+        XCTAssertEqual(decide(tv: .ours(.playing)), .stop)
+        XCTAssertEqual(decide(tv: .ours(.buffering)), .stop)
+        XCTAssertEqual(decide(tv: .ours(.loading)), .stop)
+        XCTAssertEqual(decide(tv: .ours(.paused)), .stop)
+        XCTAssertEqual(decide(tv: .ours(.unknown)), .stop)
+    }
+
+    /// Build 17 device: the app came back, the TV still buffered our dead stream (no pending intent
+    /// after a relaunch, or a resumed session): stopped too.
+    func testStopsOurStreamWithoutPendingIntent() {
+        XCTAssertEqual(decide(pending: false, tv: .ours(.buffering)), .stop)
+    }
+
+    /// Session suspended, reconnecting or gone: keep the intent, send once it is back.
+    func testWaitsForTheSession() {
+        XCTAssertEqual(decide(connected: false, tv: .ours(.buffering)), .none)
+        XCTAssertEqual(decide(connected: false, tv: .unknown), .none)
+        XCTAssertEqual(decide(connected: true, tv: .ours(.buffering)), .stop)
+    }
+
+    /// The stop went into a dead socket: the next status (TV still buffering) sends it again, but not
+    /// on every status update.
+    func testResendsAfterInterval() {
+        XCTAssertEqual(decide(tv: .ours(.buffering), since: 1), .none)
+        XCTAssertEqual(decide(tv: .ours(.buffering), since: MirrorStopPolicy.resendInterval), .stop)
+        // A clock that went backwards does not block.
+        XCTAssertEqual(decide(tv: .ours(.buffering), since: -3), .stop)
+    }
+
+    func testClearedWhenTVIdleOrOtherMedia() {
+        XCTAssertEqual(decide(tv: .ours(.idle)), .cleared)
+        XCTAssertEqual(decide(tv: .notOurs), .cleared)
+        XCTAssertEqual(decide(pending: false, tv: .ours(.idle)), .none)
+        XCTAssertEqual(decide(pending: false, tv: .notOurs), .none)
+    }
+
+    /// Never stops media that is not ours.
+    func testNeverStopsOtherMedia() {
+        XCTAssertNotEqual(decide(tv: .notOurs), .stop)
+        XCTAssertNotEqual(decide(pending: false, tv: .notOurs), .stop)
+    }
+
+    func testAsksForStatusWhenUnknown() {
+        XCTAssertEqual(decide(tv: .unknown), .askStatus)
+        XCTAssertEqual(decide(tv: .unknown, since: 1), .none)
+        XCTAssertEqual(decide(pending: false, tv: .unknown), .none)
+    }
+
+    /// A new broadcast is live: nothing is stopped, a pending clear is dropped.
+    func testLiveBroadcastCancels() {
+        XCTAssertEqual(decide(live: true, tv: .ours(.playing)), .cancel)
+        XCTAssertEqual(decide(live: true, pending: false, tv: .ours(.playing)), .none)
+    }
+
+    func testMirrorIdentification() {
+        let tokens: Set<String> = ["abc123"]
+        XCTAssertTrue(MirrorStopPolicy.isMirror("http://192.168.0.5:8765/abc123/live.m3u8", tokens: tokens))
+        XCTAssertFalse(MirrorStopPolicy.isMirror("http://192.168.0.5:8765/other/live.m3u8", tokens: tokens))
+        XCTAssertFalse(MirrorStopPolicy.isMirror("https://example.com/abc123", tokens: tokens))
+        XCTAssertFalse(MirrorStopPolicy.isMirror(nil, tokens: tokens))
+        XCTAssertFalse(MirrorStopPolicy.isMirror("not a url", tokens: tokens))
+        XCTAssertEqual(MirrorStopPolicy.token(of: "http://10.0.0.2:8765/t0k/live.m3u8"), "t0k")
+    }
+}

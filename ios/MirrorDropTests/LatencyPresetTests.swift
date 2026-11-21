@@ -6,10 +6,10 @@ final class LatencyPresetTests: XCTestCase {
     }
 
     /// RFC 8216 6.2.2: a live playlist must cover at least three target durations.
-    /// Checked with nominal durations and with keyframe-stretched ones (1.033 s, 0.533 s).
+    /// Checked with the grid durations and with ones a frame longer (a late cut).
     func testWindowCoversThreeTargetDurations() {
         for preset in LatencyPreset.allCases {
-            let stretched = preset.segmentSeconds == 1.0 ? 1.033 : 0.533
+            let stretched = preset.segmentSeconds + 1.0 / Double(SegmentGrid.frameRate)
             for duration in [preset.segmentSeconds, stretched] {
                 let window = segments(count: preset.playlistWindow, duration: duration)
                 let target = HLSPlaylist.targetDuration(window)
@@ -17,6 +17,15 @@ final class LatencyPresetTests: XCTestCase {
                 let total = window.reduce(0) { $0 + $1.duration }
                 XCTAssertGreaterThanOrEqual(total, 3 * Double(target), "\(preset.code) at \(duration) s")
             }
+        }
+    }
+
+    /// Every preset's segments hold whole video frames and whole AAC frames, near the nominal length.
+    func testEveryPresetIsOnTheSharedGrid() {
+        for preset in LatencyPreset.allCases {
+            XCTAssertTrue(SegmentGrid.isAligned(seconds: preset.segmentSeconds), preset.code)
+            XCTAssertLessThan(abs(preset.segmentSeconds - preset.nominalSegmentSeconds), 0.1, preset.code)
+            XCTAssertEqual(TargetDuration(segmentSeconds: preset.segmentSeconds).value, 1, preset.code)
         }
     }
 
@@ -34,7 +43,10 @@ final class LatencyPresetTests: XCTestCase {
     func testDefaultIsL3() {
         let preset = LatencyPreset.default
         XCTAssertEqual(preset, .l3)
-        XCTAssertEqual(preset.segmentSeconds, 0.5)
+        XCTAssertEqual(preset.nominalSegmentSeconds, 0.5)
+        // 16 video frames = 25 AAC frames (build 17's exact 0.5 s clicked every segment).
+        XCTAssertEqual(preset.segmentSeconds, 16.0 / 30.0, accuracy: 1e-12)
+        XCTAssertEqual(SegmentGrid.framesPerSegment(seconds: preset.segmentSeconds), 16)
         XCTAssertEqual(preset.playlistWindow, 6)
         XCTAssertEqual(preset.storedSegments, 10)
         XCTAssertEqual(preset.startOffset, -3.0)

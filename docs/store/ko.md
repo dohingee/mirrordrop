@@ -53,7 +53,7 @@ MirrorDrop은 iPhone 화면을 같은 Wi-Fi에 있는 TV로 그대로 보여 주
 · TV에 연결되면 앱에서 TV 볼륨과 음소거를 바꿀 수 있어요.
 
 ■ 멈추면 알려 드려요
-· iPhone이 잠기면 iOS가 화면 공유를 끝내요. 알림을 허용하면 "TV 보내기가 멈췄어요"라고 알려 드리고, 알림을 누르면 바로 다시 시작할 수 있어요.
+· iPhone이 잠기면 iOS가 화면 공유를 끝내요. 알림을 허용하면 "TV 보내기가 끝났어요"라고 알려 드리고, 알림을 누르면 바로 다시 시작할 수 있어요.
 
 ■ 꼭 알아 두세요
 · Google Cast를 지원하는 TV와 스틱에서 쓸 수 있어요. iPhone과 TV가 같은 Wi-Fi에 있어야 해요(게스트 Wi-Fi·AP 격리에서는 TV를 찾지 못해요).
@@ -119,7 +119,7 @@ HOW IT WORKS
 
 PERMISSIONS
 - Local Network: to find Google Cast devices (Bonjour _googlecast._tcp) and let the TV fetch the stream. Asked when the user first looks for a TV.
-- Notifications (optional): one local alert, "TV 보내기가 멈췄어요" (Sending stopped), when iOS ends the broadcast (e.g. the iPhone locks). Asked at the first broadcast. No remote push.
+- Notifications (optional): one local alert, "TV 보내기가 끝났어요" (Sending to TV ended), when sending ends other than by MirrorDrop's stop button (e.g. lock). Asked at the first broadcast. No remote push.
 - No background modes. A short finite-length task (beginBackgroundTask) only finishes the play request if the user leaves right after starting.
 
 ADS (Google AdMob)

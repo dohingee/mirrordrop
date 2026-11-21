@@ -16,9 +16,11 @@ final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
     struct Config {
         var width = 1280
         var height = 720
-        var frameRate = 30
+        var frameRate = SegmentGrid.frameRate
         var bitRate = 2_500_000
-        var segmentSeconds = 1.0
+        /// Should be on the shared grid (`SegmentGrid.alignedSeconds`, as LatencyPreset gives it);
+        /// it is used as a whole number of video frames.
+        var segmentSeconds = SegmentGrid.alignedSeconds(near: 1.0)
         /// The audio track is always there (silence when there is no sound or the output is the
         /// phone), so the TV setting can change live. See AudioTrack and docs/PLAN.md "5. 소리".
         var includeAudio = true
@@ -31,11 +33,29 @@ final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
     private var adaptor: AVAssetWriterInputPixelBufferAdaptor?
     private var audioInput: AVAssetWriterInput?
     private var sessionStart = CMTime.invalid
-    private var lastVideoTime = CMTime.invalid
     private var failed = false
+    /// Video frame times on the 1/frameRate grid (see SegmentGrid.swift for why).
+    private var frameGrid: VideoFrameGrid
+    /// Grid ticks (SegmentGrid.timescale) per video frame: 1600 at 30 fps and 48 kHz.
+    private let ticksPerFrame: Int64
+    /// The last frame the encoder took, repeated on a segment boundary the frames skipped over.
+    /// It is the same buffer MirrorPipeline keeps as `lastFrame`, so it adds no pool buffer normally.
+    private var lastPixelBuffer: CVPixelBuffer?
 
     init(config: Config) {
         self.config = config
+        frameGrid = VideoFrameGrid(framesPerSegment: SegmentGrid.framesPerSegment(
+            seconds: config.segmentSeconds, frameRate: config.frameRate))
+        ticksPerFrame = Int64(max(1, SegmentGrid.timescale / max(1, config.frameRate)))
+    }
+
+    /// Exact segment interval on the grid (16 frames = 25600/48000 s for L3).
+    private var segmentInterval: CMTime {
+        CMTime(value: Int64(frameGrid.framesPerSegment) * ticksPerFrame, timescale: CMTimeScale(SegmentGrid.timescale))
+    }
+
+    private func gridTime(_ index: Int64) -> CMTime {
+        CMTime(value: sessionStart.value + index * ticksPerFrame, timescale: sessionStart.timescale)
     }
 
     var isRunning: Bool { writer?.status == .writing }
@@ -46,20 +66,39 @@ final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
     /// True once the writer runs with an audio track (audio before that is not taken).
     var acceptsAudio: Bool { writer?.status == .writing && audioInput != nil && sessionStart.isValid }
 
-    /// Returns false when the frame was not taken (encoder busy, out-of-order time, or failure).
+    /// Returns false when the frame was not taken (encoder busy, out-of-order time, no free grid
+    /// slot near its time, or failure). The frame is written at its 1/frameRate grid time, not `time`.
     func appendVideo(_ pixelBuffer: CVPixelBuffer, at time: CMTime) -> Bool {
-        if writer == nil, !failed { start(at: time) }
-        guard let writer, writer.status == .writing, let videoInput, let adaptor else {
+        // The session starts on the grid's time scale so every frame, audio sample and segment
+        // boundary is an exact whole number of ticks.
+        if writer == nil, !failed {
+            start(at: time.convertScale(CMTimeScale(SegmentGrid.timescale), method: .roundHalfAwayFromZero))
+        }
+        guard let writer, writer.status == .writing, let videoInput, let adaptor, sessionStart.isValid else {
             reportFailureIfNeeded()
             return false
         }
-        if lastVideoTime.isValid, time <= lastVideoTime { return false }
+        let exact = (time - sessionStart).seconds * Double(config.frameRate)
+        guard let placement = frameGrid.place(exactIndex: exact) else { return false }
         guard videoInput.isReadyForMoreMediaData else { return false }
-        guard adaptor.append(pixelBuffer, withPresentationTime: time) else {
+        // Repeat the previous frame on any segment boundary this frame skips, so the writer cuts there.
+        if let previous = lastPixelBuffer {
+            for boundary in placement.fillers {
+                guard videoInput.isReadyForMoreMediaData else { break }
+                guard adaptor.append(previous, withPresentationTime: gridTime(boundary)) else {
+                    reportFailureIfNeeded()
+                    return false
+                }
+                frameGrid.didAppend(boundary)
+            }
+        }
+        guard videoInput.isReadyForMoreMediaData else { return false }
+        guard adaptor.append(pixelBuffer, withPresentationTime: gridTime(placement.index)) else {
             reportFailureIfNeeded()
             return false
         }
-        lastVideoTime = time
+        frameGrid.didAppend(placement.index)
+        lastPixelBuffer = pixelBuffer
         return true
     }
 
@@ -76,6 +115,7 @@ final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
     }
 
     func finish(completion: @escaping () -> Void) {
+        lastPixelBuffer = nil
         guard let writer, writer.status == .writing else { completion(); return }
         videoInput?.markAsFinished()
         audioInput?.markAsFinished()
@@ -86,16 +126,20 @@ final class HLSSegmenter: NSObject, AVAssetWriterDelegate {
         guard let contentType = UTType(AVFileType.mp4.rawValue) else { fail("mp4 UTType missing"); return }
         let writer = AVAssetWriter(contentType: contentType)
         writer.outputFileTypeProfile = .mpeg4AppleHLS
-        writer.preferredOutputSegmentInterval = CMTime(seconds: config.segmentSeconds, preferredTimescale: 1000)
+        // Exact (16 frames = 25 AAC frames for L3). In encoding mode the writer makes the frame that
+        // reaches the interval a sync sample and cuts there (WWDC 2020 "Author fragmented MPEG-4
+        // content with AVAssetWriter"); with frames on the grid that frame sits exactly on it.
+        let interval = segmentInterval
+        writer.preferredOutputSegmentInterval = interval
         writer.initialSegmentStartTime = time
         writer.delegate = self
 
         let compression: [String: Any] = [
             AVVideoAverageBitRateKey: config.bitRate,
             AVVideoExpectedSourceFrameRateKey: config.frameRate,
-            // One keyframe per segment: frames per segment (30 at 1 s, 15 at 0.5 s).
-            AVVideoMaxKeyFrameIntervalKey: max(1, Int((Double(config.frameRate) * config.segmentSeconds).rounded())),
-            AVVideoMaxKeyFrameIntervalDurationKey: config.segmentSeconds,
+            // One keyframe per segment: frames per segment (16 for L3).
+            AVVideoMaxKeyFrameIntervalKey: frameGrid.framesPerSegment,
+            AVVideoMaxKeyFrameIntervalDurationKey: interval.seconds,
             AVVideoAllowFrameReorderingKey: false,
             AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
         ]
