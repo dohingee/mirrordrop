@@ -102,3 +102,8 @@
 
 ### 8. 앱을 떠나도 TV에 띄우기 (2026-11-21, 시험하는 사람 보고)
 - TV 재생 요청은 앱이 보내므로, 보내기 시작 직후 다른 앱으로 가도 요청을 보낼 때까지만 앱이 짧은 백그라운드 작업(`beginBackgroundTask`)으로 깨어 있고(`App/MirrorCastCoordinator.swift`, 판단은 `Shared/BackgroundCastHold.swift`), Cast 세션도 뒤에서 멈추지 않게 했다(`suspendSessionsWhenBackgrounded = false`). 백그라운드 모드는 쓰지 않는다(SPEC 2.5.4). 앱이 이미 잠든 뒤의 Wi-Fi 변경은 앱을 열어야 TV에 다시 보낸다.
+- 필요 없는 다시 보내기 막기 (빌드 17, 빌드 16 기기 기록): TV에 같은 화면을 다시 불러오게 하면 버퍼링이 처음부터 다시 생긴다. 그래서 (1) 확장은 주소 글자가 바뀌거나 3초 넘게 끊겼을 때만 `urlRevision`을 올리고(`Shared/StreamAddress.swift` `StreamURLRevision`), (2) 앱은 자동으로 보내기 전에 TV가 이미 그 주소를 재생·불러오기·버퍼링·일시정지 중이면 보내지 않는다(`Shared/BackgroundCastHold.swift` `MirrorReloadPolicy`, Cast 기록 `skip reload`). 다시 연결 직후 TV 상태가 아직 없으면 최대 2초 기다린다. 직접 누른 보내기는 늘 다시 보낸다.
+
+### 9. 잠금으로 끝난 방송의 멈춤 알림 (빌드 17)
+- 빌드 16: 잠그면 iOS가 확장의 정상 종료(`broadcastFinished`)를 불러 알림을 지웠다(뜨지 않음). 확장에서 쓸 수 있는 공개 방법으로 잠금을 가린다: 방송 시작 때 App Group에 완전 보호(`.completeFileProtection`) 파일을 쓰고, 끝날 때 읽어서 보호 오류면 잠금 → 1초 뒤 알림(`Shared/StopAlert.swift` `StopAlertFinish`, 확장 `StopAlertArmer`).
+- 잠근 뒤 약 10초는 iOS가 아직 이 파일을 읽게 해 준다(Apple Platform Security "Data Protection classes": 암호 요구가 "즉시"일 때 잠금 10초 뒤 키를 버림). 그래서 읽히면 일단 지우고 끝난 뒤 11초 동안 다시 읽어 본다. 한계: 그동안 확장이 살아 있어야 하고, 직접 멈춘 뒤 1초 안에 잠그면 알림이 뜰 수 있고, 암호 없는 iPhone은 알아채지 못한다. 기기 시험(`docs/POC_TEST.md` 빌드 17)으로 확인한다.

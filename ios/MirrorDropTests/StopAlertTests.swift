@@ -58,4 +58,51 @@ final class StopAlertTests: XCTestCase {
     func testFixedIdentifier() {
         XCTAssertEqual(StopAlert.identifier, "mirrordrop.broadcast-stopped")
     }
+
+    // MARK: Lock check at finish (StopAlertFinish, LockProbe)
+
+    func testLockedAtFinishFires() {
+        XCTAssertEqual(StopAlertFinish.action(probe: .locked, secondsSinceFinish: 0), .fire)
+    }
+
+    /// Readable at the end: removed like a user stop, but read again (the key outlives the lock ~10 s).
+    func testUnlockedAtFinishKeepsChecking() {
+        XCTAssertEqual(StopAlertFinish.action(probe: .unlocked, secondsSinceFinish: 0), .cancelAndProbeAgain)
+        XCTAssertEqual(StopAlertFinish.action(probe: .unlocked, secondsSinceFinish: 9.5), .cancelAndProbeAgain)
+    }
+
+    /// The lock that ended the broadcast makes the probe fail within the window.
+    func testLockFoundLaterFires() {
+        XCTAssertEqual(StopAlertFinish.action(probe: .locked, secondsSinceFinish: 10.2), .fire)
+    }
+
+    /// Still readable after the window: the user stopped it.
+    func testStillUnlockedAfterWindowCancels() {
+        XCTAssertEqual(StopAlertFinish.action(probe: .unlocked, secondsSinceFinish: StopAlert.lockProbeWindow), .cancel)
+    }
+
+    func testNoProbeCancels() {
+        XCTAssertEqual(StopAlertFinish.action(probe: .unknown, secondsSinceFinish: 0), .cancel)
+    }
+
+    /// The window covers the ~10 s key grace after a lock just before the finish.
+    func testWindowCoversKeyGrace() {
+        XCTAssertGreaterThan(StopAlert.lockProbeWindow, 10)
+        XCTAssertLessThan(StopAlert.lockProbeInterval, 1)
+        XCTAssertGreaterThan(StopAlert.lockFireDelay, 0)
+    }
+
+    func testClassifyReadErrors() {
+        XCTAssertEqual(LockProbe.classify(nil), .unlocked)
+        let noPermission = NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoPermissionError)
+        XCTAssertEqual(LockProbe.classify(noPermission), .locked)
+        // As a locked read reports it: Cocoa error with an underlying POSIX EPERM.
+        let posix = NSError(domain: NSPOSIXErrorDomain, code: Int(EPERM))
+        let wrapped = NSError(domain: NSCocoaErrorDomain, code: NSFileReadUnknownError,
+                              userInfo: [NSUnderlyingErrorKey: posix])
+        XCTAssertEqual(LockProbe.classify(wrapped), .locked)
+        XCTAssertEqual(LockProbe.classify(NSError(domain: NSPOSIXErrorDomain, code: Int(EACCES))), .locked)
+        let missing = NSError(domain: NSCocoaErrorDomain, code: NSFileReadNoSuchFileError)
+        XCTAssertEqual(LockProbe.classify(missing), .unknown)
+    }
 }

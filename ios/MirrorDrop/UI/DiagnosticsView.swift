@@ -9,6 +9,8 @@ struct DiagnosticsView: View {
 
     /// Broadcast upload extensions are killed at roughly this footprint.
     private let memoryLimitMB = 50.0
+    /// Latest extension log lines shown in "보내기 기록" (the report has all of them).
+    private static let sendingLogLines = 40
 
     var body: some View {
         let s = monitor.status
@@ -103,6 +105,16 @@ struct DiagnosticsView: View {
                 Text("TV 재생 위치")
             } footer: {
                 Text("TV가 아는 가장 새 조각의 끝에서 얼마나 뒤를 재생하는지입니다. 인코딩 시간은 들어 있지 않습니다.")
+            }
+            Section("보내기 기록") {
+                // The extension's own log (English), newest first, tokens masked like the report.
+                let tokens = DiagnosticsReport.knownTokens(cast: cast, status: s)
+                if s.log.isEmpty { Text("없음").foregroundStyle(.secondary) }
+                ForEach(Array(s.log.suffix(Self.sendingLogLines).reversed().enumerated()), id: \.offset) { _, line in
+                    Text(verbatim: DiagnosticsReport.redact(line, tokens: tokens))
+                        .font(.caption2.monospaced())
+                        .foregroundStyle(line.hasPrefix("ERROR ") ? Color.red : Color.primary)
+                }
             }
             Section("Cast 기록") {
                 ForEach(Array(cast.events.reversed().enumerated()), id: \.offset) { _, line in
@@ -237,11 +249,16 @@ enum DiagnosticsReport {
         lines.append(String(localized: "--- Cast SDK 로그 (최근 80줄)"))
         lines += cast.sdkLog.suffix(80)
 
+        return redact(lines.joined(separator: "\n"), tokens: knownTokens(cast: cast, status: s))
+    }
+
+    /// Stream tokens the app knows of: every mirror URL sent to the TV and the current stream URL.
+    static func knownTokens(cast: CastManager, status: BroadcastStatus) -> Set<String> {
         var tokens = cast.mirrorTokens
-        if let text = s.url, let url = URL(string: text), let token = CastManager.token(of: url) {
+        if let text = status.url, let url = URL(string: text), let token = CastManager.token(of: url) {
             tokens.insert(token)
         }
-        return redact(lines.joined(separator: "\n"), tokens: tokens)
+        return tokens
     }
 
     /// Masks stream tokens: every known token, plus the first path part of any URL whose host is

@@ -86,3 +86,38 @@ final class BackgroundCastHoldTests: XCTestCase {
         XCTAssertEqual(late.castReason(url: "a", revision: 0, connected: true), .autoConnected)
     }
 }
+
+final class MirrorReloadPolicyTests: XCTestCase {
+    private func decide(force: Bool = false, _ tv: MirrorReloadPolicy.TVStatus,
+                        mayWait: Bool = true) -> MirrorReloadPolicy.Decision {
+        MirrorReloadPolicy.decide(url: "http://10.0.0.2:8765/t/live.m3u8", force: force, tv: tv, mayWait: mayWait)
+    }
+
+    private let same = "http://10.0.0.2:8765/t/live.m3u8"
+
+    /// Build 16: the TV played the stream and got it again (screen off and on, reconnect).
+    func testSkipsWhileTVPlaysTheSameStream() {
+        for phase in [PlaybackTrace.Phase.playing, .buffering, .paused, .loading] {
+            XCTAssertEqual(decide(.known(contentURL: same, phase: phase)), .skip, "\(phase)")
+        }
+    }
+
+    func testLoadsWhenTVStoppedOrPlaysSomethingElse() {
+        XCTAssertEqual(decide(.known(contentURL: same, phase: .idle)), .load)
+        XCTAssertEqual(decide(.known(contentURL: same, phase: .unknown)), .load)
+        XCTAssertEqual(decide(.known(contentURL: "http://10.0.0.3:8765/t/live.m3u8", phase: .playing)), .load)
+        XCTAssertEqual(decide(.known(contentURL: nil, phase: .playing)), .load)
+    }
+
+    func testForcedSendAlwaysLoads() {
+        XCTAssertEqual(decide(force: true, .known(contentURL: same, phase: .playing)), .load)
+        XCTAssertEqual(decide(force: true, .unknown), .load)
+    }
+
+    /// A resumed session has no media status at first: wait for one, then load if still none.
+    func testWaitsForStatusOnce() {
+        XCTAssertEqual(decide(.unknown), .waitForStatus)
+        XCTAssertEqual(decide(.unknown, mayWait: false), .load)
+    }
+}
+

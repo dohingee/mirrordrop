@@ -110,3 +110,45 @@ enum CastReason: String, Equatable {
         }
     }
 }
+
+/// Whether an automatic play request can be skipped because the TV already plays this very stream.
+/// Every re-load restarts the receiver's buffering (build 16: a re-load after the screen went off and
+/// on was followed by 9 bufferings, 19.9 s in 30 s). App side: CastManager.castMirror.
+/// Pure logic, tested in BackgroundCastHoldTests.
+enum MirrorReloadPolicy {
+    /// What the app knows about the receiver right before an automatic send.
+    enum TVStatus: Equatable {
+        /// The session has no media status yet (just connected or resumed); worth waiting for.
+        case unknown
+        /// The receiver's media status: its content URL (nil when none) and player state.
+        case known(contentURL: String?, phase: PlaybackTrace.Phase)
+    }
+
+    enum Decision: Equatable {
+        /// Send the play request.
+        case load
+        /// The TV already plays (or loads) this stream: record it as delivered, no request.
+        case skip
+        /// No media status yet: ask the receiver for one and decide when it comes (or after
+        /// `statusWait` s, then `load`).
+        case waitForStatus
+    }
+
+    /// How long an automatic send waits for the first media status of a new or resumed session.
+    static let statusWait: Double = 2
+
+    /// `force`: the user pressed a button, always re-load. `mayWait`: false once the wait is over.
+    static func decide(url: String, force: Bool, tv: TVStatus, mayWait: Bool) -> Decision {
+        guard !force else { return .load }
+        switch tv {
+        case .unknown:
+            return mayWait ? .waitForStatus : .load
+        case let .known(contentURL, phase):
+            guard contentURL == url else { return .load }
+            switch phase {
+            case .playing, .buffering, .paused, .loading: return .skip
+            case .idle, .unknown: return .load
+            }
+        }
+    }
+}

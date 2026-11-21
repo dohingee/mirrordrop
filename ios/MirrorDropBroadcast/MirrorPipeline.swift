@@ -22,10 +22,17 @@ final class MirrorPipeline: HLSSegmenterDelegate {
     private var audio: AudioTrack?
     private var observingAudioOutput = false
     private var timer: DispatchSourceTimer?
-    /// "TV 보내기가 멈췄어요" notification that fires if the extension dies without a callback (screen lock).
-    private lazy var stopAlert = StopAlertArmer(queue: queue, log: { [status] in status.log($0) })
+    /// "TV 보내기가 멈췄어요" notification: fires if the extension dies without a callback, or when the
+    /// broadcast finished because the iPhone locked (StopAlertArmer). Its lines are published at once:
+    /// after the broadcast finished no tick flushes the status any more.
+    private lazy var stopAlert = StopAlertArmer(queue: queue, log: { [status] in
+        status.log($0)
+        status.flush(force: true)
+    })
     private var pathMonitor: NWPathMonitor?
     private var address: StreamAddress
+    /// When the published URL gets a new `urlRevision` (the app re-sends a new revision to the TV).
+    private var revision = StreamURLRevision()
     private var running = false
     /// Host-clock times of recent encoder replacements, to give up if the writer keeps failing.
     private var recoveryTimes: [Double] = []
@@ -141,8 +148,9 @@ final class MirrorPipeline: HLSSegmenterDelegate {
         stopObservingAudioOutput()
         queue.sync {
             running = false
-            // First, so nothing fires even if the process ends soon after this call.
-            stopAlert.stop()
+            // First, so the alert is decided even if the process ends soon after this call: removed for a
+            // user stop, scheduled when the iPhone is locked (logs "broadcast finished (locked=…)").
+            stopAlert.finish()
             timer?.cancel()
             timer = nil
             pathMonitor?.cancel()
@@ -151,7 +159,6 @@ final class MirrorPipeline: HLSSegmenterDelegate {
             server = nil
             lastFrame = nil
             status.update { $0.state = .stopped }
-            status.log("broadcast finished")
             status.flush(force: true)
             let done = DispatchSemaphore(value: 0)
             segmenter?.finish { done.signal() }
@@ -331,18 +338,22 @@ final class MirrorPipeline: HLSSegmenterDelegate {
     }
 
     /// Writes the current URL (or the reason there is none) to the status. The token stays out of the log.
+    /// `urlRevision` rises only for a new URL text or after an outage of 3 s or more (StreamURLRevision):
+    /// a short blip, e.g. an empty IP read while the screen locks, must not make the app re-load the TV.
     private func publishAddress() {
         let url = address.url
         let ip = address.ip
+        let raised = revision.update(url: url, now: Self.hostSeconds())
+        let rev = revision.revision
         status.update {
-            if $0.url != url {
-                $0.url = url
-                if url != nil { $0.urlRevision += 1 }
-            }
+            $0.url = url
+            $0.urlRevision = rev
             $0.networkIssue = ip == nil ? Self.noWiFiMessage : nil
         }
         if let ip {
-            status.log("stream address ip=\(ip), port=\(address.port.map { String($0) } ?? "-")")
+            let port = address.port.map { String($0) } ?? "-"
+            let change = url == nil ? "" : raised ? " (new)" : " (same, TV keeps playing)"
+            status.log("stream address ip=\(ip), port=\(port), rev \(rev)\(change)")
         } else {
             status.error("no Wi-Fi IPv4 address; waiting for Wi-Fi")
         }

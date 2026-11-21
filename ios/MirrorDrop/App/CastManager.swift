@@ -48,10 +48,17 @@ final class CastManager: NSObject, ObservableObject {
     private var isSetUp = false
     private weak var observedClient: GCKRemoteMediaClient?
     private var loadRequest: GCKRequest? {
-        didSet { isLoadPending = loadRequest != nil }
+        didSet { updateLoadPending() }
     }
-    /// A play request was sent and the TV has not answered yet (MirrorCastCoordinator keeps the app
-    /// awake in the background until it has).
+    /// An automatic send waiting for the first media status of a new or resumed session, to see
+    /// whether the TV already plays the stream (MirrorReloadPolicy). Answered by the next status or
+    /// after `MirrorReloadPolicy.statusWait` s.
+    private var statusWait: (url: URL, revision: Int, reason: CastReason, id: Int)? {
+        didSet { updateLoadPending() }
+    }
+    private var statusWaitID = 0
+    /// A play request was sent and the TV has not answered yet, or an automatic send waits for the
+    /// TV's status (MirrorCastCoordinator keeps the app awake in the background until neither is so).
     @Published private(set) var isLoadPending = false
     private var lagTimer: Timer?
 
@@ -172,27 +179,101 @@ final class CastManager: NSObject, ObservableObject {
     }
 
     /// Sends the iPhone screen stream to the TV. Without `force`, does nothing when this URL and
-    /// revision were already sent in the current session (a new URL or revision, e.g. after a
-    /// Wi-Fi change or outage, is always sent). `reason` goes to the Cast events and the records.
+    /// revision were already sent in the current session, and records it as delivered without a
+    /// request when the TV already plays this stream (a re-load restarts the receiver's buffering;
+    /// Shared/BackgroundCastHold.swift MirrorReloadPolicy). A new or resumed session without a media
+    /// status yet waits up to 2 s for one first. `force` (a button) always re-loads. `reason` goes to
+    /// the Cast events and the records. Returns true when a play request was sent.
     @discardableResult
     func castMirror(_ url: URL, revision: Int, force: Bool, reason: CastReason) -> Bool {
+        castMirror(url, revision: revision, force: force, reason: reason, mayWait: true)
+    }
+
+    @discardableResult
+    private func castMirror(_ url: URL, revision: Int, force: Bool, reason: CastReason, mayWait: Bool) -> Bool {
+        // A newer call replaces an automatic send that waits for the TV's status.
+        statusWait = nil
         guard isConnected else { return false }
         if !force, loadedMirrorURL == url, loadedMirrorRevision == revision { return false }
-        // What the TV was doing just before: a re-load while it already played our stream restarts
-        // the receiver's buffering. No URL or token in the log.
-        let status = remoteClient?.mediaStatus
+        // What the TV was doing just before. No URL or token in the log.
+        let client = remoteClient
+        let status = client?.mediaStatus
         let before = status.map(describeForLog) ?? "no media status"
-        let sameStream = status?.mediaInformation?.contentURL == url
+        let sameStream = status.map { Self.plays(url, $0) } ?? false
+        let tv: MirrorReloadPolicy.TVStatus
+        if let status {
+            tv = .known(contentURL: sameStream ? url.absoluteString : status.mediaInformation?.contentURL?.absoluteString,
+                        phase: Self.phase(of: status))
+        } else {
+            tv = .unknown
+        }
+        // Only a stream sent before in this app run can already be on the TV: a first send never waits.
+        let sentBefore = Self.token(of: url).map { mirrorTokens.contains($0) } ?? false
+        switch MirrorReloadPolicy.decide(url: url.absoluteString, force: force, tv: tv,
+                                         mayWait: mayWait && client != nil && sentBefore) {
+        case .load:
+            break
+        case .skip:
+            markMirrorDelivered(url, revision: revision)
+            addEvent("skip reload: TV already plays this stream (\(reason.rawValue), rev \(revision)); TV: \(before)")
+            return false
+        case .waitForStatus:
+            statusWaitID += 1
+            let id = statusWaitID
+            statusWait = (url, revision, reason, id)
+            _ = client?.requestStatus()
+            addEvent("waiting for TV status before sending (\(reason.rawValue), rev \(revision))")
+            DispatchQueue.main.asyncAfter(deadline: .now() + MirrorReloadPolicy.statusWait) { [weak self] in
+                guard let self, self.statusWait?.id == id else { return }
+                self.addEvent("no TV status after \(StartupReport.f1(MirrorReloadPolicy.statusWait)) s")
+                self.resolveStatusWait()
+            }
+            return false
+        }
         addEvent("cast mirror (\(reason.rawValue), rev \(revision)\(force ? ", forced" : "")); "
                  + "TV before: \(before)\(sameStream ? ", same stream" : "")")
         let sentAt = HostClock.now()
         guard load(url: url, title: String(localized: "내 iPhone 화면"), live: true, format: .fmp4) else { return false }
         let token = Self.token(of: url)
         playbackRecords.loadSent(token: token, origin: sentAt, reason: reason)
+        markMirrorDelivered(url, revision: revision)
+        return true
+    }
+
+    /// The mirror with this URL and revision is on the TV (sent now, or found already playing).
+    private func markMirrorDelivered(_ url: URL, revision: Int) {
         loadedMirrorURL = url
         loadedMirrorRevision = revision
-        if let token { mirrorTokens.insert(token) }
-        return true
+        if let token = Self.token(of: url) { mirrorTokens.insert(token) }
+    }
+
+    /// The first media status came (or the wait is over): decide the waiting automatic send now.
+    private func resolveStatusWait() {
+        guard let wait = statusWait else { return }
+        statusWait = nil
+        castMirror(wait.url, revision: wait.revision, force: false, reason: wait.reason, mayWait: false)
+    }
+
+    private func updateLoadPending() {
+        let pending = loadRequest != nil || statusWait != nil
+        if pending != isLoadPending { isLoadPending = pending }
+    }
+
+    /// The receiver's media is this stream (content URL, or the content ID it was loaded under).
+    private static func plays(_ url: URL, _ status: GCKMediaStatus) -> Bool {
+        guard let info = status.mediaInformation else { return false }
+        return info.contentURL == url || info.contentID == url.absoluteString
+    }
+
+    private static func phase(of status: GCKMediaStatus) -> PlaybackTrace.Phase {
+        switch status.playerState {
+        case .idle: return .idle
+        case .loading: return .loading
+        case .buffering: return .buffering
+        case .playing: return .playing
+        case .paused: return .paused
+        default: return .unknown
+        }
     }
 
     /// Stops the TV when it is playing our mirror stream (the broadcast ended), leaving other media alone.
@@ -237,9 +318,11 @@ final class CastManager: NSObject, ObservableObject {
         }
         isConnected = connection == .connected
         if !isConnected {
-            // The next connection (new, resumed or reconnected session) gets the mirror again.
+            // The next connection (new, resumed or reconnected session) gets the mirror again, unless
+            // the TV still plays it then (castMirror checks the receiver's status first).
             loadedMirrorURL = nil
             tvPlayback = .none
+            statusWait = nil
         }
         let session = context.sessionManager.currentCastSession
         deviceName = session?.device.friendlyName
@@ -323,15 +406,7 @@ final class CastManager: NSObject, ObservableObject {
     private func recordStartupState(_ status: GCKMediaStatus) {
         let now = HostClock.now()
         guard playbackRecords.isRecording(at: now) else { return }
-        let phase: PlaybackTrace.Phase
-        switch status.playerState {
-        case .idle: phase = .idle
-        case .loading: phase = .loading
-        case .buffering: phase = .buffering
-        case .playing: phase = .playing
-        case .paused: phase = .paused
-        default: phase = .unknown
-        }
+        let phase = Self.phase(of: status)
         var reason: String?
         if status.playerState == .idle {
             switch status.idleReason {
@@ -455,6 +530,9 @@ extension CastManager: GCKSessionManagerListener {
 
 extension CastManager: GCKRemoteMediaClientListener {
     func remoteMediaClient(_ client: GCKRemoteMediaClient, didUpdate mediaStatus: GCKMediaStatus?) {
+        // An automatic send was waiting for the TV's status (new or resumed session); decided after
+        // this update is applied, also when the TV has no media.
+        defer { if statusWait != nil { resolveStatusWait() } }
         guard let mediaStatus else { mediaText = "-"; tvPlayback = .none; return }
         recordStartupState(mediaStatus)
         let text = describe(mediaStatus)

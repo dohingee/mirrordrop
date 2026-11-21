@@ -8,9 +8,12 @@
 #  - screenshots the main, diagnostics, clock and usage guide screens on the iPhone (Korean, status bar 9:41,
 #    full battery) through the app's `-MDScreen` launch argument (UI/ContentView.swift
 #    LaunchScreen), and the launch screen on the iPad;
-#  - App Store screenshots (iphone-store-*.png): the iPhone is a 6.9-inch Pro Max model when the
-#    runtime has one (1320x2868 for iPhone 16/17 Pro Max), and `-MDDemo connected|sending` shows a
-#    connected TV / the screen being sent without a Cast device (MirrorDrop/App/DemoMode.swift);
+#  - App Store screenshots (iphone-store-*.png): the iPhone is a 6.9-inch model picked by name from
+#    the runtime's device types (iPhone 17 Pro Max first; the 6.9-inch slot takes 1320x2868, 1290x2796
+#    or 1260x2736). Build 16's run took "the last Pro Max" in list order and got the iPhone 11 Pro Max
+#    (1242x2688, 6.5-inch). No 6.9-inch type, or a capture of another size, fails the check.
+#    `-MDDemo connected|sending` shows a connected TV / the screen being sent without a Cast device
+#    (MirrorDrop/App/DemoMode.swift);
 #  - the same in English (`-AppleLanguages "(en)"`): iphone-en-main/-guide.png and
 #    iphone-store-en-sending/-connected.png (String Catalogs, MirrorDrop/Resources/Localizable.xcstrings);
 #  - copies the Google Cast SDK's privacy files (NutritionLabel.txt, PrivacyInfo.xcprivacy) for the
@@ -78,19 +81,30 @@ done > "$out/entitlements.txt"
 [ "$(grep -c 'group.com.mirrordrop.app' "$out/entitlements.txt")" -ge 2 ] \
   || echo "::warning::App Group group.com.mirrordrop.app not found in both signatures (entitlements.txt)"
 
-read -r runtime iphone ipad <<<"$(xcrun simctl list -j | python3 -c '
-import json, sys
+# 6.9-inch iPhones (App Store screenshot slot, docs/RELEASE.md), best first. GitHub's macos-26 image
+# (Xcode 26, iOS 26.x runtimes) has iPhone 17 Pro Max and iPhone Air; the older names cover other
+# images. Display: 17/16 Pro Max 1320x2868, Air 1260x2736, 16 Plus / 15 Pro Max / 15 Plus / 14 Pro Max
+# 1290x2796. Pixel sizes the slot accepts are checked again on the captured screenshot below.
+store_iphones="iPhone 17 Pro Max|iPhone 16 Pro Max|iPhone Air|iPhone 16 Plus|iPhone 15 Pro Max|iPhone 15 Plus|iPhone 14 Pro Max"
+store_sizes="1320x2868 1290x2796 1260x2736"
+read -r runtime iphone ipad store_ok <<<"$(xcrun simctl list -j | STORE_IPHONES="$store_iphones" python3 -c '
+import json, os, sys
 d = json.load(sys.stdin)
 rt = sorted((r for r in d["runtimes"] if r["platform"] == "iOS" and r["isAvailable"]),
             key=lambda r: [int(x) for x in r["version"].split(".")])[-1]
 types = rt.get("supportedDeviceTypes", d["devicetypes"])
-def pick(prefix, prefer=""):
-    names = [t for t in types if t["name"].startswith(prefix)]
-    best = [t for t in names if prefer and prefer in t["name"]]
-    return (best or names)[-1]["identifier"]
-# Pro Max: 6.9-inch display, the App Store screenshot size (docs/RELEASE.md).
-print(rt["identifier"], pick("iPhone", "Pro Max"), pick("iPad Air"))')"
-echo "runtime $runtime"
+by_name = {t["name"]: t["identifier"] for t in types}
+store = [by_name[n] for n in os.environ["STORE_IPHONES"].split("|") if n in by_name]
+# No 6.9-inch type: still run the launch check on some iPhone, but the store screenshots fail.
+iphones = [t["identifier"] for t in types if t["name"].startswith("iPhone")]
+ipads = [t["identifier"] for t in types if t["name"].startswith("iPad Air")]
+print(rt["identifier"], (store or iphones)[0], ipads[-1], "yes" if store else "no")')"
+echo "runtime $runtime, iPhone $iphone, iPad $ipad"
+if [ "$store_ok" != yes ]; then
+  echo "::error::no 6.9-inch iPhone simulator in $runtime (looked for: $store_iphones)"
+  summary "Store screenshots: FAILED, no 6.9-inch iPhone simulator in $runtime (looked for: $store_iphones); using $iphone"
+  failed=1
+fi
 
 ko=(-AppleLanguages "(ko)" -AppleLocale ko_KR)
 en=(-AppleLanguages "(en)" -AppleLocale en_US)
@@ -194,8 +208,15 @@ for kind in iphone ipad; do
     check "$udid" iphone store-en-connected 15 "${en[@]}" "${seen[@]}" -MDDemo connected
     check "$udid" iphone en-main 15 "${en[@]}"
     check "$udid" iphone en-guide 15 "${en[@]}" -MDScreen guide
-    size=$(sips -g pixelWidth -g pixelHeight "$out/iphone-store-sending.png" 2>/dev/null | awk '/pixel/ {printf "%s ", $2}' || true)
-    summary "Store screenshots: iPhone $iphone, ${size:-size unknown }(6.9-inch needs 1320 2868, 1290 2796 or 1260 2736)"
+    size=$(sips -g pixelWidth -g pixelHeight "$out/iphone-store-sending.png" 2>/dev/null \
+      | awk '/pixelWidth/ {w=$2} /pixelHeight/ {h=$2} END {if (w && h) print w "x" h}' || true)
+    if [ -n "$size" ] && [[ " $store_sizes " == *" $size "* ]]; then
+      summary "Store screenshots: iPhone $iphone, $size (6.9-inch slot)"
+    else
+      echo "::error::store screenshots are ${size:-of unknown size}, the 6.9-inch slot needs one of: $store_sizes"
+      summary "Store screenshots: FAILED, iPhone $iphone gave ${size:-unknown size} (6.9-inch needs one of $store_sizes)"
+      failed=1
+    fi
   fi
   limit 60 xcrun simctl shutdown "$udid" || true
 done

@@ -282,3 +282,58 @@ final class StreamAddressTests: XCTestCase {
         XCTAssertNil(BroadcastStatus().networkIssue)
     }
 }
+
+final class StreamURLRevisionTests: XCTestCase {
+    func testFirstURLGetsRevisionOne() {
+        var gate = StreamURLRevision()
+        XCTAssertFalse(gate.update(url: nil, now: 0))
+        XCTAssertEqual(gate.revision, 0)
+        XCTAssertTrue(gate.update(url: "a", now: 1))
+        XCTAssertEqual(gate.revision, 1)
+    }
+
+    func testSameURLAgainKeepsRevision() {
+        var gate = StreamURLRevision()
+        gate.update(url: "a", now: 0)
+        XCTAssertFalse(gate.update(url: "a", now: 5))
+        XCTAssertEqual(gate.revision, 1)
+    }
+
+    /// Build 16: a blip while the screen locked (no address for a moment) re-loaded the TV.
+    func testShortBlipKeepsRevision() {
+        var gate = StreamURLRevision()
+        gate.update(url: "a", now: 0)
+        gate.update(url: nil, now: 10)
+        gate.update(url: nil, now: 11)
+        XCTAssertFalse(gate.update(url: "a", now: 12.9))
+        XCTAssertEqual(gate.revision, 1)
+        XCTAssertNil(gate.unreachableSince)
+    }
+
+    /// A real outage (3 s or more): the TV probably gave up, so it gets the stream again.
+    func testLongOutageRaisesRevision() {
+        var gate = StreamURLRevision()
+        gate.update(url: "a", now: 0)
+        gate.update(url: nil, now: 10)
+        XCTAssertTrue(gate.update(url: "a", now: 10 + StreamURLRevision.outageThreshold))
+        XCTAssertEqual(gate.revision, 2)
+    }
+
+    /// Outage measured from its start, not from the last nil report.
+    func testOutageCountsFromFirstNil() {
+        var gate = StreamURLRevision()
+        gate.update(url: "a", now: 0)
+        gate.update(url: nil, now: 10)
+        gate.update(url: nil, now: 12.5)
+        XCTAssertTrue(gate.update(url: "a", now: 13.5))
+    }
+
+    func testNewURLTextAlwaysRaises() {
+        var gate = StreamURLRevision()
+        gate.update(url: "a", now: 0)
+        XCTAssertTrue(gate.update(url: "b", now: 0.1))
+        gate.update(url: nil, now: 1)
+        XCTAssertTrue(gate.update(url: "c", now: 1.5))
+        XCTAssertEqual(gate.revision, 3)
+    }
+}

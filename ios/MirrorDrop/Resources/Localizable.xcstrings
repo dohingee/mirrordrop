@@ -2673,6 +2673,22 @@
         }
       }
     },
+    "보내기 기록" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sending log"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보내기 기록"
+          }
+        }
+      }
+    },
     "보내기 멈추기" : {
       "localizations" : {
         "en" : {

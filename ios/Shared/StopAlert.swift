@@ -52,3 +52,78 @@ struct StopAlertSchedule {
         lastArmed = nil
     }
 }
+
+// MARK: Lock check when the broadcast finishes
+
+/// Locking the iPhone ends the broadcast, and iOS then calls `broadcastFinished` like a user stop
+/// (build 16: the stop path removed the alert, so it never appeared). To tell the two apart, the
+/// extension writes a tiny file with complete data protection (`Data.WritingOptions
+/// .completeFileProtection`) when the broadcast starts and tries to read it when it finishes: a
+/// protection (permission) error means the device is locked.
+///
+/// Grace period: iOS discards the key of that protection class about 10 s after the lock (when
+/// "Require Password" is "Immediately", always the case with Face ID / Touch ID; Apple Platform
+/// Security, "Data Protection classes"). The lock comes just before the broadcast ends, so a read
+/// right at the end still succeeds. So after a readable first read the extension removes the alert
+/// (as for a user stop) and keeps reading every `lockProbeInterval` for `lockProbeWindow` s after
+/// the end: the lock that ended the broadcast makes a read fail within about 10 s, while a user who
+/// stopped and locks later makes it fail only 10 s after that later lock. Limits (docs/POC_TEST.md):
+/// the extension process must live that long after `broadcastFinished`; a user who locks within
+/// about 1 s of stopping gets the alert too; without a passcode the file never locks (no alert).
+extension StopAlert {
+    /// File name of the probe in the App Group container.
+    static let lockProbeFileName = "lock-probe"
+    /// The alert fires this long after the lock was detected (must be > 0 for the trigger).
+    static let lockFireDelay: TimeInterval = 1
+    /// How long after the end the extension keeps reading the probe (10 s key grace + margin).
+    static let lockProbeWindow: TimeInterval = 11
+    static let lockProbeInterval: TimeInterval = 0.5
+}
+
+/// Result of reading the probe file.
+enum LockProbe: String, Equatable {
+    /// Read: the device is unlocked (or locked less than about 10 s ago).
+    case unlocked
+    /// Protection error: the device is locked.
+    case locked
+    /// No probe (not written, other error): cannot tell.
+    case unknown
+
+    /// Classifies the error of reading the probe (nil: read fine). A read of a protected file while
+    /// locked fails with NSFileReadNoPermissionError (257), underlying POSIX EPERM / EACCES.
+    static func classify(_ error: Error?) -> LockProbe {
+        guard let error else { return .unlocked }
+        var current: NSError? = error as NSError
+        while let nsError = current {
+            if nsError.domain == NSCocoaErrorDomain, nsError.code == NSFileReadNoPermissionError { return .locked }
+            if nsError.domain == NSPOSIXErrorDomain, nsError.code == Int(EPERM) || nsError.code == Int(EACCES) {
+                return .locked
+            }
+            current = nsError.userInfo[NSUnderlyingErrorKey] as? NSError
+        }
+        return .unknown
+    }
+}
+
+/// What the extension does with the alert when the broadcast has finished. Pure logic, tested in
+/// StopAlertTests.
+enum StopAlertFinish {
+    enum Action: Equatable {
+        /// Locked: the lock ended the broadcast. Schedule the alert in `StopAlert.lockFireDelay` s.
+        case fire
+        /// Readable so far: no alert now (removed like a user stop), read again in
+        /// `StopAlert.lockProbeInterval` s.
+        case cancelAndProbeAgain
+        /// User stop (still readable at the end of the window) or no probe: no alert, stop reading.
+        case cancel
+    }
+
+    static func action(probe: LockProbe, secondsSinceFinish: Double) -> Action {
+        switch probe {
+        case .locked: return .fire
+        case .unknown: return .cancel
+        case .unlocked:
+            return secondsSinceFinish < StopAlert.lockProbeWindow ? .cancelAndProbeAgain : .cancel
+        }
+    }
+}
