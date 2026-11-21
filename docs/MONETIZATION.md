@@ -138,11 +138,26 @@
    - Google Mobile Ads SDK를 SPM으로 **앱 대상에만** 추가(`ios/project.yml`). 확장에는 넣지 않는다.
    - `Info.plist`: `GADApplicationIdentifier`, `SKAdNetworkItems`(Google 목록), `NSUserTrackingUsageDescription`(한국어, "맞춤 광고를 보여 주는 데만 씁니다. 거부해도 모든 기능을 쓸 수 있어요").
    - 동의 순서: 앱 켤 때 UMP(구글 동의 화면) 상태 갱신 → 필요한 지역이면 동의 화면 → `canRequestAds`일 때만 광고 요청[출처 17]. **ATT(앱 추적 허락) 질문은 첫 보내기가 끝난 뒤** 한 번만 묻는다(첫 연결 흐름을 막지 않음). 거부해도 비맞춤 광고로 그대로 쓴다(SPEC 9번).
-   - `AdPolicy`(순수 로직, `Shared/`에 두고 단위 테스트): 위 배너 숨김·전면 광고 5가지 조건·24시간 상한을 한곳에서 판단. 입력은 방송 상태(`BroadcastMonitor`), 마지막 보내기 길이, 알림으로 열렸는지, 마지막 광고 시각, 설치일, (나중) 구매 여부.
+   - `AdPolicy`(순수 로직, `Shared/`에 두고 단위 테스트): 위 배너 숨김·전면 광고 5가지 조건·24시간 상한을 한곳에서 판단. 입력은 방송 상태(`BroadcastMonitor`), 시작한 보내기 횟수, 알림으로 열었거나 뜻밖에 멈춘 시각, 마지막 광고 시각, (나중) 구매 여부. → 아래 "구현 메모".
    - "광고 신고" 메뉴.
 5. 🤖 App Privacy(개인정보 라벨) 답안 바꾸기: Google이 밝힌 항목 — 기기 ID(광고 식별자), 사용 데이터(광고 데이터·제품 상호작용), 진단(충돌 기록·성능), 대략적 위치 — 를 "제3자 광고" 용도로 적고, ATT 허락 시 "추적"에 해당한다고 적는다[출처 18]. Google SDK 11.2.0 이상은 자체 개인정보 선언 파일을 갖고 있으니, 우리 `PrivacyInfo.xcprivacy`와 겹치지 않게 맞춘다.
 6. 🤖 심사 메모(영어)에 한 줄: "Ads appear only on the home screen while the screen is not being sent to the TV; no ads are shown during mirroring, and no features are locked behind payment."
 7. 🤖 `ios-build.yml` 시뮬레이터 캡처로 배너 위치(버튼과 안 겹침)·보내는 중 숨김 확인 → TestFlight. ✋ iPhone으로 확인할 것: TV 화면에 광고가 한 번도 안 나오는지, 전면 광고가 시작 카드를 누를 때 하루 한 번만 뜨고, 닫은 뒤 한 번 더 누르면 시작되는지.
+
+### 구현 메모 (2026-11-22, 빌드 17 = 1.0)
+위 4번 코드는 만들었다. 파일과 실제 동작:
+- **파일**: 판단은 `ios/Shared/AdPolicy.swift`(`AdPolicy`·`AdHistory`·`AdUnits`, Foundation만, 테스트 `ios/MirrorDropTests/AdPolicyTests.swift`), 광고 SDK·동의·전면 광고·배너는 `ios/MirrorDrop/App/AdsManager.swift`, 어느 광고 단위를 쓸지는 `App/AdStoreEnvironment.swift`. 화면은 `UI/ContentView.swift`(배너 자리, 시작 카드), `UI/AdvancedView.swift`("광고" 칸).
+- **SDK**: Google Mobile Ads 13.12.0 + User Messaging Platform 3.1.0(SPM, `ios/project.yml`, 앱 대상에만). Bottlepost iOS 앱과 같은 판이다.
+- **광고 ID는 `ios/project.yml` 한 곳**(빌드 설정 `ADMOB_APP_ID`·`ADMOB_BANNER`·`ADMOB_INTERSTITIAL` → Info.plist `GADApplicationIdentifier`·`MDAdMobBanner`·`MDAdMobInterstitial`). 값은 `docs/RELEASE.md` 3번. 비밀값이 아니라 GitHub 변수로 따로 두지 않는다.
+- **진짜 광고는 App Store에서 받은 앱에서만**: Debug·시뮬레이터 빌드는 늘 Google 시험 광고 단위. 출시용 빌드도 StoreKit `AppTransaction.environment`가 `production`일 때만 진짜 단위를 쓰고, TestFlight·App Store 심사(`sandbox`)·판별 실패·5초 안에 답이 없으면 시험 광고다(팔자노트와 같은 방식). 주인·심사관이 진짜 광고를 누르는 일(AdMob 부정 클릭, 계정이 다른 앱과 같음)을 막는다. 대신 App Store판에서 StoreKit 판별이 실패하면 그 실행 동안은 수익이 없다.
+- **배너**: 첫 화면 맨 아래(`safeAreaInset`, 구분선 아래, 버튼과 떨어짐), 적응형 고정 배너(`largeAnchoredAdaptiveBanner`). 보내는 중·시작하는 중(`BroadcastMonitor.isLive`), "TV를 찾지 못했어요" 안내가 보일 때, 동의 전, 데모에서는 **뷰를 아예 뺀다**. 밀어 넣은 화면(고급·진단·진단·사용 방법)에는 없다.
+- **전면 광고**: 조건은 `AdPolicy.interstitialEligible`(보내는 중 아님, 시작 3번 넘음, 24시간 지남, 멈춤 알림으로 연 뒤·뜻밖에 멈춤/실패 뒤 10분 지남). 이 조건일 때만 광고를 미리 받고(실패하면 2분 뒤 다시, 55분 지나면 새로), 받아져 있으면(`armsInterstitial`) 카드가 보통 버튼이 된다. 누르면 광고 → 닫으면 카드는 다시 iOS 시작 버튼이 되고 주황 테두리와 "이제 눌러서 시작하세요". 시작 창을 코드로 열지 않는다.
+- **보내기 횟수**: 확장 상태의 `startedAt`이 새로 보일 때마다 1번(`AdHistory.registerBroadcast`). 앱이 꺼져 있을 때 시작한 것도 다음 실행 때 센다. 기록은 앱 UserDefaults `adHistory`(설치 뒤부터, 앱을 지우면 처음부터).
+- **동의·추적 순서**: 앱을 켤 때는 `requestConsentInfoUpdate`(상태 갱신)만 한다. 동의 화면(`ConsentForm.loadAndPresentIfRequired`)과 그 뒤 ATT 창은 `AdPolicy.asksConsent`(첫 보내기를 시작한 적 있음, 지금 보내는 중 아님, 다시 시작하는 중 아님) + 앱이 앞에 있음 + TV 연결 중 아님일 때 실행마다 한 번까지. 즉 **첫 보내기가 끝난 뒤** 처음 조용한 때다. AdMob에 IDFA 설명 메시지를 게시하면 UMP가 설명 → ATT까지 띄우고, 아니면 앱이 바로 ATT를 묻는다. SDK 시작(`MobileAds.shared.start()`)과 광고 요청은 `canRequestAds`일 때만, 보내는 중·TV 연결 중이 아닐 때만.
+  - 결과: 동의가 필요 없는 지역은 첫 실행부터 배너가 나온다(ATT 전이라 광고 식별자 없이). 동의가 필요한 지역(영국·스위스 등)과, IDFA 설명 메시지 때문에 UMP가 "동의 필요"로 보는 경우는 첫 보내기가 끝날 때까지 광고가 없다.
+- **"광고 개인정보 설정"**: `privacyOptionsRequirementStatus == .required`일 때만 고급·진단에 보인다. **"광고 신고"**: 메일(`kimyeoware@gmail.com`, 제목 "MirrorDrop 광고 신고", 앱 버전 포함)을 연다.
+- **데모 모드**(`-MDDemo`): `AdsManager.start()`가 아무것도 하지 않아 광고·동의 화면·ATT가 없다.
+- 광고 등급(G~T)·민감 분야 차단은 AdMob 콘솔에서 한다(코드에서 따로 정하지 않음).
 
 ### 나중에(사업자 생긴 뒤) — "광고 제거" 구매
 1. ✋ 사업자등록('새벼리', 업종 722000 응용 소프트웨어 개발·공급업이 흔함[출처 13]), 통신판매업 신고 필요 여부를 세무서·구청에 확인, 부가세 신고 방법 확인.

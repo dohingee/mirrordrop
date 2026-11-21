@@ -8,6 +8,7 @@ import SwiftUI
 struct AdvancedView: View {
     @EnvironmentObject private var cast: CastManager
     @EnvironmentObject private var monitor: BroadcastMonitor
+    @EnvironmentObject private var ads: AdsManager
 
     var body: some View {
         List {
@@ -18,6 +19,7 @@ struct AdvancedView: View {
             }
             mirrorSection
             tvSection
+            adsSection
             Section("정보") {
                 Link("개인정보 처리방침", destination: AppLinks.privacyPolicy)
                 Link("문의·도움말 (웹)", destination: AppLinks.support)
@@ -43,6 +45,23 @@ struct AdvancedView: View {
             Text("내 화면 보내기")
         } footer: {
             Text("화면이 준비되면 TV에 자동으로 띄웁니다. TV에 안 나올 때만 \"지금 TV에 띄우기\"를 눌러 보세요. 소리 나오는 곳(TV·휴대폰)은 첫 화면에서 보내는 중에도 바꿀 수 있어요.")
+        }
+    }
+
+    /// Labels are fixed: the privacy policy (6), the support page and the review notes name them
+    /// (docs/RELEASE.md 2-2). No ad on this screen itself.
+    private var adsSection: some View {
+        Section {
+            // Google's privacy options form: offered only where Google says it is required.
+            if ads.privacyOptionsRequired {
+                Button("광고 개인정보 설정") { ads.presentPrivacyOptions() }
+            }
+            // App Store guideline 2.5.18: users can report an inappropriate ad.
+            Link("광고 신고", destination: AdReport.mailURL)
+        } header: {
+            Text("광고")
+        } footer: {
+            Text("TV로 보내는 동안에는 광고가 나오지 않아요. 이상한 광고를 봤다면 \"광고 신고\"로 알려 주세요.")
         }
     }
 

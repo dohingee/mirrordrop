@@ -20,6 +20,9 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         AudioOutput.removeLegacySettings()
         // Notification delegate before launch finishes, so a tap that launched the app is handled.
         StopAlertCenter.shared.setUp()
+        // Ads (App/AdsManager.swift): only refreshes the consent status now; the SDK, ad requests and the
+        // consent / tracking prompts follow the rules there. Does nothing in demo mode.
+        AdsManager.shared.start()
         return true
     }
 }
@@ -30,6 +33,7 @@ struct MirrorDropApp: App {
     @StateObject private var cast = CastManager.shared
     @StateObject private var monitor = BroadcastMonitor.shared
     @StateObject private var stopAlert = StopAlertCenter.shared
+    @StateObject private var ads = AdsManager.shared
 
     var body: some Scene {
         WindowGroup {
@@ -37,6 +41,7 @@ struct MirrorDropApp: App {
                 .environmentObject(cast)
                 .environmentObject(monitor)
                 .environmentObject(stopAlert)
+                .environmentObject(ads)
         }
     }
 }

@@ -122,8 +122,9 @@ PERMISSIONS
 - No background modes are used. The app uses a short finite-length background task (beginBackgroundTask) only to finish sending the play request to the TV if the user leaves the app right after starting.
 
 ADS
-- Google AdMob: a banner at the bottom of the main screen, hidden while the screen is being sent (the whole screen is visible on the TV), and at most one interstitial per day shown before the broadcast picker opens (never during the first 3 broadcasts, never right after an unexpected stop). No ads while sending, no app-open or rewarded ads, no ads in the extension. Ads never block the Stop button.
-- Consent: Google UMP consent form where required (EEA/UK/Switzerland), then the App Tracking Transparency prompt. Everything works if the user declines. "광고 개인정보 설정" (Ad privacy settings) and "광고 신고" (Report an ad) are in "고급·진단" (Advanced & Diagnostics).
+- Google AdMob: a banner at the bottom of the main screen, removed while the screen is being sent (the whole screen is visible on the TV), and at most one interstitial per day before a broadcast starts (never during the first 3 broadcasts, never within 10 minutes of an unexpected stop or after opening the stop notification). On that one tap a day the start card first shows the ad; after it is closed the card is Apple's broadcast picker again and says "이제 눌러서 시작하세요" (Tap to start now), so the ad always closes before sharing begins. The picker is never triggered programmatically. No ads while sending, no app-open or rewarded ads, no ads in the extension. Ads never cover the Start or Stop button.
+- This review build shows Google TEST ads: the app checks the App Store environment (StoreKit AppTransaction) and requests live ads only in apps downloaded from the App Store, so TestFlight and App Review never touch live ads. Because the first 3 broadcasts never show the interstitial, you will most likely see only the banner.
+- Consent and tracking: at launch the app only refreshes Google's consent status. After the first broadcast has ended, while the app is in front, it shows Google's UMP consent form where required (EEA/UK/Switzerland) and then the App Tracking Transparency prompt, so neither interrupts the first TV setup. In regions that require consent, no ad is requested before a choice is made. Everything works if the user declines. "광고 개인정보 설정" (Ad privacy settings, shown where Google requires it) and "광고 신고" (Report an ad, opens an email to the support address) are in "고급·진단" (Advanced & Diagnostics).
 
 WHAT MAKES IT DIFFERENT (Guideline 4.3)
 - Local only: the stream goes from the iPhone directly to the TV on the same Wi-Fi. No cloud relay, no account, no analytics SDK.
@@ -139,7 +140,7 @@ Support: https://mirrordrop-app.web.app/en/support.html
 Privacy policy: https://mirrordrop-app.web.app/en/privacy.html
 ```
 
-- 버튼 이름은 앱 화면 글자와 같다(`ios/MirrorDrop/UI/ContentView.swift`, `AdvancedView.swift`). 영어 화면을 만든 뒤에는 괄호 안 영어를 실제 영어 버튼 글자로 맞춘다. 광고 코드가 들어가면 광고 줄을 실제 동작(심사 빌드가 시험 광고를 보이는지 포함)과 맞춘다.
+- 버튼 이름은 앱 화면 글자와 같다(`ios/MirrorDrop/UI/ContentView.swift`, `AdvancedView.swift`). 영어 화면을 만든 뒤에는 괄호 안 영어를 실제 영어 버튼 글자로 맞춘다. 광고 줄은 광고 코드(`ios/MirrorDrop/App/AdsManager.swift`, `ios/Shared/AdPolicy.swift`)의 실제 동작대로 썼다(2026-11-22): 심사·TestFlight 빌드는 시험 광고, ATT는 첫 보내기가 끝난 뒤.
 - "TV를 찾지 못했어요" 화면은 실제로 TV가 없을 때 5초 뒤에 나온다(`ContentView.noDevicesGrace`).
 
 ### 9-2. 우리말 요약 (사용자 확인용, 붙여 넣지 않음)
@@ -147,6 +148,6 @@ Privacy policy: https://mirrordrop-app.web.app/en/privacy.html
 - 쓰는 법: TV 고르기 → 큰 카드(애플의 시스템 방송 선택기, 우리 확장만 보임) → "방송 시작". iOS가 숫자 세기와 빨간 표시를 띄운다(2.5.14).
 - 원리: 확장이 화면을 메모리 안 HLS 조각으로 만들고, iPhone 안 작은 서버가 집 안 주소의 기기에만, 방송마다 새 비밀 주소로 준다. TV가 직접 가져간다. 화면은 집 Wi-Fi 밖으로 안 나가고 저장도 안 한다.
 - 권한: 로컬 네트워크(TV 찾기·가져가기), 알림(멈춤 알림 하나, 로컬). 백그라운드 모드 없음(재생 요청을 마저 보내는 짧은 작업만).
-- 광고: 배너는 보내는 중에 숨김, 전면은 시작 전 하루 1번(처음 3번·뜻밖에 끝난 뒤 제외), 보내는 중 광고 없음. 동의(UMP) → 추적 허용(ATT), 거부해도 모든 기능.
+- 광고: 배너는 보내는 중에 숨김(화면에서 뺌), 전면은 시작 전 하루 1번(처음 3번·뜻밖에 끝난 뒤 10분·멈춤 알림으로 연 때 제외). 그날 한 번은 카드를 누르면 광고 → 닫으면 카드가 "이제 눌러서 시작하세요"로 바뀌고 한 번 더 눌러 시작. 보내는 중 광고 없음. 심사·TestFlight 빌드는 Google 시험 광고(App Store에서 받은 앱만 진짜 광고). 동의(UMP) → 추적 허용(ATT)은 첫 보내기가 끝난 뒤 앱이 앞에 있을 때, 거부해도 모든 기능.
 - 다른 점(4.3): 로컬 전용·가입 없음·분석 SDK 없음, 모든 기능 무료(구독·결제벽·시간 제한·워터마크 없음), 가족용 한 화면·소리 고르기·TV 볼륨·멈춤 알림·사용 방법, 한계(약 4초·720p·DRM 검게)를 솔직히 적음.
 - Google과 관계없는 독립 앱, Cast 버튼은 SDK 공식 버튼.

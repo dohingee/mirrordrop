@@ -17,11 +17,34 @@ settings:
     SWIFT_VERSION: "5.0"
     CODE_SIGN_STYLE: Automatic
     ENABLE_USER_SCRIPT_SANDBOXING: YES
+    # AdMob (the one place for the IDs; not secrets). App "MirrorDrop" (iOS, registered as not yet in a
+    # store), banner unit main_banner, interstitial unit start_interstitial. docs/RELEASE.md 3.
+    # Live units are used only by App Store downloads: Debug and simulator builds, TestFlight and App
+    # Review show Google's test ads (App/AdStoreEnvironment.swift, Shared/AdPolicy.swift AdUnits).
+    ADMOB_APP_ID: ca-app-pub-7472495816861016~6824258094
+    ADMOB_BANNER: ca-app-pub-7472495816861016/6198853395
+    ADMOB_INTERSTITIAL: ca-app-pub-7472495816861016/5128033043
+  configs:
+    Debug:
+      # Google's test ad units (https://developers.google.com/admob/ios/test-ads); the code also forces
+      # them in Debug and simulator builds. The app ID stays the real one (test units work with it).
+      ADMOB_BANNER: ca-app-pub-3940256099942544/2435281174
+      ADMOB_INTERSTITIAL: ca-app-pub-3940256099942544/4411468910
 packages:
   # Google's official SPM package (binary xcframework from dl.google.com). See docs/PLAN.md "Cast SDK".
   GoogleCast:
     url: https://github.com/googlecast/google-cast-ios-sdk
     exactVersion: 4.8.6
+  # Google Mobile Ads (AdMob), app target only (never the broadcast extension: guideline 2.5.18 and its
+  # memory budget). Same versions as Bottlepost's shipped iOS app (checked 2026-11-22: 13.12.0 of
+  # 2026-11-02; 13.13.0 is under two weeks old). The ads package already depends on UMP ("1.1.0"..<"4.0.0");
+  # listing UMP here pins it exactly.
+  GoogleMobileAds:
+    url: https://github.com/googleads/swift-package-manager-google-mobile-ads
+    exactVersion: 13.12.0
+  GoogleUserMessagingPlatform:
+    url: https://github.com/googleads/swift-package-manager-google-user-messaging-platform
+    exactVersion: 3.1.0
 targets:
   MirrorDrop:
     type: application
@@ -55,6 +78,66 @@ targets:
         # Lets the diagnostics screen fetch the extension's own http://<LAN IP> server.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
+        # Ads (App/AdsManager.swift). IDs from the build settings above.
+        GADApplicationIdentifier: $(ADMOB_APP_ID)
+        MDAdMobBanner: $(ADMOB_BANNER)
+        MDAdMobInterstitial: $(ADMOB_INTERSTITIAL)
+        # Apple's tracking prompt, asked after Google's consent form and after the first broadcast ended.
+        # Korean only for now; the English text comes with the English localization (InfoPlist strings).
+        NSUserTrackingUsageDescription: 맞춤 광고를 보여 주는 데만 씁니다. 허용하지 않아도 모든 기능을 그대로 쓸 수 있어요.
+        # Google's SKAdNetwork list, in the order of https://developers.google.com/admob/ios/quick-start
+        # (checked 2026-11-22: 50 IDs, Google's own cstr6suwn9 first).
+        SKAdNetworkItems:
+          - SKAdNetworkIdentifier: cstr6suwn9.skadnetwork
+          - SKAdNetworkIdentifier: 4fzdc2evr5.skadnetwork
+          - SKAdNetworkIdentifier: 2fnua5tdw4.skadnetwork
+          - SKAdNetworkIdentifier: ydx93a7ass.skadnetwork
+          - SKAdNetworkIdentifier: p78axxw29g.skadnetwork
+          - SKAdNetworkIdentifier: v72qych5uu.skadnetwork
+          - SKAdNetworkIdentifier: ludvb6z3bs.skadnetwork
+          - SKAdNetworkIdentifier: cp8zw746q7.skadnetwork
+          - SKAdNetworkIdentifier: 3sh42y64q3.skadnetwork
+          - SKAdNetworkIdentifier: c6k4g5qg8m.skadnetwork
+          - SKAdNetworkIdentifier: s39g8k73mm.skadnetwork
+          - SKAdNetworkIdentifier: wg4vff78zm.skadnetwork
+          - SKAdNetworkIdentifier: 3qy4746246.skadnetwork
+          - SKAdNetworkIdentifier: f38h382jlk.skadnetwork
+          - SKAdNetworkIdentifier: hs6bdukanm.skadnetwork
+          - SKAdNetworkIdentifier: mlmmfzh3r3.skadnetwork
+          - SKAdNetworkIdentifier: v4nxqhlyqp.skadnetwork
+          - SKAdNetworkIdentifier: wzmmz9fp6w.skadnetwork
+          - SKAdNetworkIdentifier: su67r6k2v3.skadnetwork
+          - SKAdNetworkIdentifier: yclnxrl5pm.skadnetwork
+          - SKAdNetworkIdentifier: t38b2kh725.skadnetwork
+          - SKAdNetworkIdentifier: 7ug5zh24hu.skadnetwork
+          - SKAdNetworkIdentifier: gta9lk7p23.skadnetwork
+          - SKAdNetworkIdentifier: vutu7akeur.skadnetwork
+          - SKAdNetworkIdentifier: y5ghdn5j9k.skadnetwork
+          - SKAdNetworkIdentifier: v9wttpbfk9.skadnetwork
+          - SKAdNetworkIdentifier: n38lu8286q.skadnetwork
+          - SKAdNetworkIdentifier: 47vhws6wlr.skadnetwork
+          - SKAdNetworkIdentifier: kbd757ywx3.skadnetwork
+          - SKAdNetworkIdentifier: 9t245vhmpl.skadnetwork
+          - SKAdNetworkIdentifier: a2p9lx4jpn.skadnetwork
+          - SKAdNetworkIdentifier: 22mmun2rn5.skadnetwork
+          - SKAdNetworkIdentifier: 44jx6755aq.skadnetwork
+          - SKAdNetworkIdentifier: k674qkevps.skadnetwork
+          - SKAdNetworkIdentifier: 4468km3ulz.skadnetwork
+          - SKAdNetworkIdentifier: 2u9pt9hc89.skadnetwork
+          - SKAdNetworkIdentifier: 8s468mfl3y.skadnetwork
+          - SKAdNetworkIdentifier: klf5c3l5u5.skadnetwork
+          - SKAdNetworkIdentifier: ppxm28t8ap.skadnetwork
+          - SKAdNetworkIdentifier: kbmxgpxpgc.skadnetwork
+          - SKAdNetworkIdentifier: uw77j35x4d.skadnetwork
+          - SKAdNetworkIdentifier: 578prtvx9j.skadnetwork
+          - SKAdNetworkIdentifier: 4dzt52r2t5.skadnetwork
+          - SKAdNetworkIdentifier: tl55sbb4fm.skadnetwork
+          - SKAdNetworkIdentifier: c3frkrj4fj.skadnetwork
+          - SKAdNetworkIdentifier: e5fvkxwrpn.skadnetwork
+          - SKAdNetworkIdentifier: 8c4e2ghe7u.skadnetwork
+          - SKAdNetworkIdentifier: 3rd42ekr43.skadnetwork
+          - SKAdNetworkIdentifier: 97r2b46745.skadnetwork
+          - SKAdNetworkIdentifier: 3qcr597p9d.skadnetwork
     entitlements:
       path: MirrorDrop/MirrorDrop.entitlements
       properties:
@@ -71,6 +154,10 @@ targets:
     dependencies:
       - package: GoogleCast
         product: GoogleCastDynamic
+      - package: GoogleMobileAds
+        product: GoogleMobileAds
+      - package: GoogleUserMessagingPlatform
+        product: GoogleUserMessagingPlatform
       - target: MirrorDropBroadcast
   MirrorDropBroadcast:
     type: app-extension

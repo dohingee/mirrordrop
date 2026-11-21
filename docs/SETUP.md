@@ -82,6 +82,8 @@ GitHub 비밀값은 **저장소마다 따로**입니다. Bottlepost에 넣은 �
 |---|---|---|
 | `APPLE_TEAM_ID` | 1번의 Team ID | 🤖 |
 
+AdMob 광고 ID는 GitHub 변수로 넣지 않습니다. 비밀값이 아니어서 `ios/project.yml`의 빌드 설정 `ADMOB_APP_ID`·`ADMOB_BANNER`·`ADMOB_INTERSTITIAL` 한 곳에 적어 둡니다(값과 시험 광고 규칙은 `docs/RELEASE.md` 2-3).
+
 **Secrets** 탭 → **New repository secret**:
 
 | Name | 넣을 값 | 누가 |
@@ -118,6 +120,7 @@ GitHub 비밀값은 **저장소마다 따로**입니다. Bottlepost에 넣은 �
 ## 8. ✋ 첫 실행 때 허용할 것 (iPhone)
 - TV 버튼을 처음 누르면 **"로컬 네트워크의 기기를 찾고 연결하려고 합니다"** → **허용**
   - 실수로 거부했다면: 설정 → 개인정보 보호 및 보안 → **로컬 네트워크** → MirrorDrop 켜기
+- 첫 TV 보내기를 마친 뒤 앱으로 돌아오면(1.0부터): 동의가 필요한 지역이면 Google의 광고 동의 화면, 이어서 **"앱이 다른 회사의 앱 및 웹 사이트에 걸친 사용자의 활동을 추적하도록 허용하겠습니까?"** → 아무거나 골라도 모든 기능을 씁니다. TestFlight 빌드의 광고는 "Test Ad" 표시가 있는 시험 광고입니다.
 - iPhone과 TV(Cast 기기)는 **같은 Wi-Fi**에 있어야 합니다. 공유기의 "게스트 Wi-Fi"나 "AP 격리"가 켜져 있으면 서로 보이지 않습니다.
 - 이제 `docs/POC_TEST.md` 순서대로 시험합니다.
 

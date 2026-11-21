@@ -6,6 +6,7 @@ struct ContentView: View {
     @EnvironmentObject private var cast: CastManager
     @EnvironmentObject private var monitor: BroadcastMonitor
     @EnvironmentObject private var stopAlert: StopAlertCenter
+    @EnvironmentObject private var ads: AdsManager
     @State private var path = LaunchScreen.fromArguments?.navigationPath ?? []
     @StateObject private var phoneVolume = PhoneVolumeMonitor()
     @Environment(\.scenePhase) private var scenePhase
@@ -41,6 +42,14 @@ struct ContentView: View {
                 // The user tapped the notification (also when it launched the app).
                 .onAppear { showStartCardIfAsked(proxy) }
                 .onChange(of: stopAlert.wantsStartCard) { _, _ in showStartCardIfAsked(proxy) }
+            }
+            // AdMob banner (docs/MONETIZATION.md): main screen only (not on pushed screens), below the
+            // buttons and apart from them. Out of the view hierarchy while sending (the screen goes to
+            // the TV) and over the TV-not-found help. App/AdsManager.swift, Shared/AdPolicy.swift.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if ads.showsBanner(troubleshooting: showsNoTVHelp), let unit = ads.units?.banner {
+                    AdBannerSlot(unitID: unit)
+                }
             }
             .background(Color(uiColor: .systemGroupedBackground))
             .navigationTitle("MirrorDrop")
@@ -368,7 +377,7 @@ struct ContentView: View {
                     .fill(monitor.isLive ? Color.red : Color.accentColor)
                 VStack(spacing: 4) {
                     Spacer()
-                    Text(monitor.isLive ? "보내기 멈추기" : "TV로 보내기 시작").font(.title3.bold())
+                    Text(monitor.isLive ? "보내기 멈추기" : showsStartPrompt ? "이제 눌러서 시작하세요" : "TV로 보내기 시작").font(.title3.bold())
                     Text(monitor.isLive ? "누른 다음 \"방송 중단\"을 누르세요" : "누른 다음 \"방송 시작\"을 누르세요")
                         .font(.footnote)
                 }
@@ -376,9 +385,21 @@ struct ContentView: View {
                 .padding(.bottom, 18)
                 .allowsHitTesting(false)
                 .accessibilityHidden(true)
-                // On top so the system picker itself receives the tap (its button fills the card).
-                BroadcastPickerView(glyphColor: .white)
-                    .accessibilityLabel(monitor.isLive ? "보내기 멈추기" : "TV로 보내기 시작")
+                if showsInterstitialButton {
+                    // Decided before the tap (AdPolicy): the day's one interstitial comes first, then the
+                    // card is the system picker again. The picker is never triggered from code.
+                    Button {
+                        ads.showInterstitial()
+                    } label: {
+                        Color.clear.contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("TV로 보내기 시작")
+                } else {
+                    // On top so the system picker itself receives the tap (its button fills the card).
+                    BroadcastPickerView(glyphColor: .white)
+                        .accessibilityLabel(monitor.isLive ? "보내기 멈추기" : "TV로 보내기 시작")
+                }
             }
             .frame(height: 160)
             Text("멈출 때는 이 버튼이나 화면 위쪽의 빨간 표시를 누릅니다.")
@@ -390,10 +411,15 @@ struct ContentView: View {
         .overlay {
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.orange, lineWidth: 3)
-                .opacity(highlightStartCard ? 1 : 0)
+                .opacity(highlightStartCard || showsStartPrompt ? 1 : 0)
                 .allowsHitTesting(false)
         }
     }
+
+    private var showsInterstitialButton: Bool { ads.interstitialArmed && !monitor.isLive }
+
+    /// After the interstitial closed, the card (now the system picker) asks for the real start.
+    private var showsStartPrompt: Bool { ads.startPrompt && !monitor.isLive }
 
     private var noticeCard: some View {
         VStack(alignment: .leading, spacing: 8) {

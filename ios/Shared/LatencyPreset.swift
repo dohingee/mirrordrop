@@ -57,7 +57,13 @@ enum LatencyPreset: String, CaseIterable, Identifiable {
     var startOffset: Double? {
         switch self {
         case .l2: return -2.0
-        case .l0, .l1, .l3: return nil
+        // L3: start 3 s (6 segments, the whole first playlist) behind the newest segment. Build 16 startup trace: the TV
+        // started only 1.5 s behind (seg2 while seg5 was newest) and fetched every segment about
+        // 0.5 s after it appeared, so it had almost no buffer and stalled until it drifted back to
+        // its steady ~2.4 s lag. Starting about there should skip that settling. -3.0 rather than
+        // -2.5: RFC 8216 4.3.5.2 says a live offset SHOULD NOT be within 3 target durations (TD 1).
+        case .l3: return -3.0
+        case .l0, .l1: return nil
         }
     }
 

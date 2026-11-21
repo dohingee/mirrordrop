@@ -37,8 +37,10 @@ final class LatencyPresetTests: XCTestCase {
         XCTAssertEqual(preset.segmentSeconds, 0.5)
         XCTAssertEqual(preset.playlistWindow, 6)
         XCTAssertEqual(preset.storedSegments, 10)
-        XCTAssertNil(preset.startOffset)
+        XCTAssertEqual(preset.startOffset, -3.0)
         XCTAssertEqual(preset.segmentsBeforeReady, 6)
+        // The start point must lie inside the first playlist the TV sees.
+        XCTAssertLessThanOrEqual(-(preset.startOffset ?? 0), Double(preset.segmentsBeforeReady) * preset.segmentSeconds)
     }
 
     func testStoredValueRoundTrip() {
@@ -136,6 +138,6 @@ final class PlaylistStartTests: XCTestCase {
         let snapshot = store.snapshot()
         XCTAssertEqual(snapshot.playlistSegments.map(\.sequence), Array(6..<12))
         XCTAssertEqual(snapshot.storedSegments.count, 10)
-        XCTAssertNil(snapshot.startOffset)
+        XCTAssertEqual(snapshot.startOffset, -3.0)
     }
 }
